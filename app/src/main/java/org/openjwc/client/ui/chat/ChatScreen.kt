@@ -123,31 +123,9 @@ fun ChatList(
         verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
         items(chatMessages) { message ->
-            MessageBubble(message)
+            MessageBubble(message, true)
         }
     }
 }
 
 
-
-@Preview
-@Composable
-fun TestMessageBubbleFromUser() {
-    val mockChatMessage = ChatMessage(
-        id = 11451,
-        text = "Hello World",
-        isUser = true
-    )
-    MessageBubble(mockChatMessage)
-}
-
-@Preview
-@Composable
-fun TestMessageBubbleFromAI() {
-    val mockChatMessage = ChatMessage(
-        id = 19198,
-        text =  "hello",
-        isUser = false
-    )
-    MessageBubble(mockChatMessage)
-}

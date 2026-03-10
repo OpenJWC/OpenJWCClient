@@ -5,15 +5,19 @@ import android.widget.Toast
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ContentCopy
 import androidx.compose.material.icons.filled.Share
+import androidx.compose.material3.CircularWavyProgressIndicator
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -30,49 +34,36 @@ import androidx.compose.ui.platform.ClipEntry
 import androidx.compose.ui.platform.LocalClipboard
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalUriHandler
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import dev.jeziellago.compose.markdowntext.MarkdownText
 import kotlinx.coroutines.launch
 import org.openjwc.client.net.chat.ChatMessage
 
+@OptIn(ExperimentalMaterial3ExpressiveApi::class) // 启用 Expressive API
 @Composable
 fun MessageBubble(
     message: ChatMessage,
+    isSending: Boolean,
     modifier: Modifier = Modifier
 ) {
-    // 用来弹出菜单
     var showMenu by remember { mutableStateOf(false) }
-    // 用来复制
     val clipboardManager = LocalClipboard.current
-    // 用来打开链接
     val uriCurrent = LocalUriHandler.current
-    // 启动协程
     val scope = rememberCoroutineScope()
-    // 弹 Toast
     val context = LocalContext.current
-    // 区分气泡位置
     val isUser = message.isUser
 
-    val containerColor = if (isUser) {
-        MaterialTheme.colorScheme.primaryContainer
-    } else {
-        MaterialTheme.colorScheme.surfaceVariant
-    }
-
-    val contentColor = if (isUser) {
-        MaterialTheme.colorScheme.onPrimaryContainer
-    } else {
-        MaterialTheme.colorScheme.onSurfaceVariant
-    }
+    val containerColor = if (isUser) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surfaceVariant
+    val contentColor = if (isUser) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurfaceVariant
 
     val bubbleShape = RoundedCornerShape(
         topStart = 20.dp,
         topEnd = 20.dp,
-        bottomStart = if (isUser) 20.dp else 4.dp, // 接收方左下角尖
-        bottomEnd = if (isUser) 4.dp else 20.dp     // 发送方右下角尖
+        bottomStart = if (isUser) 20.dp else 4.dp,
+        bottomEnd = if (isUser) 4.dp else 20.dp
     )
-
 
     Column(
         modifier = modifier
@@ -80,85 +71,114 @@ fun MessageBubble(
             .padding(vertical = 4.dp),
         horizontalAlignment = if (isUser) Alignment.End else Alignment.Start
     ) {
-        Box(
-            modifier = Modifier.combinedClickable(
-            onClick = { /* 单击逻辑 */ },
-            onLongClick = { showMenu = true }
-        )) {
-            Surface(
-                color = containerColor,
-                contentColor = contentColor,
-                shape = bubbleShape,
-                tonalElevation = if (isUser) 0.dp else 2.dp,
-            )
-            {
-                if (isUser) {
-                    Text(
-                        text = message.text,
-                        modifier = Modifier
-                            .padding(horizontal = 16.dp, vertical = 10.dp)
-                            .widthIn(max = 280.dp), // 限制最大宽度，防止单行过长
-                        style = MaterialTheme.typography.bodyLarge.copy(
-                            lineHeight = 24.sp
+        // 使用 Row 容器来排列加载器和气泡
+        Row(
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            // 1. 如果是用户发送中，在气泡左侧显示加载动画
+            if (isUser && isSending) {
+                CircularWavyProgressIndicator(
+                    modifier = Modifier
+                        .padding(end = 8.dp)
+                        .size(20.dp), // 适配气泡高度
+                    color = MaterialTheme.colorScheme.primary,
+                    amplitude = 0.5f, // 适中的波动幅度
+                    wavelength = 8.dp // 密集的波纹感
+                )
+            }
+
+            Box(
+                modifier = Modifier.combinedClickable(
+                    onClick = { /* 单击逻辑 */ },
+                    onLongClick = { showMenu = true }
+                )
+            ) {
+                Surface(
+                    color = containerColor,
+                    contentColor = contentColor,
+                    shape = bubbleShape,
+                    tonalElevation = if (isUser) 0.dp else 2.dp,
+                ) {
+                    if (isUser) {
+                        Text(
+                            text = message.text,
+                            modifier = Modifier
+                                .padding(horizontal = 16.dp, vertical = 10.dp)
+                                .widthIn(max = 280.dp),
+                            style = MaterialTheme.typography.bodyLarge.copy(lineHeight = 24.sp)
                         )
+                    } else {
+                        MarkdownText(
+                            markdown = message.text,
+                            modifier = Modifier
+                                .padding(horizontal = 16.dp, vertical = 10.dp)
+                                .widthIn(max = 280.dp),
+                            style = MaterialTheme.typography.bodyLarge.copy(
+                                color = contentColor,
+                                lineHeight = 24.sp
+                            ),
+                            onLinkClicked = { url -> uriCurrent.openUri(url) }
+                        )
+                    }
+                }
+
+                DropdownMenu(expanded = showMenu, onDismissRequest = { showMenu = false }) {
+                    DropdownMenuItem(
+                        text = { Text("复制") },
+                        onClick = {
+                            Toast.makeText(context, "复制成功", Toast.LENGTH_SHORT).show()
+                            scope.launch {
+                                clipboardManager.setClipEntry(ClipEntry(ClipData.newPlainText(message.text, message.text)))
+                            }
+                            showMenu = false
+                        },
+                        leadingIcon = { Icon(Icons.Default.ContentCopy, contentDescription = null) }
                     )
-                } else {
-                    MarkdownText(
-                        markdown = message.text,
-                        modifier = Modifier
-                            .padding(horizontal = 16.dp, vertical = 10.dp)
-                            .widthIn(max = 280.dp),
-                        style = MaterialTheme.typography.bodyLarge.copy(
-                            color = contentColor,
-                            lineHeight = 24.sp
-                        ),
-                        // 自动处理链接跳转
-                        onLinkClicked = { url ->
-                            uriCurrent.openUri(url)
-                        }
+                    DropdownMenuItem(
+                        text = { Text("转发") },
+                        onClick = { showMenu = false },
+                        leadingIcon = { Icon(Icons.Filled.Share, contentDescription = null) }
                     )
                 }
             }
 
-            DropdownMenu(
-                expanded = showMenu,
-                onDismissRequest = { showMenu = false }
-            ) {
-                DropdownMenuItem(
-                    text = { Text("复制") },
-                    onClick = {
-                        Toast.makeText(context, "复制成功", Toast.LENGTH_SHORT).show()
-                        scope.launch {
-                            clipboardManager.setClipEntry(
-                                ClipEntry(
-                                    ClipData.newPlainText(
-                                        message.text,
-                                        message.text
-                                    )
-                                )
-                            )
-                        }
-
-                        showMenu = false
-                    },
-                    leadingIcon = { Icon(Icons.Default.ContentCopy, contentDescription = null) }
-                )
-                DropdownMenuItem(
-                    text = { Text("转发") },
-                    onClick = { /* TODO: 转发逻辑 */ showMenu = false },
-                    leadingIcon = { Icon(Icons.Filled.Share, contentDescription = null) }
+            // 2. 如果是 AI 正在生成，在气泡右侧显示加载动画
+            if (!isUser && isSending) {
+                CircularWavyProgressIndicator(
+                    modifier = Modifier
+                        .padding(start = 8.dp)
+                        .size(20.dp),
+                    color = MaterialTheme.colorScheme.secondary,
+                    amplitude = 0.5f,
+                    wavelength = 8.dp
                 )
             }
         }
     }
+}
 
-    // TODO: 显示发送时间功能
-    /*
-    Text(
-        text = "10:24 AM",
-        style = MaterialTheme.typography.labelSmall,
-        modifier = Modifier.padding(top = 4.dp, start = 8.dp, end = 8.dp),
-        color = MaterialTheme.colorScheme.outline
+
+@Preview
+@Composable
+fun TestMessageBubbleFromUser() {
+    val mockChatMessage = ChatMessage(
+        id = 11451,
+        text = "Hello World",
+        isUser = true
     )
-    */
+    MessageBubble(
+        mockChatMessage,
+        isSending = true
+    )
+}
+
+@Preview
+@Composable
+fun TestMessageBubbleFromAI() {
+    val mockChatMessage = ChatMessage(
+        id = 19198,
+        text =  "hello",
+        isUser = false
+    )
+    MessageBubble(mockChatMessage, true)
 }
