@@ -3,9 +3,11 @@ package org.openjwc.client.viewmodels
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import org.openjwc.client.net.chat.ChatMessage
@@ -14,46 +16,58 @@ import org.openjwc.client.net.models.ChatHistory
 import org.openjwc.client.net.models.ChatRequest
 import org.openjwc.client.net.models.NetworkResult
 
+sealed class SendMessageState {
+    data object Idle : SendMessageState()
+    data object Sending : SendMessageState()
+}
+
+sealed class ChatEvent {
+    data class ShowToast(val message: String) : ChatEvent()
+    data class ShowSnackBar(val message: String) : ChatEvent()
+}
+
 class ChatViewModel : ViewModel() {
     private val label = "ChatViewModel"
     private val _messages = MutableStateFlow<List<ChatMessage>>(emptyList())
     val messages: StateFlow<List<ChatMessage>> = _messages.asStateFlow()
 
-    fun sendMessage(message: String) {
-        if (message.isBlank()) return
+    // 控制发送按钮是否可用
+    private val _sendMessageState = MutableStateFlow<SendMessageState>(SendMessageState.Idle)
+    val sendMessageState: StateFlow<SendMessageState> = _sendMessageState.asStateFlow()
 
-        // 生成唯一的 ID，避免 System.currentTimeMillis() 在极快点击下重复
+    private val _eventChannel = Channel<ChatEvent>()
+    val events = _eventChannel.receiveAsFlow()
+    fun sendMessage(message: String) {
+        if (sendMessageState.value is SendMessageState.Sending || message.isBlank()) return
+
+        Log.d(label, "Sending message: $message")
+        _sendMessageState.value = SendMessageState.Sending
+
         val userMsgId = System.currentTimeMillis()
         val botMsgId = userMsgId + 1
-
         val newUserMessage = ChatMessage(id = userMsgId, text = message, isUser = true)
 
-        // 先把用户消息塞进列表
         _messages.update { it + newUserMessage }
 
         viewModelScope.launch {
-            // 准备历史记录, 并排除掉刚刚发出的这一条
-            val historyList = _messages.value
-                .filter { it.id != userMsgId }
-                .map {
-                    ChatHistory(
-                        role = if (it.isUser) "user" else "assistant",
-                        content = it.text
-                    )
-                }
-
-            val chatRequest = ChatRequest(
-                noticeId = "test",
-                userQuery = message,
-                stream = true,
-                history = historyList
-            )
-
-            // 4. 插入一个 AI 的空占位符
-            _messages.update { it + ChatMessage(id = botMsgId, text = "", isUser = false) }
-
-            // 5. 开始收集流式数据
             try {
+                // 准备历史记录
+                val historyList = _messages.value
+                    .filter { it.id != userMsgId }
+                    .map {
+                        ChatHistory(
+                            role = if (it.isUser) "user" else "assistant",
+                            content = it.text
+                        )
+                    }
+
+                // TODO: noticeId 还不知道怎么用
+                val chatRequest = ChatRequest("test", message, true, historyList)
+
+                // 插入占位符
+                _messages.update { it + ChatMessage(id = botMsgId, text = "", isUser = false) }
+
+                // 开始流式收集
                 sendMessageStream(chatRequest).collect { result ->
                     when (result) {
                         is NetworkResult.Success -> {
@@ -64,18 +78,29 @@ class ChatViewModel : ViewModel() {
                                 }
                             }
                         }
-                        is NetworkResult.ValidationError,
-                        is NetworkResult.Failure,
+
+                        is NetworkResult.ValidationError -> {
+                            _messages.update { list -> list.filter { it.id != botMsgId } }
+                            _eventChannel.send(ChatEvent.ShowToast(result.errors.detail.toString()))
+                        }
+
+                        is NetworkResult.Failure -> {
+                            _messages.update { list -> list.filter { it.id != botMsgId } }
+                            _eventChannel.send(ChatEvent.ShowToast("请求失败(${result.code}): ${result.msg}"))
+                        }
+
                         is NetworkResult.Error -> {
                             _messages.update { list -> list.filter { it.id != botMsgId } }
-
-                            Log.e(label, "Request failed: $result")
+                            _eventChannel.send(ChatEvent.ShowToast("请求失败: ${result.msg}"))
                         }
                     }
                 }
             } catch (e: Exception) {
                 _messages.update { list -> list.filter { it.id != botMsgId } }
                 Log.e(label, "Stream collection failed", e)
+            } finally {
+                _sendMessageState.value = SendMessageState.Idle
+                Log.d(label, "Stream collection finished")
             }
         }
     }

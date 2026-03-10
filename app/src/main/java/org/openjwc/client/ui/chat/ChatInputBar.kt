@@ -30,9 +30,10 @@ import androidx.compose.ui.unit.dp
 
 @Composable
 fun ChatInputBar(
+    modifier: Modifier = Modifier,
     onSendMessage: (String) -> Unit,
     onAttachment: () -> Unit,
-    modifier: Modifier = Modifier
+    sendButtonEnabled: Boolean = true,
 ) {
     var textState by remember { mutableStateOf("") }
     val isNotEmpty = textState.isNotBlank()
@@ -91,16 +92,16 @@ fun ChatInputBar(
                     textState = ""
                 }
             },
-            enabled = isNotEmpty,
+            enabled = isNotEmpty && sendButtonEnabled,
             shape = CircleShape,
-            color = if (isNotEmpty) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceVariant,
+            color = if (isNotEmpty && sendButtonEnabled) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceVariant,
             modifier = Modifier.size(48.dp)
         ) {
             Box(contentAlignment = Alignment.Center) {
                 Icon(
                     imageVector = Icons.AutoMirrored.Rounded.Send,
                     contentDescription = "Send",
-                    tint = if (isNotEmpty) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f),
+                    tint = if (isNotEmpty && sendButtonEnabled) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f),
                     modifier = Modifier.size(20.dp)
                 )
             }

@@ -43,6 +43,8 @@ object ChatClient {
 }
 
 // 先留在这边吧，万一有用呢（
+@Deprecated("Use sendMessageStream instead")
+@Suppress("unused")
 suspend fun sendMessage(chatRequest: ChatRequest): NetworkResult {
     return try {
         val response = ChatClient.apiService.postQuery(chatRequest)
@@ -86,8 +88,29 @@ fun sendMessageStream(chatRequest: ChatRequest): Flow<NetworkResult> = flow {
     try {
         val response = ChatClient.apiService.postQueryStream(chatRequest)
         if (!response.isSuccessful) {
+            Log.e(LABEL, "Failure: ${response.code()} ${response.message()}")
             emit(NetworkResult.Failure(response.code(), response.message()))
             return@flow
+        }
+        if (response.code() == 422) {
+            Log.e(LABEL, "422: $response")
+            val errorBody = response.errorBody()?.string()
+
+            if (errorBody.isNullOrBlank()) {
+                Log.e(LABEL, "422: Unknown error")
+                emit(NetworkResult.Failure(422, "Unknown error"))
+                return@flow
+            }
+
+            try {
+                val errorObj = Json.decodeFromString<ErrorResponse>(errorBody)
+                emit(NetworkResult.ValidationError(errorObj))
+                return@flow
+            } catch (e: Exception) {
+                Log.e(LABEL, "Parsing 422 message failure: ${e.message}")
+                emit(NetworkResult.Failure(422, "Parsing 422 message failure"))
+                return@flow
+            }
         }
         val source = response.body()?.source() ?: return@flow
         val buffer = okio.Buffer()
@@ -129,7 +152,6 @@ fun sendMessageStream(chatRequest: ChatRequest): Flow<NetworkResult> = flow {
         }
 
     } catch (e: Exception) {
-
         emit(NetworkResult.Error("连接中断: ${e.localizedMessage}"))
     }
 

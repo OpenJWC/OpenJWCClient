@@ -1,5 +1,6 @@
 package org.openjwc.client.ui.chat
 
+import android.widget.Toast
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -17,8 +18,8 @@ import androidx.compose.material3.windowsizeclass.WindowWidthSizeClass
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.DpSize
@@ -26,7 +27,9 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import org.openjwc.client.net.chat.ChatMessage
+import org.openjwc.client.viewmodels.ChatEvent
 import org.openjwc.client.viewmodels.ChatViewModel
+import org.openjwc.client.viewmodels.SendMessageState
 
 
 @OptIn(ExperimentalMaterial3WindowSizeClassApi::class)
@@ -47,8 +50,8 @@ fun ChatScreen(
     // TODO: windowSizeClass 还没用到，即将在支持多会话之后用来区分手机和平板左侧的列表形式
     viewModel: ChatViewModel = viewModel()
 ) {
+    val context = LocalContext.current
     val listState = rememberLazyListState()
-    val scope = rememberCoroutineScope()
     val horizontalPadding = when (windowSizeClass.widthSizeClass) {
         WindowWidthSizeClass.Compact -> 12.dp  // 手机：窄边距
         WindowWidthSizeClass.Medium -> 32.dp   // 折叠屏/小平板：中等边距
@@ -57,14 +60,26 @@ fun ChatScreen(
     }
 
     val messages by viewModel.messages.collectAsStateWithLifecycle()
-
+    val sendMessageState by viewModel.sendMessageState.collectAsStateWithLifecycle()
     // 如果发送了信息，则自动滚动到底部
     LaunchedEffect(messages.size) {
         if (messages.isNotEmpty()) {
             listState.animateScrollToItem(messages.lastIndex)
         }
     }
+    LaunchedEffect(Unit) {
+        viewModel.events.collect { event ->
+            when (event) {
+                is ChatEvent.ShowToast -> {
+                    Toast.makeText(context, event.message, Toast.LENGTH_SHORT).show()
+                }
 
+                is ChatEvent.ShowSnackBar -> {
+                    // TODO: 显示 SnackBar
+                }
+            }
+        }
+    }
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -87,7 +102,8 @@ fun ChatScreen(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(vertical = 8.dp)
-                .imePadding()
+                .imePadding(),
+            sendButtonEnabled = sendMessageState is SendMessageState.Idle
         )
     }
 }

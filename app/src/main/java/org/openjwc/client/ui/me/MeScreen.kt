@@ -8,7 +8,6 @@ import androidx.compose.runtime.Composable
 fun MeScreen(
     contentPadding: PaddingValues,
     windowSizeClass: WindowSizeClass,
-
 ) {
 
 }
