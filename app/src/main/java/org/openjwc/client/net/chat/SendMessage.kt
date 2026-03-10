@@ -83,7 +83,6 @@ suspend fun sendMessage(chatRequest: ChatRequest): NetworkResult {
 }
 
 fun sendMessageStream(chatRequest: ChatRequest): Flow<NetworkResult> = flow {
-    val TAG = "StreamDebug"
     try {
         val response = ChatClient.apiService.postQueryStream(chatRequest)
         if (!response.isSuccessful) {
@@ -122,7 +121,7 @@ fun sendMessageStream(chatRequest: ChatRequest): Flow<NetworkResult> = flow {
                 // 消耗 "\n\n"
                 buffer.skip(2)
 
-                Log.d(TAG, "Chunk: [${chunk.replace("\n","\\n")}]")
+                Log.d(LABEL, "Chunk: [${chunk.replace("\n","\\n")}]")
                 if (chunk == "[DONE]") return@flow
                 accumulatedText += chunk
                 emit(NetworkResult.Success(accumulatedText))

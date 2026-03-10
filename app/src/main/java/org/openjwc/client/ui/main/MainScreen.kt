@@ -3,6 +3,7 @@ package org.openjwc.client.ui.main
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.consumeWindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Scaffold
@@ -61,10 +62,11 @@ private fun MainScaffoldContent(
         Scaffold(
             modifier = Modifier.weight(1f),
             topBar = {
-                TopAppBar ({ Text(stringResource(currentTab.titleRes)) })
+                TopAppBar({ Text(stringResource(currentTab.titleRes)) })
             },
             bottomBar = {
-                if (!useNavRail) MainNavigationBar(currentTab) { mainViewModel.updateTab(it) }
+                if (!useNavRail)
+                    MainNavigationBar(currentTab) { mainViewModel.updateTab(it) }
             }
         ) { contentPadding ->
             MainTabContent(
@@ -82,7 +84,10 @@ private fun MainTabContent(
     contentPadding: PaddingValues,
     windowSizeClass: WindowSizeClass,
 ){
-    Box(Modifier.fillMaxSize()) {
+    Box(
+        Modifier.fillMaxSize()
+        .consumeWindowInsets(contentPadding)
+    ) {
         when (currentTab) {
             MainTab.Chat -> ChatScreen(contentPadding, windowSizeClass)
             MainTab.News -> NewsScreen(contentPadding, windowSizeClass)

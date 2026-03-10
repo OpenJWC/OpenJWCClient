@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListState
@@ -60,7 +61,7 @@ fun ChatScreen(
     // 如果发送了信息，则自动滚动到底部
     LaunchedEffect(messages.size) {
         if (messages.isNotEmpty()) {
-            listState.scrollToItem(messages.lastIndex)
+            listState.animateScrollToItem(messages.lastIndex)
         }
     }
 
@@ -86,6 +87,7 @@ fun ChatScreen(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(vertical = 8.dp)
+                .imePadding()
         )
     }
 }
