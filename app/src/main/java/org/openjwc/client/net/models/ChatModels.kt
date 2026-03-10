@@ -56,7 +56,10 @@ sealed class NetworkResult {
 }
 
 interface ChatService {
-    @Streaming
     @POST("api/chat")
     suspend fun postQuery(@Body request: ChatRequest): Response<ResponseBody>
+
+    @Streaming
+    @POST("api/chat")
+    suspend fun postQueryStream(@Body request: ChatRequest): Response<ResponseBody>
 }

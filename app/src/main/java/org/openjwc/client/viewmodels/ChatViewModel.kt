@@ -9,6 +9,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import org.openjwc.client.net.chat.ChatMessage
+import org.openjwc.client.net.chat.sendMessageStream
 import org.openjwc.client.net.models.ChatHistory
 import org.openjwc.client.net.models.ChatRequest
 import org.openjwc.client.net.models.NetworkResult
@@ -19,63 +20,63 @@ class ChatViewModel : ViewModel() {
     val messages: StateFlow<List<ChatMessage>> = _messages.asStateFlow()
 
     fun sendMessage(message: String) {
-        if (message.isBlank()) {
-            Log.e(label, "Message is blank")
-            return
-        }
+        if (message.isBlank()) return
 
-        val newMessage = ChatMessage(
-            id = System.currentTimeMillis(), // TODO: ID 可能不是这个格式，先占个位
-            text = message,
-            isUser = true
-        )
+        // 生成唯一的 ID，避免 System.currentTimeMillis() 在极快点击下重复
+        val userMsgId = System.currentTimeMillis()
+        val botMsgId = userMsgId + 1
 
-        // 网络和本地可能同时修改这个 messages, 所以用 update 确保原子性
-        _messages.update { currentList ->
-            currentList + newMessage
-        }
+        val newUserMessage = ChatMessage(id = userMsgId, text = message, isUser = true)
+
+        // 先把用户消息塞进列表
+        _messages.update { it + newUserMessage }
 
         viewModelScope.launch {
+            // 准备历史记录, 并排除掉刚刚发出的这一条
+            val historyList = _messages.value
+                .filter { it.id != userMsgId }
+                .map {
+                    ChatHistory(
+                        role = if (it.isUser) "user" else "assistant",
+                        content = it.text
+                    )
+                }
+
             val chatRequest = ChatRequest(
                 noticeId = "test",
                 userQuery = message,
                 stream = true,
-                history = _messages.value
-                    .filter { it.text != message }
-                    .map { message ->
-                        ChatHistory(
-                            role = if (message.isUser) "user" else "system",
-                            content = message.text
-                        )
-                    }
+                history = historyList
             )
-            val result = org.openjwc.client.net.chat.sendMessage(chatRequest)
 
-            when (result) {
-                is NetworkResult.Success -> {
-                    val botMessage = ChatMessage(
-                        id = System.currentTimeMillis(),
-                        text = result.content,
-                        isUser = false
-                    )
-                    _messages.update { currentList ->
-                        currentList + botMessage
+            // 4. 插入一个 AI 的空占位符
+            _messages.update { it + ChatMessage(id = botMsgId, text = "", isUser = false) }
+
+            // 5. 开始收集流式数据
+            try {
+                sendMessageStream(chatRequest).collect { result ->
+                    when (result) {
+                        is NetworkResult.Success -> {
+                            _messages.update { list ->
+                                list.map { msg ->
+                                    if (msg.id == botMsgId) msg.copy(text = result.content)
+                                    else msg
+                                }
+                            }
+                        }
+                        is NetworkResult.ValidationError,
+                        is NetworkResult.Failure,
+                        is NetworkResult.Error -> {
+                            _messages.update { list -> list.filter { it.id != botMsgId } }
+
+                            Log.e(label, "Request failed: $result")
+                        }
                     }
                 }
-
-                is NetworkResult.ValidationError -> {
-                    Log.e(label, "Validation error: ${result.errors}")
-                }
-
-                is NetworkResult.Failure -> {
-                    Log.e(label, "Failure: ${result.code} ${result.msg}")
-                }
-
-                is NetworkResult.Error -> {
-                    Log.e(label, "Error: ${result.msg}")
-                }
+            } catch (e: Exception) {
+                _messages.update { list -> list.filter { it.id != botMsgId } }
+                Log.e(label, "Stream collection failed", e)
             }
         }
-        // TODO: 参数可能还得加一个会话 id，用来判断在哪一个会话聊天
     }
 }
