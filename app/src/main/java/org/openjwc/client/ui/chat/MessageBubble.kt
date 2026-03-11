@@ -80,7 +80,8 @@ fun MessageBubble(
                 CircularWavyProgressIndicator(
                     modifier = Modifier
                         .padding(end = 8.dp)
-                        .size(20.dp), // 适配气泡高度
+                        .size(20.dp)
+                        .align(Alignment.Bottom),
                     color = MaterialTheme.colorScheme.primary,
                     amplitude = 0.5f, // 适中的波动幅度
                     wavelength = 8.dp // 密集的波纹感
@@ -147,7 +148,8 @@ fun MessageBubble(
                 CircularWavyProgressIndicator(
                     modifier = Modifier
                         .padding(start = 8.dp)
-                        .size(20.dp),
+                        .size(20.dp)
+                        .align(Alignment.Bottom),
                     color = MaterialTheme.colorScheme.secondary,
                     amplitude = 0.5f,
                     wavelength = 8.dp
