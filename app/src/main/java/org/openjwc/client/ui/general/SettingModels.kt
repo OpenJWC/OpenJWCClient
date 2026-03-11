@@ -1,4 +1,4 @@
-package org.openjwc.client.ui.components
+package org.openjwc.client.ui.general
 
 import androidx.compose.ui.graphics.vector.ImageVector
 

@@ -120,35 +120,40 @@ fun sendMessageStream(chatRequest: ChatRequest): Flow<NetworkResult> = flow {
 
         while (true) {
             val read = source.read(buffer, 8192)
-            if (read == -1L && buffer.size == 0L) break
             while (true) {
                 val start = buffer.indexOf(prefix.encodeUtf8())
                 if (start == -1L) break
 
                 val next = buffer.indexOf(separator.encodeUtf8(), start + prefix.length)
-                if (next == -1L) break
 
-                // 丢弃 data: 之前的数据
-                if (start > 0) buffer.skip(start)
+                if (next == -1L && read != -1L) break
 
-                // 跳过 "data:"
-                buffer.skip(prefix.length.toLong())
-
-                val payloadLength = next - start - prefix.length
-                var chunk = buffer.readUtf8(payloadLength)
-
-                // 去掉前导空格（SSE规范）
-                if (chunk.startsWith(" ")) {
-                    chunk = chunk.substring(1)
+                val payloadLength = if (next != -1L) {
+                    next - start - prefix.length
+                } else {
+                    buffer.size - start - prefix.length
                 }
-                // 消耗 "\n\n"
-                buffer.skip(2)
+                buffer.skip(start + prefix.length)
+
+                var chunk = buffer.readUtf8(payloadLength)
+                if (chunk.startsWith(" ")) chunk = chunk.substring(1)
+
+                if (next != -1L) {
+                    buffer.skip(separator.length.toLong() - prefix.length.toLong())
+                }
 
                 Log.d(LABEL, "Chunk: [${chunk.replace("\n","\\n")}]")
-                if (chunk == "[DONE]") return@flow
+
+                if (chunk.contains("[DONE]")) {
+                    return@flow
+                }
+
                 accumulatedText += chunk
                 emit(NetworkResult.Success(accumulatedText))
+
+                if (next == -1L) break
             }
+            if (read == -1L && buffer.size == 0L) break
         }
 
     } catch (e: Exception) {

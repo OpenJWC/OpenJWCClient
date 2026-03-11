@@ -38,14 +38,15 @@ class ChatViewModel : ViewModel() {
     private val _eventChannel = Channel<ChatEvent>()
     val events = _eventChannel.receiveAsFlow()
     fun sendMessage(message: String) {
-        if (sendMessageState.value is SendMessageState.Sending || message.isBlank()) return
+        if (sendMessageState.value is SendMessageState.Sending
+            || message.isBlank()) return
 
         Log.d(label, "Sending message: $message")
         _sendMessageState.value = SendMessageState.Sending
 
         val userMsgId = System.currentTimeMillis()
         val botMsgId = userMsgId + 1
-        val newUserMessage = ChatMessage(id = userMsgId, text = message, isUser = true)
+        val newUserMessage = ChatMessage(id = userMsgId, text = message, isUser = true, isLoading = false)
 
         _messages.update { it + newUserMessage }
 
@@ -65,7 +66,7 @@ class ChatViewModel : ViewModel() {
                 val chatRequest = ChatRequest("test", message, true, historyList)
 
                 // 插入占位符
-                _messages.update { it + ChatMessage(id = botMsgId, text = "", isUser = false) }
+                _messages.update { it + ChatMessage(id = botMsgId, text = "", isUser = false, isLoading = true) }
 
                 // 开始流式收集
                 sendMessageStream(chatRequest).collect { result ->
@@ -95,12 +96,18 @@ class ChatViewModel : ViewModel() {
                         }
                     }
                 }
+                Log.d(label, "Stream collection finished successfully")
             } catch (e: Exception) {
                 _messages.update { list -> list.filter { it.id != botMsgId } }
                 Log.e(label, "Stream collection failed", e)
             } finally {
+                _messages.update { list ->
+                    list.map { msg ->
+                        msg.copy(isLoading = false)
+                    }
+                }
                 _sendMessageState.value = SendMessageState.Idle
-                Log.d(label, "Stream collection finished")
+                Log.d(label, "Stream collection finished finally")
             }
         }
     }

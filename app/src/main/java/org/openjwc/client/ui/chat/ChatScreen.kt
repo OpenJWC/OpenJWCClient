@@ -123,7 +123,7 @@ fun ChatList(
         verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
         items(chatMessages) { message ->
-            MessageBubble(message, true)
+            MessageBubble(message)
         }
     }
 }

@@ -45,7 +45,6 @@ import org.openjwc.client.net.chat.ChatMessage
 @Composable
 fun MessageBubble(
     message: ChatMessage,
-    isSending: Boolean,
     modifier: Modifier = Modifier
 ) {
     var showMenu by remember { mutableStateOf(false) }
@@ -54,6 +53,7 @@ fun MessageBubble(
     val scope = rememberCoroutineScope()
     val context = LocalContext.current
     val isUser = message.isUser
+    val isSending = message.isLoading
 
     val containerColor = if (isUser) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surfaceVariant
     val contentColor = if (isUser) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurfaceVariant
@@ -164,11 +164,11 @@ fun TestMessageBubbleFromUser() {
     val mockChatMessage = ChatMessage(
         id = 11451,
         text = "Hello World",
-        isUser = true
+        isUser = true,
+        isLoading = true,
     )
     MessageBubble(
         mockChatMessage,
-        isSending = true
     )
 }
 
@@ -178,7 +178,8 @@ fun TestMessageBubbleFromAI() {
     val mockChatMessage = ChatMessage(
         id = 19198,
         text =  "hello",
-        isUser = false
+        isUser = false,
+        isLoading = false
     )
-    MessageBubble(mockChatMessage, true)
+    MessageBubble(mockChatMessage)
 }
