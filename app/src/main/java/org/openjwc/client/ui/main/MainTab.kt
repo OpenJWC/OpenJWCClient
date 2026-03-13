@@ -9,7 +9,7 @@ import androidx.compose.material.icons.filled.Person
 import org.openjwc.client.R
 
 sealed class MainTab(
-    @StringRes val titleRes: Int,
+    @param: StringRes val titleRes: Int,
     val icon: ImageVector
 ) {
     object Chat : MainTab(R.string.chat, Icons.AutoMirrored.Filled.Chat)

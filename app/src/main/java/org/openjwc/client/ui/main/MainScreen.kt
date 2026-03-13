@@ -6,10 +6,10 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.consumeWindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.windowsizeclass.ExperimentalMaterial3WindowSizeClassApi
 import androidx.compose.material3.windowsizeclass.WindowSizeClass
 import androidx.compose.material3.windowsizeclass.WindowWidthSizeClass
 import androidx.compose.runtime.Composable
@@ -17,31 +17,22 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.DpSize
-import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.NavController
 import org.openjwc.client.ui.chat.ChatScreen
 import org.openjwc.client.ui.me.MeScreen
 import org.openjwc.client.ui.news.NewsScreen
 import org.openjwc.client.viewmodels.MainViewModel
 
-@OptIn(ExperimentalMaterial3WindowSizeClassApi::class)
-@Preview
-@Composable
-fun TestMainScreen() {
-    MainScreen(
-        windowSizeClass = WindowSizeClass.calculateFromSize(DpSize(600.dp, 800.dp))
-    )
-}
-
 @Composable
 fun MainScreen(
     windowSizeClass: WindowSizeClass,
+    navController: NavController,
     mainViewModel: MainViewModel = viewModel()
 ) {
     MainScaffoldContent(
         windowSizeClass,
+        navController,
         mainViewModel
     )
 }
@@ -50,6 +41,7 @@ fun MainScreen(
 @Composable
 private fun MainScaffoldContent(
     windowSizeClass: WindowSizeClass,
+    navController: NavController,
     mainViewModel: MainViewModel
 ) {
     val currentTab by mainViewModel.currentTab.collectAsState()
@@ -60,6 +52,7 @@ private fun MainScaffoldContent(
         }
 
         Scaffold(
+            containerColor = MaterialTheme.colorScheme.background,
             modifier = Modifier.weight(1f),
             topBar = {
                 TopAppBar({ Text(stringResource(currentTab.titleRes)) })
@@ -71,6 +64,7 @@ private fun MainScaffoldContent(
         ) { contentPadding ->
             MainTabContent(
                 currentTab,
+                navController,
                 contentPadding,
                 windowSizeClass
             )
@@ -81,6 +75,7 @@ private fun MainScaffoldContent(
 @Composable
 private fun MainTabContent(
     currentTab: MainTab,
+    navController: NavController,
     contentPadding: PaddingValues,
     windowSizeClass: WindowSizeClass,
 ){
@@ -91,7 +86,7 @@ private fun MainTabContent(
         when (currentTab) {
             MainTab.Chat -> ChatScreen(contentPadding, windowSizeClass)
             MainTab.News -> NewsScreen(contentPadding, windowSizeClass)
-            MainTab.Me -> MeScreen(contentPadding, windowSizeClass)
+            MainTab.Me -> MeScreen(contentPadding, windowSizeClass, navController)
         }
     }
 }

@@ -6,28 +6,30 @@ import androidx.compose.material.icons.filled.Settings
 import androidx.lifecycle.ViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import org.openjwc.client.ui.general.SettingItem
-import org.openjwc.client.ui.general.SettingSection
+import org.openjwc.client.navigation.me.Routes.buildSettingsRoute
+import org.openjwc.client.settings.MenuItem
+import org.openjwc.client.settings.SettingSection
 
-
-private val MOCK_SETTING_SECTION = listOf(
-    SettingSection(
-        title = "General",
-        items = listOf(
-            SettingItem.Action(
-                icon = Icons.Default.Info,
-                label = "About",
-                onClick = {}
-            ),
-            SettingItem.Action(
-                icon = Icons.Default.Settings,
-                label = "Settings",
-                onClick = {}
+class MeViewModel : ViewModel() {
+    private val _sections = MutableStateFlow(
+        listOf(
+            SettingSection(
+                title = null,
+                items = listOf(
+                    MenuItem.Route(
+                        icon = Icons.Default.Settings,
+                        route = buildSettingsRoute(""),
+                        title = "设置",
+                    ),
+                    MenuItem.Action(
+                        icon = Icons.Default.Info,
+                        label = "关于",
+                        onClick = {
+                        }
+                    )
+                )
             ),
         )
-    ),
-)
-class MeViewModel : ViewModel() {
-    private val _sections = MutableStateFlow<List<SettingSection>>(MOCK_SETTING_SECTION)
+    )
     val sections = _sections.asStateFlow()
 }

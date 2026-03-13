@@ -19,22 +19,23 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
-import org.openjwc.client.ui.general.SettingSectionCard
+import androidx.navigation.NavController
+import org.openjwc.client.settings.Event
+import org.openjwc.client.ui.settings.MenuSectionCard
 import org.openjwc.client.viewmodels.MeViewModel
 
 @Composable
 fun MeScreen(
     contentPadding: PaddingValues,
     windowSizeClass: WindowSizeClass,
+    navController: NavController,
     viewModel: MeViewModel = viewModel()
 ) {
     val sections by viewModel.sections.collectAsStateWithLifecycle()
-
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .padding(contentPadding)
-        ,
+            .padding(contentPadding),
         contentAlignment = Alignment.TopCenter
     ) {
         LazyColumn(
@@ -51,8 +52,23 @@ fun MeScreen(
                 items = sections,
                 key = { section -> section.title ?: section.items.hashCode() }
             ) { section ->
-                SettingSectionCard(
-                    section = section
+                MenuSectionCard(
+                    section = section,
+                    onEvent = {
+                        when (it) {
+                            is Event.Route -> {
+                                navController.navigate(it.route)
+                            }
+
+                            is Event.Toggle -> {
+                                // TODO: MeScreen 里面暂时没有开关，先不急
+                            }
+
+                            is Event.Action -> {
+                                it.onAction()
+                            }
+                        }
+                    }
                 )
             }
 

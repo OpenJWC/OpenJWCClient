@@ -16,6 +16,7 @@ composeBom = "2026.02.01"
 material3 = "1.5.0-alpha15"
 material3-adaptive = "1.5.0-alpha15"
 foundationLayout = "1.10.4"
+materialKolor = "4.1.1"
 
 # 网络请求与序列化
 retrofit = "3.0.0"
@@ -27,6 +28,10 @@ markdown = "0.5.0"
 junit = "4.13.2"
 junitVersion = "1.3.0"
 espressoCore = "3.7.0"
+navigationRuntimeKtx = "2.9.7"
+navigationCompose = "2.9.7"
+animation = "1.10.4"
+material3Version = "1.4.0"
 
 [libraries]
 # Androidx 核心
@@ -48,6 +53,7 @@ androidx-material-icons-extended = { group = "androidx.compose.material", name =
 androidx-material3 = { group = "androidx.compose.material3", name = "material3", version.ref = "material3" }
 androidx-material3-window-size = { group = "androidx.compose.material3", name = "material3-window-size-class", version.ref = "material3" }
 androidx-material3-adaptive-navigation = { group = "androidx.compose.material3", name = "material3-adaptive-navigation-suite", version.ref = "material3-adaptive" }
+materialKolor = { module = "com.materialkolor:material-kolor", version.ref = "materialKolor" }
 
 # 网络与序列化 (统一使用中划线规避 InvalidUserDataException)
 retrofit-core = { group = "com.squareup.retrofit2", name = "retrofit", version.ref = "retrofit" }
@@ -65,6 +71,10 @@ androidx-junit = { group = "androidx.test.ext", name = "junit", version.ref = "j
 androidx-espresso-core = { group = "androidx.test.espresso", name = "espresso-core", version.ref = "espressoCore" }
 androidx-ui-test-manifest = { group = "androidx.compose.ui", name = "ui-test-manifest" }
 androidx-ui-test-junit4 = { group = "androidx.compose.ui", name = "ui-test-junit4" }
+androidx-navigation-runtime-ktx = { group = "androidx.navigation", name = "navigation-runtime-ktx", version.ref = "navigationRuntimeKtx" }
+androidx-navigation-compose = { group = "androidx.navigation", name = "navigation-compose", version.ref = "navigationCompose" }
+androidx-animation = { group = "androidx.compose.animation", name = "animation", version.ref = "animation" }
+material3 = { group = "androidx.compose.material3", name = "material3", version.ref = "material3Version" }
 
 [bundles]
 compose-ui = [

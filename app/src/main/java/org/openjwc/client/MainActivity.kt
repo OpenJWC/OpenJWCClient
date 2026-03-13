@@ -6,9 +6,12 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.material3.windowsizeclass.ExperimentalMaterial3WindowSizeClassApi
 import androidx.compose.material3.windowsizeclass.calculateWindowSizeClass
+import androidx.compose.runtime.collectAsState
 import androidx.core.view.WindowCompat
-import org.openjwc.client.ui.main.MainScreen
+import androidx.lifecycle.viewmodel.compose.viewModel
+import org.openjwc.client.navigation.me.NavGraph
 import org.openjwc.client.ui.theme.OpenJWCClientTheme
+import org.openjwc.client.viewmodels.MainViewModel
 
 class MainActivity : ComponentActivity() {
     @OptIn(ExperimentalMaterial3WindowSizeClassApi::class)
@@ -18,8 +21,12 @@ class MainActivity : ComponentActivity() {
         WindowCompat.setDecorFitsSystemWindows(window, false)
         setContent {
             val windowSizeClass = calculateWindowSizeClass(this)
-            OpenJWCClientTheme {
-                MainScreen(windowSizeClass)
+            val mainViewModel: MainViewModel = viewModel()
+            OpenJWCClientTheme(
+                color = mainViewModel.themeColor.collectAsState().value,
+                darkThemeStyle = mainViewModel.darkThemeStyle.collectAsState().value
+            ) {
+                NavGraph(windowSizeClass)
             }
         }
     }
