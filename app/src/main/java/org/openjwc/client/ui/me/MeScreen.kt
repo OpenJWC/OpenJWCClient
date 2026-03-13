@@ -20,8 +20,9 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
+import org.openjwc.client.navigation.me.Routes.buildSettingsRoute
 import org.openjwc.client.settings.Event
-import org.openjwc.client.ui.settings.MenuSectionCard
+import org.openjwc.client.ui.me.settings.MenuSectionCard
 import org.openjwc.client.viewmodels.MeViewModel
 
 @Composable
@@ -57,7 +58,7 @@ fun MeScreen(
                     onEvent = {
                         when (it) {
                             is Event.Route -> {
-                                navController.navigate(it.route)
+                                navController.navigate(buildSettingsRoute(it.route))
                             }
 
                             is Event.Toggle -> {

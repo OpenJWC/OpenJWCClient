@@ -2,36 +2,29 @@
 # Java 版本
 java = "11"
 
-# 构建工具与 Kotlin
 agp = "8.12.3"
 kotlin = "2.3.10"
 
-# 核心与生命周期
-coreKtx = "1.17.0"
+coreKtx = "1.18.0"
 lifecycle = "2.10.0"
-activityCompose = "1.12.4"
+activityCompose = "1.13.0"
 
-# Compose 与 Material 3 (Expressive API 需要 1.4.0-alpha+)
-composeBom = "2026.02.01"
+composeBom = "2026.03.00"
 material3 = "1.5.0-alpha15"
 material3-adaptive = "1.5.0-alpha15"
-foundationLayout = "1.10.4"
+foundationLayout = "1.10.5"
 materialKolor = "4.1.1"
 
-# 网络请求与序列化
 retrofit = "3.0.0"
 serialization-json = "1.10.0"
 okhttp = "5.3.2"
 
-# 其他库
 markdown = "0.5.0"
 junit = "4.13.2"
 junitVersion = "1.3.0"
 espressoCore = "3.7.0"
-navigationRuntimeKtx = "2.9.7"
 navigationCompose = "2.9.7"
-animation = "1.10.4"
-material3Version = "1.4.0"
+animation = "1.10.5"
 
 [libraries]
 # Androidx 核心
@@ -71,27 +64,8 @@ androidx-junit = { group = "androidx.test.ext", name = "junit", version.ref = "j
 androidx-espresso-core = { group = "androidx.test.espresso", name = "espresso-core", version.ref = "espressoCore" }
 androidx-ui-test-manifest = { group = "androidx.compose.ui", name = "ui-test-manifest" }
 androidx-ui-test-junit4 = { group = "androidx.compose.ui", name = "ui-test-junit4" }
-androidx-navigation-runtime-ktx = { group = "androidx.navigation", name = "navigation-runtime-ktx", version.ref = "navigationRuntimeKtx" }
 androidx-navigation-compose = { group = "androidx.navigation", name = "navigation-compose", version.ref = "navigationCompose" }
 androidx-animation = { group = "androidx.compose.animation", name = "animation", version.ref = "animation" }
-material3 = { group = "androidx.compose.material3", name = "material3", version.ref = "material3Version" }
-
-[bundles]
-compose-ui = [
-    "androidx-ui",
-    "androidx-ui-graphics",
-    "androidx-ui-tooling-preview",
-    "androidx-material3",
-    "androidx-material-icons-extended",
-    "androidx-foundation-layout"
-]
-network = [
-    "retrofit-core",
-    "retrofit-converter-serialization",
-    "okhttp-core",
-    "okhttp-logging",
-    "kotlinx-serialization-json"
-]
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

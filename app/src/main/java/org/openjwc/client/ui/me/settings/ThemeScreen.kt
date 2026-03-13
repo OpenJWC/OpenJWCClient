@@ -1,4 +1,4 @@
-package org.openjwc.client.ui.settings
+package org.openjwc.client.ui.me.settings
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -17,8 +17,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.nestedscroll.nestedScroll
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.navigation.NavController
 import org.openjwc.client.ui.theme.ColorType
 import org.openjwc.client.ui.theme.DarkThemeStyle
 import org.openjwc.client.ui.theme.SeedDefault
@@ -31,7 +33,7 @@ fun TestThemeScreen() {
         onConfirm = {
             _, _ ->
         },
-        onBack = {},
+        navController = NavController(LocalContext.current),
         colorPresets = seedColors,
         initialColorType = ColorType.Custom(SeedDefault),
         initialThemeStyle = DarkThemeStyle.Auto
@@ -40,8 +42,8 @@ fun TestThemeScreen() {
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ThemeScreen(
+    navController: NavController,
     onConfirm: (ColorType, DarkThemeStyle) -> Unit,
-    onBack: () -> Unit,
     colorPresets: List<Color>,
     initialColorType: ColorType = ColorType.Dynamic(),
     initialThemeStyle: DarkThemeStyle = DarkThemeStyle.Auto
@@ -59,8 +61,10 @@ fun ThemeScreen(
             LargeTopAppBar(
                 title = { Text("个性化主题") },
                 navigationIcon = {
-                    IconButton(onClick = onBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "返回")
+                    if (navController.previousBackStackEntry != null) {
+                        IconButton(onClick = { navController.popBackStack() }) {
+                            Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "返回")
+                        }
                     }
                 },
                 actions = {

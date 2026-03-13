@@ -1,4 +1,4 @@
-package org.openjwc.client.ui.settings
+package org.openjwc.client.ui.me.settings
 
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row

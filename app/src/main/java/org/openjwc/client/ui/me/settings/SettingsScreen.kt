@@ -1,4 +1,4 @@
-package org.openjwc.client.ui.settings
+package org.openjwc.client.ui.me.settings
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.PaddingValues

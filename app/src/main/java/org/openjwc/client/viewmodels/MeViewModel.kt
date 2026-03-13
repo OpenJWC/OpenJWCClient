@@ -6,7 +6,6 @@ import androidx.compose.material.icons.filled.Settings
 import androidx.lifecycle.ViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import org.openjwc.client.navigation.me.Routes.buildSettingsRoute
 import org.openjwc.client.settings.MenuItem
 import org.openjwc.client.settings.SettingSection
 
@@ -18,14 +17,13 @@ class MeViewModel : ViewModel() {
                 items = listOf(
                     MenuItem.Route(
                         icon = Icons.Default.Settings,
-                        route = buildSettingsRoute(""),
+                        route = "",
                         title = "设置",
                     ),
-                    MenuItem.Action(
+                    MenuItem.Route(
                         icon = Icons.Default.Info,
-                        label = "关于",
-                        onClick = {
-                        }
+                        title = "关于",
+                        route = "about"
                     )
                 )
             ),

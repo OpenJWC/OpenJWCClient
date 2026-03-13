@@ -70,7 +70,7 @@ dependencies {
     implementation(libs.androidx.material3.window.size)
     implementation(libs.androidx.material3.adaptive.navigation)
     implementation(libs.materialKolor)
-    implementation("androidx.navigation:navigation-compose:2.7.0")
+    implementation(libs.androidx.navigation.compose)
 
     // 架构与功能
     implementation(libs.androidx.lifecycle.viewmodel.compose)
@@ -84,7 +84,6 @@ dependencies {
     implementation(libs.okhttp.logging)
     implementation(libs.androidx.navigation.compose)
     implementation(libs.androidx.animation)
-    implementation(libs.material3)
 
     // 测试相关
     testImplementation(libs.junit)
