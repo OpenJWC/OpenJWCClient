@@ -8,8 +8,9 @@ import androidx.compose.material3.dynamicLightColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.platform.LocalContext
 import com.materialkolor.rememberDynamicColorScheme
+import kotlinx.serialization.Serializable
 
-
+@Serializable
 enum class DarkThemeStyle {
     Auto,
     Light,

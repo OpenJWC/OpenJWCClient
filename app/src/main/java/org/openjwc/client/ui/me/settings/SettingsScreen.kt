@@ -21,9 +21,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
-import org.openjwc.client.navigation.me.Routes.buildSettingsRoute
-import org.openjwc.client.settings.Event
-import org.openjwc.client.settings.Menu
+import org.openjwc.client.navigation.Routes.buildSettingsRoute
+import org.openjwc.client.data.settings.Event
+import org.openjwc.client.data.settings.Menu
 import org.openjwc.client.viewmodels.SettingsViewModel
 
 
@@ -32,7 +32,7 @@ import org.openjwc.client.viewmodels.SettingsViewModel
 fun SettingsScreen(
     navController: NavHostController,
     route: String, // 这个指向设置 viewModel 里面菜单的路径
-    viewModel: SettingsViewModel = viewModel()
+    viewModel: SettingsViewModel
     // 这个 viewModel 用来监听里边 uiState 然后弹框，以及读取菜单用
 ) {
     val menu = viewModel.menus.collectAsState().value.find { it.route == route } ?: Menu (

@@ -1,4 +1,4 @@
-package org.openjwc.client.ui.me.settings
+package org.openjwc.client.ui.me.settings.general
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -30,7 +30,7 @@ import org.openjwc.client.ui.theme.seedColors
 @Composable
 fun TestThemeScreen() {
     ThemeScreen(
-        onConfirm = {
+        onSelect = {
             _, _ ->
         },
         navController = NavController(LocalContext.current),
@@ -43,14 +43,14 @@ fun TestThemeScreen() {
 @Composable
 fun ThemeScreen(
     navController: NavController,
-    onConfirm: (ColorType, DarkThemeStyle) -> Unit,
+    onSelect: (ColorType, DarkThemeStyle) -> Unit,
     colorPresets: List<Color>,
-    initialColorType: ColorType = ColorType.Dynamic(),
+    initialColorType: ColorType = ColorType.Dynamic,
     initialThemeStyle: DarkThemeStyle = DarkThemeStyle.Auto
 ) {
     // 状态管理
-    var selectedColorType by remember { mutableStateOf(initialColorType) }
-    var darkThemeStyle by remember { mutableStateOf(initialThemeStyle) }
+    var selectedColorType by remember{ mutableStateOf(initialColorType) }
+    var darkThemeStyle by remember{ mutableStateOf(initialThemeStyle) }
 
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
 
@@ -67,11 +67,11 @@ fun ThemeScreen(
                         }
                     }
                 },
-                actions = {
+                /*actions = {
                     TextButton(onClick = { onConfirm(selectedColorType, darkThemeStyle) }) {
                         Text("保存")
                     }
-                },
+                }*/
                 scrollBehavior = scrollBehavior
             )
         }
@@ -90,7 +90,10 @@ fun ThemeScreen(
 
             ThemeStyleSelector(
                 selectedStyle = darkThemeStyle,
-                onStyleSelected = { darkThemeStyle = it }
+                onStyleSelected = {
+                    darkThemeStyle = it
+                    onSelect(selectedColorType, darkThemeStyle)
+                }
             )
 
             HorizontalDivider(modifier = Modifier.padding(vertical = 16.dp, horizontal = 24.dp))
@@ -108,7 +111,8 @@ fun ThemeScreen(
                     Switch(
                         checked = selectedColorType is ColorType.Dynamic,
                         onCheckedChange = { isChecked ->
-                            selectedColorType = if (isChecked) ColorType.Dynamic() else ColorType.Custom(colorPresets.first())
+                            selectedColorType = if (isChecked) ColorType.Dynamic else ColorType.Custom(colorPresets.first())
+                            onSelect(selectedColorType, darkThemeStyle)
                         }
                     )
                 },
@@ -134,7 +138,9 @@ fun ThemeScreen(
                         ColorItem(
                             color = color,
                             isSelected = (selectedColorType as? ColorType.Custom)?.color == color,
-                            onClick = { selectedColorType = ColorType.Custom(color) }
+                            onClick = { selectedColorType = ColorType.Custom(color)
+                                onSelect(selectedColorType, darkThemeStyle)
+                            }
                         )
                     }
                 }

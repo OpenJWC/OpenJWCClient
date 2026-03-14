@@ -6,8 +6,8 @@ import androidx.compose.material.icons.filled.Settings
 import androidx.lifecycle.ViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import org.openjwc.client.settings.MenuItem
-import org.openjwc.client.settings.SettingSection
+import org.openjwc.client.data.settings.MenuItem
+import org.openjwc.client.data.settings.SettingSection
 
 class MeViewModel : ViewModel() {
     private val _sections = MutableStateFlow(

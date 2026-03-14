@@ -3,7 +3,7 @@ package org.openjwc.client.ui.theme
 import androidx.compose.ui.graphics.Color
 
 sealed class ColorType {
-    class Dynamic : ColorType()
+    object Dynamic : ColorType()
     class Custom(val color: Color) : ColorType()
 }
 

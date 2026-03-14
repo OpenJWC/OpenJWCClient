@@ -1,4 +1,4 @@
-package org.openjwc.client.navigation.me
+package org.openjwc.client.navigation
 
 object Routes {
     const val MAIN = "main"

@@ -1,87 +1,76 @@
 package org.openjwc.client.viewmodels
 
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.Palette
-import androidx.compose.material.icons.filled.Settings
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
-import org.openjwc.client.settings.Menu
-import org.openjwc.client.settings.MenuItem
-import org.openjwc.client.settings.SettingSection
-import org.openjwc.client.settings.ToggleID
-import kotlin.collections.mapOf
+import kotlinx.coroutines.launch
+import org.openjwc.client.data.repository.SettingsRepository
+import org.openjwc.client.data.settings.MenuItem
+import org.openjwc.client.data.settings.ToggleID
+import org.openjwc.client.data.settings.UserSettings
+import org.openjwc.client.data.settings.menuTemplates
 
 data class UiState(
     val showXXXDialog: Boolean = false
     // TODO: 如果有弹窗，就写在这里
 )
 
-class SettingsViewModel : ViewModel() {
+class SettingsViewModel(
+    private val repository: SettingsRepository
+) : ViewModel() {
     private val _uiState = MutableStateFlow(UiState())
     val uiState = _uiState.asStateFlow()
     // 这里的 uiState 交给 SettingsScreen 去监听，拿个 LaunchedEffect 去弹框吧
 
-    // TODO: 设置里的每一个 Toggle 都得让 ViewModel 来保存状态。
+    val settings: StateFlow<UserSettings> = repository.userSettings
+        .map { it ?: UserSettings() }
+        .stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5000),
+            initialValue = UserSettings()
+        )
 
+    val host: StateFlow<String> = repository.userSettings
+        .map { (it ?: UserSettings()).host }
+        .stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5000),
+            initialValue = UserSettings().host
+        )
+
+    val port: StateFlow<Int> = repository.userSettings
+        .map { (it ?: UserSettings()).port }
+        .stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5000),
+            initialValue = UserSettings().port
+        )
+    fun updateHost(host: String) {
+        viewModelScope.launch {
+            repository.updateHost(host)
+        }
+    }
+
+    fun updatePort(port: Int) {
+        viewModelScope.launch {
+            repository.updatePort(port)
+        }
+    }
+
+    // TODO: 设置里的每一个 Toggle 都得让 ViewModel 来保存状态。
     private val _toggleState = MutableStateFlow(
         mapOf(
             ToggleID.TEST_TOGGLE to false
         )
     )
-    private val menuTemplates =
-        listOf(
-            Menu(
-                route = "", title = "设置", sections = listOf(
-                    SettingSection(
-                        title = "通用", items = listOf(
-                            MenuItem.Route(
-                                icon = Icons.Default.Palette,
-                                route = "theme",
-                                title = "主题",
-                            )
-                        )
-                    ), SettingSection(
-                        title = "测试", items = listOf(
-                            MenuItem.Route(
-                                icon = Icons.AutoMirrored.Filled.ArrowBack,
-                                route = "test",
-                                title = "测试菜单",
-                            )
-                        )
-                    )
-                )
-            ),
 
-            Menu(
-                route = "test",
-                title = "测试菜单",
-                sections = listOf(
-                    SettingSection(
-                        title = "测试类别", items = listOf(
-                            MenuItem.Action(
-                                icon = Icons.Filled.Settings,
-                                label = "测试动作",
-                                trailing = "测试尾部",
-                                onClick = {}
-                            ),
-                            MenuItem.Toggle(
-                                id = ToggleID.TEST_TOGGLE,
-                                icon = Icons.Filled.Settings,
-                                label = "测试开关",
-                                isChecked = false,
-                            )
-                        )
-                    )
-                )
-            )
-        )
 
     val menus = _toggleState.map { states ->
         menuTemplates.map { menu ->
@@ -111,5 +100,16 @@ class SettingsViewModel : ViewModel() {
             }
         }
     }
+}
 
+class SettingsViewModelFactory(
+    private val settingsRepository: SettingsRepository
+) : ViewModelProvider.Factory {
+    override fun <T : ViewModel> create(modelClass: Class<T>): T {
+        if (modelClass.isAssignableFrom(SettingsViewModel::class.java)) {
+            @Suppress("UNCHECKED_CAST")
+            return SettingsViewModel(settingsRepository) as T
+        }
+        throw IllegalArgumentException("Unknown ViewModel class")
+    }
 }

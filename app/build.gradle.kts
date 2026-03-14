@@ -3,6 +3,7 @@ plugins {
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.kotlin.serialization)
+    alias(libs.plugins.ksp)
 }
 
 android {
@@ -52,6 +53,7 @@ kotlin {
 }
 
 dependencies {
+    ksp(libs.androidx.room.compiler)
     // 基础库
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
@@ -84,6 +86,8 @@ dependencies {
     implementation(libs.okhttp.logging)
     implementation(libs.androidx.navigation.compose)
     implementation(libs.androidx.animation)
+    implementation(libs.androidx.room.common.jvm)
+    implementation(libs.androidx.room.ktx)
 
     // 测试相关
     testImplementation(libs.junit)

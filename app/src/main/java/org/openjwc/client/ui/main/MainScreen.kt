@@ -17,23 +17,25 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
-import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import org.openjwc.client.ui.chat.ChatScreen
 import org.openjwc.client.ui.me.MeScreen
 import org.openjwc.client.ui.news.NewsScreen
+import org.openjwc.client.viewmodels.ChatViewModel
 import org.openjwc.client.viewmodels.MainViewModel
 
 @Composable
 fun MainScreen(
     windowSizeClass: WindowSizeClass,
     navController: NavController,
-    mainViewModel: MainViewModel = viewModel()
+    mainViewModel: MainViewModel,
+    chatViewModel: ChatViewModel
 ) {
     MainScaffoldContent(
         windowSizeClass,
         navController,
-        mainViewModel
+        mainViewModel,
+        chatViewModel
     )
 }
 
@@ -42,7 +44,8 @@ fun MainScreen(
 private fun MainScaffoldContent(
     windowSizeClass: WindowSizeClass,
     navController: NavController,
-    mainViewModel: MainViewModel
+    mainViewModel: MainViewModel,
+    chatViewModel: ChatViewModel
 ) {
     val currentTab by mainViewModel.currentTab.collectAsState()
     val useNavRail = windowSizeClass.widthSizeClass != WindowWidthSizeClass.Compact
@@ -63,10 +66,11 @@ private fun MainScaffoldContent(
             }
         ) { contentPadding ->
             MainTabContent(
+                chatViewModel,
                 currentTab,
                 navController,
                 contentPadding,
-                windowSizeClass
+                windowSizeClass,
             )
         }
     }
@@ -74,6 +78,7 @@ private fun MainScaffoldContent(
 
 @Composable
 private fun MainTabContent(
+    chatViewModel: ChatViewModel,
     currentTab: MainTab,
     navController: NavController,
     contentPadding: PaddingValues,
@@ -84,7 +89,7 @@ private fun MainTabContent(
         .consumeWindowInsets(contentPadding)
     ) {
         when (currentTab) {
-            MainTab.Chat -> ChatScreen(contentPadding, windowSizeClass)
+            MainTab.Chat -> ChatScreen(contentPadding, windowSizeClass, chatViewModel)
             MainTab.News -> NewsScreen(contentPadding, windowSizeClass)
             MainTab.Me -> MeScreen(contentPadding, windowSizeClass, navController)
         }

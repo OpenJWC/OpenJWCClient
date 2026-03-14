@@ -1,4 +1,4 @@
-package org.openjwc.client.navigation.me
+package org.openjwc.client.navigation
 
 import android.util.Log
 import androidx.compose.animation.core.FastOutSlowInEasing
@@ -11,29 +11,32 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.windowsizeclass.WindowSizeClass
 import androidx.compose.runtime.Composable
-import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
-import org.openjwc.client.navigation.me.Routes.SETTINGS_PATTERN
-import org.openjwc.client.ui.me.settings.ThemeScreen
+import org.openjwc.client.navigation.Routes.SETTINGS_PATTERN
 import org.openjwc.client.ui.main.MainScreen
-import org.openjwc.client.ui.me.settings.SettingsScreen
-import org.openjwc.client.ui.theme.seedColors
-import org.openjwc.client.viewmodels.MainViewModel
-import androidx.compose.runtime.collectAsState
 import org.openjwc.client.ui.me.AboutScreen
+import org.openjwc.client.ui.me.settings.SettingsScreen
+import org.openjwc.client.ui.me.settings.general.HostScreen
+import org.openjwc.client.ui.me.settings.general.ThemeScreen
+import org.openjwc.client.ui.theme.seedColors
+import org.openjwc.client.viewmodels.ChatViewModel
+import org.openjwc.client.viewmodels.MainViewModel
 import org.openjwc.client.viewmodels.SettingsViewModel
 
 private const val LABEL = "MeNavGraph"
 
 @Composable
 fun NavGraph(
-    windowSizeClass: WindowSizeClass
+    windowSizeClass: WindowSizeClass,
+    mainViewModel: MainViewModel,
+    settingsViewModel: SettingsViewModel,
+    chatViewModel: ChatViewModel
 ) {
-    val mainViewModel: MainViewModel = viewModel()
-    val settingsViewModel: SettingsViewModel = viewModel()
     val navController = rememberNavController()
     Surface(
         color = MaterialTheme.colorScheme.background
@@ -73,7 +76,9 @@ fun NavGraph(
             composable(Routes.MAIN) {
                 MainScreen(
                     windowSizeClass,
-                    navController = navController
+                    navController = navController,
+                    mainViewModel,
+                    chatViewModel
                 )
             }
 
@@ -84,25 +89,44 @@ fun NavGraph(
                     defaultValue = "default_menu"
                 })
             ) { backStackEntry ->
-                val route = backStackEntry.arguments?.getString("route") ?: return@composable // 找不到 route 就空白吧
+                val route = backStackEntry.arguments?.getString("route")
+                    ?: return@composable // 找不到 route 就空白吧
                 Log.d(LABEL, "route: $route")
-                when (route) { /** 目前的打算是把所有非主屏幕的 Route 都归结为 settings/{} */
+                when (route) {
+                    /** 目前的打算是把所有非主屏幕的 Route 都归结为 settings/{} */
                     // 这个地方我先让所有屏幕都拿一个 navController，但是可能在根部操作更规范？
                     "about" -> {
                         AboutScreen(navController)
                     }
-                    "theme" ->
-                        ThemeScreen(
+                    "host" -> {
+                        val currentHost by settingsViewModel.host.collectAsState()
+                        val currentPort by settingsViewModel.port.collectAsState()
+                        HostScreen(
                             navController = navController,
-                            onConfirm = { color, darkTheme ->
-                                mainViewModel.updateThemeColor(color)
-                                mainViewModel.updateDarkThemeStyle(darkTheme)
+                            onConfirm = { host, port ->
+                                settingsViewModel.updateHost(host)
+                                settingsViewModel.updatePort(port)
                                 navController.popBackStack()
                             },
-                            colorPresets = seedColors,
-                            initialColorType = mainViewModel.themeColor.collectAsState().value,
-                            initialThemeStyle = mainViewModel.darkThemeStyle.collectAsState().value
+                            initialHost = currentHost,
+                            initialPort = currentPort
                         )
+                    }
+                    "theme" -> {
+                        val currentColor by mainViewModel.themeColor.collectAsState()
+                        val currentStyle by mainViewModel.darkThemeStyle.collectAsState()
+
+                        ThemeScreen(
+                            navController = navController,
+                            onSelect = { color, darkTheme ->
+                                mainViewModel.updateThemeColor(color)
+                                mainViewModel.updateDarkThemeStyle(darkTheme)
+                            },
+                            colorPresets = seedColors,
+                            initialColorType = currentColor,
+                            initialThemeStyle = currentStyle
+                        )
+                    }
 
                     else -> {
                         SettingsScreen(navController, route, settingsViewModel)

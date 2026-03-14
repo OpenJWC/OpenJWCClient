@@ -26,10 +26,10 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import org.openjwc.client.settings.Event
-import org.openjwc.client.settings.MenuItem
-import org.openjwc.client.settings.SettingSection
-import org.openjwc.client.settings.ToggleID
+import org.openjwc.client.data.settings.Event
+import org.openjwc.client.data.settings.MenuItem
+import org.openjwc.client.data.settings.SettingSection
+import org.openjwc.client.data.settings.ToggleID
 
 @Composable
 fun MenuListItem(
@@ -58,6 +58,14 @@ fun MenuListItem(
                         style = MaterialTheme.typography.bodyLarge,
                         modifier = Modifier.weight(1f)
                     )
+                    if (item.trailing != null) {
+                        Text(
+                            text = item.trailing,
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.outline,
+                            modifier = Modifier.padding(horizontal = 8.dp)
+                        )
+                    }
                     // Menu 通常固定显示向右箭头
                     Icon(
                         imageVector = Icons.Default.ChevronRight,

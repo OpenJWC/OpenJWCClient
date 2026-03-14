@@ -31,24 +31,12 @@ import org.openjwc.client.viewmodels.ChatEvent
 import org.openjwc.client.viewmodels.ChatViewModel
 import org.openjwc.client.viewmodels.SendMessageState
 
-
-@OptIn(ExperimentalMaterial3WindowSizeClassApi::class)
-@Preview
-@Composable
-fun TestChatScreen() {
-    ChatScreen(
-        contentPadding = PaddingValues(0.dp),
-        windowSizeClass = WindowSizeClass.calculateFromSize(DpSize(600.dp, 800.dp))
-    )
-}
-
-
 @Composable
 fun ChatScreen(
     contentPadding: PaddingValues,
     windowSizeClass: WindowSizeClass,
     // TODO: windowSizeClass 还没用到，即将在支持多会话之后用来区分手机和平板左侧的列表形式
-    viewModel: ChatViewModel = viewModel()
+    viewModel: ChatViewModel
 ) {
     val context = LocalContext.current
     val listState = rememberLazyListState()
