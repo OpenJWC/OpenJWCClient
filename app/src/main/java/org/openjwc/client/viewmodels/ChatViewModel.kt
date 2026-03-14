@@ -71,6 +71,9 @@ class ChatViewModel(
         }
     }
 
+    fun toNewChat() {
+        _currentSessionMetadata.value = null
+    }
     fun sendMessage(messageContent: String) {
         if (sendMessageState.value is SendMessageState.Sending || messageContent.isBlank()) return
 

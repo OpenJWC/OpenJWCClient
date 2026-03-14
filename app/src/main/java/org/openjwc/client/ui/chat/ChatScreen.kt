@@ -17,6 +17,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ChatBubbleOutline
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.MoreVert
@@ -115,6 +116,10 @@ fun ChatScreen(
                     viewModel.loadSession(id)
                     scope.launch { drawerState.close() }
                 },
+                onNewChat = {
+                    viewModel.toNewChat()
+                    scope.launch { drawerState.close() }
+                },
                 onDeleteSession = { id -> viewModel.deleteSession(id) }
             )
         }
@@ -141,6 +146,7 @@ fun ChatScreen(
 fun ChatHistoryList(
     sessions: List<ChatSession>,
     currentSessionId: Long?,
+    onNewChat: () -> Unit,
     onSessionClick: (Long) -> Unit,
     onDeleteSession: (Long) -> Unit,
     modifier: Modifier = Modifier
@@ -151,11 +157,14 @@ fun ChatHistoryList(
         verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
         item {
-            Text(
-                "历史会话",
-                style = MaterialTheme.typography.titleSmall,
-                modifier = Modifier.padding(bottom = 8.dp)
+            NavigationDrawerItem(
+                label = { Text("新建会话") },
+                selected = currentSessionId == null,
+                onClick = onNewChat,
+                icon = { Icon(Icons.Default.Add, null) },
+                modifier = Modifier.padding(horizontal = 12.dp)
             )
+
         }
         items(
             items = sessions,
