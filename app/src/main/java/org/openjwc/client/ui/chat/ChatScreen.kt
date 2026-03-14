@@ -11,7 +11,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.items
@@ -19,26 +18,28 @@ import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ChatBubbleOutline
-import androidx.compose.material3.DismissibleDrawerSheet
-import androidx.compose.material3.DismissibleNavigationDrawer
+import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material3.DrawerState
-import androidx.compose.material3.DrawerValue
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalDrawerSheet
 import androidx.compose.material3.ModalNavigationDrawer
 import androidx.compose.material3.NavigationDrawerItem
-import androidx.compose.material3.PermanentDrawerSheet
-import androidx.compose.material3.PermanentNavigationDrawer
 import androidx.compose.material3.Text
-import androidx.compose.material3.rememberDrawerState
 import androidx.compose.material3.windowsizeclass.WindowSizeClass
 import androidx.compose.material3.windowsizeclass.WindowWidthSizeClass
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextOverflow
@@ -113,7 +114,8 @@ fun ChatScreen(
                 onSessionClick = { id ->
                     viewModel.loadSession(id)
                     scope.launch { drawerState.close() }
-                }
+                },
+                onDeleteSession = { id -> viewModel.deleteSession(id) }
             )
         }
     }
@@ -140,6 +142,7 @@ fun ChatHistoryList(
     sessions: List<ChatSession>,
     currentSessionId: Long?,
     onSessionClick: (Long) -> Unit,
+    onDeleteSession: (Long) -> Unit,
     modifier: Modifier = Modifier
 ) {
     LazyColumn(
@@ -154,21 +157,83 @@ fun ChatHistoryList(
                 modifier = Modifier.padding(bottom = 8.dp)
             )
         }
-        items(sessions) { session ->
-            val isSelected = session.metadata.sessionId == currentSessionId
-            NavigationDrawerItem(
-                label = {
-                    Text(
-                        text = session.metadata.title.ifBlank { "无标题会话" },
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis
-                    )
-                },
-                selected = isSelected,
-                onClick = { onSessionClick(session.metadata.sessionId) },
-                icon = { Icon(Icons.Default.ChatBubbleOutline, null) },
-                modifier = Modifier.padding(horizontal = 12.dp)
+        items(
+            items = sessions,
+            key = { it.metadata.sessionId }
+        ) { session ->
+            ChatHistoryItem(
+                session = session,
+                isSelected = session.metadata.sessionId == currentSessionId,
+                onSessionClick = onSessionClick,
+                onDeleteSession = onDeleteSession
             )
+        }
+    }
+}
+
+@Composable
+fun ChatHistoryItem(
+    session: ChatSession,
+    isSelected: Boolean,
+    onSessionClick: (Long) -> Unit,
+    onDeleteSession: (Long) -> Unit
+) {
+    var showMenu by remember { mutableStateOf(false) }
+
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 12.dp),
+        verticalAlignment = androidx.compose.ui.Alignment.CenterVertically
+    ) {
+
+        NavigationDrawerItem(
+            label = {
+                Text(
+                    text = session.metadata.title.ifBlank { "无标题会话" },
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+            },
+            selected = isSelected,
+            onClick = { onSessionClick(session.metadata.sessionId) },
+            icon = { Icon(Icons.Default.ChatBubbleOutline, null) },
+            modifier = Modifier.weight(1f)
+        )
+
+        if (isSelected) {
+            Box {
+                IconButton(
+                    onClick = { showMenu = true }
+                ) {
+                    Icon(Icons.Default.MoreVert, contentDescription = "更多")
+                }
+
+                DropdownMenu(
+                    expanded = showMenu,
+                    onDismissRequest = { showMenu = false }
+                ) {
+                    DropdownMenuItem(
+                        text = {
+                            Text(
+                                "删除会话",
+                                color = MaterialTheme.colorScheme.error
+                            )
+                        },
+                        leadingIcon = {
+                            Icon(
+                                Icons.Default.Delete,
+                                contentDescription = null,
+                                tint = MaterialTheme.colorScheme.error
+                            )
+                        },
+                        onClick = {
+                            onDeleteSession(session.metadata.sessionId)
+                            showMenu = false
+                        }
+                    )
+                }
+            }
         }
     }
 }

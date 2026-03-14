@@ -124,6 +124,15 @@ class ChatViewModel(
         aiMsgId?.let { chatRepository.deleteMessageById(it) }
         _eventChannel.send(ChatEvent.ShowToast(errorMsg))
     }
+
+    fun deleteSession(sessionId: Long) {
+        viewModelScope.launch {
+            chatRepository.deleteSession(sessionId)
+            if (_currentSessionMetadata.value?.sessionId == sessionId) {
+                _currentSessionMetadata.value = null
+            }
+        }
+    }
 }
 
 class ChatViewModelFactory(
