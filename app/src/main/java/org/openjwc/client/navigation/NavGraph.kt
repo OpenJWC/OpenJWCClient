@@ -29,7 +29,7 @@ import org.openjwc.client.viewmodels.ChatViewModel
 import org.openjwc.client.viewmodels.MainViewModel
 import org.openjwc.client.viewmodels.SettingsViewModel
 
-private const val LABEL = "MeNavGraph"
+private const val LABEL = "NavGraph"
 
 @Composable
 fun NavGraph(
@@ -120,7 +120,8 @@ fun NavGraph(
                             onConfirm = { key ->
                                 settingsViewModel.updateAuthKey(key)
                                 navController.popBackStack() },
-                            onBack = { navController.popBackStack() }
+                            onBack = { navController.popBackStack() },
+                            deviceId = currentSettings.uuidString
                         )
                     }
                     "theme" -> {

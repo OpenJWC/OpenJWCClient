@@ -12,7 +12,6 @@ import java.util.UUID
 
 class SettingsRepository(
     private val settingsDao: SettingsDao,
-
 ) {
     private val settingsMutex = Mutex()
     val userSettings: Flow<UserSettings?> = settingsDao.getSettings()

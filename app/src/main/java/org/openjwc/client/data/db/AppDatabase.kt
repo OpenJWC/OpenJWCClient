@@ -5,17 +5,25 @@ import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
 import androidx.room.TypeConverters
+import org.openjwc.client.data.dao.ChatDao
 import org.openjwc.client.data.dao.SettingsDao
 import org.openjwc.client.data.settings.UserSettings
+import org.openjwc.client.net.chat.ChatMessage
+import org.openjwc.client.net.chat.ChatMetadata
 
 @Database(
-    entities = [UserSettings::class],
+    entities = [
+        UserSettings::class,
+        ChatMetadata::class,
+        ChatMessage::class,
+    ],
     version = 1,
     exportSchema = false
 )
 @TypeConverters(Converters::class)
 abstract class AppDatabase : RoomDatabase() {
     abstract fun settingsDao(): SettingsDao
+    abstract fun chatDao(): ChatDao
 
     // 确保只有一个数据库实例
     companion object {

@@ -9,15 +9,18 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.stateIn
-import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import org.openjwc.client.data.repository.ChatRepository
 import org.openjwc.client.data.repository.SettingsRepository
 import org.openjwc.client.data.settings.UserSettings
 import org.openjwc.client.net.chat.ChatClient
 import org.openjwc.client.net.chat.ChatMessage
+import org.openjwc.client.net.chat.ChatSession
+import org.openjwc.client.net.chat.Role
 import org.openjwc.client.net.chat.sendMessageStream
 import org.openjwc.client.net.models.ChatHistory
 import org.openjwc.client.net.models.ChatRequestBody
@@ -34,119 +37,108 @@ sealed class ChatEvent {
 }
 
 class ChatViewModel(
-    private val repository: SettingsRepository
+    private val settingsRepository: SettingsRepository,
+    private val chatRepository: ChatRepository
 ) : ViewModel() {
-    private val label = "ChatViewModel"
-    private val _messages = MutableStateFlow<List<ChatMessage>>(emptyList())
-    val messages: StateFlow<List<ChatMessage>> = _messages.asStateFlow()
 
-    // 控制发送按钮是否可用
+    private val _currentSessionId = MutableStateFlow<Long?>(null)
+    val currentSessionId = _currentSessionId.asStateFlow()
+
     private val _sendMessageState = MutableStateFlow<SendMessageState>(SendMessageState.Idle)
     val sendMessageState: StateFlow<SendMessageState> = _sendMessageState.asStateFlow()
 
     private val _eventChannel = Channel<ChatEvent>()
     val events = _eventChannel.receiveAsFlow()
 
-    val settings: StateFlow<UserSettings> = repository.userSettings
-        .map { it ?: UserSettings() }
+    // 💡 唯一的数据源：自动响应 ID 变化切换监听
+    @OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)
+    val messages: StateFlow<List<ChatMessage>> = _currentSessionId
+        .flatMapLatest { id ->
+            if (id == null) flowOf(emptyList())
+            else chatRepository.getMessagesBySessionId(id)
+        }
         .stateIn(
             scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(5000),
-            initialValue = UserSettings()
+            initialValue = emptyList()
         )
 
-    fun sendMessage(message: String) {
-        if (sendMessageState.value is SendMessageState.Sending
-            || message.isBlank()) return
+    val allSessions: StateFlow<List<ChatSession>> = chatRepository.getChatSessions()
+        .stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5000),
+            initialValue = emptyList()
+        )
 
-        Log.d(label, "Sending message: $message")
+    fun loadSession(sessionId: Long) {
+        _currentSessionId.value = sessionId
+    }
+
+    fun sendMessage(messageContent: String) {
+        if (sendMessageState.value is SendMessageState.Sending || messageContent.isBlank()) return
+
         _sendMessageState.value = SendMessageState.Sending
 
-        val userMsgId = System.currentTimeMillis()
-        val botMsgId = userMsgId + 1
-        val newUserMessage = ChatMessage(id = userMsgId, text = message, isUser = true, isLoading = false)
-
-        _messages.update { it + newUserMessage }
-
         viewModelScope.launch {
-            val currentSettings = repository.getSettingsSnapshot() ?: UserSettings()
-            val deviceId = repository.getOrGenerateDeviceId()
-            val key = currentSettings.authKey
-            val host = currentSettings.host
-            val port = currentSettings.port
-
-            val apiService = ChatClient.createService(host, port)
-            Log.d("ChatViewModel", "API service created")
+            var aiMsgId: Long? = null // 提升作用域以便在 catch 中访问
             try {
-                // 准备历史记录
-                val historyList = _messages.value
-                    .filter { it.id != userMsgId }
-                    .map {
-                        ChatHistory(
-                            role = if (it.isUser) "user" else "assistant",
-                            content = it.text
-                        )
-                    }
+                val sessionId = _currentSessionId.value ?: chatRepository.createChatSession(messageContent.take(20))
+                if (_currentSessionId.value == null) _currentSessionId.value = sessionId
 
-                // TODO: noticeId 还不知道怎么用
-                val chatRequestBody = ChatRequestBody("test", message, true, historyList)
+                // 1. 发送用户消息
+                chatRepository.sendMessage(ChatMessage(ownerSessionId = sessionId, text = messageContent, role = Role.USER))
 
-                // 插入占位符
-                _messages.update { it + ChatMessage(id = botMsgId, text = "", isUser = false, isLoading = true) }
-                Log.d(label, "Stream collection started, connected to $host:$port")
-                // 开始流式收集
-                apiService.sendMessageStream(key, deviceId, chatRequestBody).collect { result ->
-                    when (result) {
-                        is NetworkResult.Success -> {
-                            _messages.update { list ->
-                                list.map { msg ->
-                                    if (msg.id == botMsgId) msg.copy(text = result.content)
-                                    else msg
-                                }
+                // 2. 准备上下文 (使用 messages.value 代替 _messages.value)
+                val historyList = messages.value
+                    .filter { it.text.isNotBlank() }
+                    .map { ChatHistory(role = if (it.role == Role.USER) "user" else "assistant", content = it.text) }
+
+                // 3. 准备网络服务
+                val currentSettings = settingsRepository.getSettingsSnapshot() ?: UserSettings()
+                val apiService = ChatClient.createService(currentSettings.host, currentSettings.port)
+                val chatRequestBody = ChatRequestBody("test", messageContent, true, historyList)
+
+                // 4. 插入 AI 占位消息
+                aiMsgId = chatRepository.sendMessage(ChatMessage(ownerSessionId = sessionId, text = "", role = Role.ASSISTANT))
+
+                // 5. 流式更新
+                apiService.sendMessageStream(currentSettings.authKey, settingsRepository.getOrGenerateDeviceId(), chatRequestBody)
+                    .collect { result ->
+                        when (result) {
+                            is NetworkResult.Success -> {
+                                chatRepository.updateMessageText(aiMsgId, result.content)
                             }
-                        }
-
-                        is NetworkResult.ValidationError -> {
-                            _messages.update { list -> list.filter { it.id != botMsgId } }
-                            _eventChannel.send(ChatEvent.ShowToast(result.errors.detail.toString()))
-                        }
-
-                        is NetworkResult.Failure -> {
-                            _messages.update { list -> list.filter { it.id != botMsgId } }
-                            _eventChannel.send(ChatEvent.ShowToast("请求失败(${result.code}): ${result.msg}"))
-                        }
-
-                        is NetworkResult.Error -> {
-                            _messages.update { list -> list.filter { it.id != botMsgId } }
-                            _eventChannel.send(ChatEvent.ShowToast("请求失败: ${result.msg}"))
+                            is NetworkResult.ValidationError -> handleFailure("验证失败: ${result.errors.detail}", aiMsgId)
+                            is NetworkResult.Failure -> handleFailure("请求失败(${result.code}): ${result.msg}", aiMsgId)
+                            is NetworkResult.Error -> handleFailure(result.msg, aiMsgId)
                         }
                     }
-                }
-                Log.d(label, "Stream collection finished successfully")
+
             } catch (e: Exception) {
-                _messages.update { list -> list.filter { it.id != botMsgId } }
-                Log.e(label, "Stream collection failed", e)
+                handleFailure("连接异常: ${e.localizedMessage}", aiMsgId)
             } finally {
-                _messages.update { list ->
-                    list.map { msg ->
-                        msg.copy(isLoading = false)
-                    }
-                }
+                Log.d("ChatViewModel", "Setting state to Idle")
                 _sendMessageState.value = SendMessageState.Idle
-                Log.d(label, "Stream collection finished finally")
             }
         }
+    }
+
+    private suspend fun handleFailure(errorMsg: String, aiMsgId: Long? = null) {
+        // 💡 如果报错了，可以考虑删除占位符，避免留下空白气泡
+        Log.d("ChatViewModel", "handleFailure: $errorMsg")
+        aiMsgId?.let { chatRepository.deleteMessageById(it) }
+        _eventChannel.send(ChatEvent.ShowToast(errorMsg))
     }
 }
 
 class ChatViewModelFactory(
-    private val settingsRepository: SettingsRepository
+    private val settingsRepository: SettingsRepository,
+    private val chatRepository: ChatRepository
 ) : ViewModelProvider.Factory {
     override fun <T : ViewModel> create(modelClass: Class<T>): T {
         if (modelClass.isAssignableFrom(ChatViewModel::class.java)) {
             @Suppress("UNCHECKED_CAST")
-            // 💡 传入两个 Repository
-            return ChatViewModel(settingsRepository) as T
+            return ChatViewModel(settingsRepository, chatRepository) as T
         }
         throw IllegalArgumentException("Unknown ViewModel class")
     }

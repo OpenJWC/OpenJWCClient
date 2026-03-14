@@ -40,11 +40,13 @@ import androidx.compose.ui.unit.sp
 import dev.jeziellago.compose.markdowntext.MarkdownText
 import kotlinx.coroutines.launch
 import org.openjwc.client.net.chat.ChatMessage
+import org.openjwc.client.net.chat.Role
 
 @OptIn(ExperimentalMaterial3ExpressiveApi::class) // 启用 Expressive API
 @Composable
 fun MessageBubble(
     message: ChatMessage,
+    isLoading: Boolean,
     modifier: Modifier = Modifier
 ) {
     var showMenu by remember { mutableStateOf(false) }
@@ -52,8 +54,7 @@ fun MessageBubble(
     val uriCurrent = LocalUriHandler.current
     val scope = rememberCoroutineScope()
     val context = LocalContext.current
-    val isUser = message.isUser
-    val isSending = message.isLoading
+    val isUser = message.role == Role.USER
 
     val containerColor = if (isUser) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surfaceVariant
     val contentColor = if (isUser) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurfaceVariant
@@ -76,7 +77,7 @@ fun MessageBubble(
             verticalAlignment = Alignment.CenterVertically
         ) {
             // 1. 如果是用户发送中，在气泡左侧显示加载动画
-            if (isUser && isSending) {
+            if (isUser && isLoading) {
                 CircularWavyProgressIndicator(
                     modifier = Modifier
                         .padding(end = 8.dp)
@@ -144,7 +145,7 @@ fun MessageBubble(
             }
 
             // 2. 如果是 AI 正在生成，在气泡右侧显示加载动画
-            if (!isUser && isSending) {
+            if (!isUser && isLoading) {
                 CircularWavyProgressIndicator(
                     modifier = Modifier
                         .padding(start = 8.dp)
@@ -164,13 +165,15 @@ fun MessageBubble(
 @Composable
 fun TestMessageBubbleFromUser() {
     val mockChatMessage = ChatMessage(
-        id = 11451,
+        messageId = 11451,
         text = "Hello World",
-        isUser = true,
-        isLoading = true,
+        role = Role.USER,
+        ownerSessionId = 0,
+        timestamp = System.currentTimeMillis()
     )
     MessageBubble(
         mockChatMessage,
+        true
     )
 }
 
@@ -178,10 +181,11 @@ fun TestMessageBubbleFromUser() {
 @Composable
 fun TestMessageBubbleFromAI() {
     val mockChatMessage = ChatMessage(
-        id = 19198,
+        messageId = 19198,
         text =  "hello",
-        isUser = false,
-        isLoading = false
+        role = Role.ASSISTANT,
+        ownerSessionId = 0,
+        timestamp = System.currentTimeMillis()
     )
-    MessageBubble(mockChatMessage)
+    MessageBubble(mockChatMessage, true)
 }

@@ -10,6 +10,7 @@ import androidx.compose.material3.windowsizeclass.calculateWindowSizeClass
 import androidx.compose.runtime.collectAsState
 import androidx.core.view.WindowCompat
 import org.openjwc.client.data.db.AppDatabase
+import org.openjwc.client.data.repository.ChatRepository
 import org.openjwc.client.data.repository.SettingsRepository
 import org.openjwc.client.navigation.NavGraph
 import org.openjwc.client.ui.theme.ColorType
@@ -28,19 +29,20 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         val database = AppDatabase.getDatabase(applicationContext)
-        val repository = SettingsRepository(database.settingsDao())
+        val settingsRepository = SettingsRepository(database.settingsDao())
+        val chatRepository = ChatRepository(database.chatDao())
         enableEdgeToEdge()
         WindowCompat.setDecorFitsSystemWindows(window, false)
         setContent {
             val windowSizeClass = calculateWindowSizeClass(this)
             val mainViewModel: MainViewModel by viewModels {
-                MainViewModelFactory(repository)
+                MainViewModelFactory(settingsRepository)
             }
             val settingsViewModel: SettingsViewModel by viewModels {
-                SettingsViewModelFactory(repository)
+                SettingsViewModelFactory(settingsRepository)
             }
             val chatViewModel: ChatViewModel by viewModels {
-                ChatViewModelFactory(repository)
+                ChatViewModelFactory(settingsRepository, chatRepository)
             }
             OpenJWCClientTheme(
                 color = mainViewModel.themeColor.collectAsState(

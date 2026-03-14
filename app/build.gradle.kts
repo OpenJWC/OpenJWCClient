@@ -53,6 +53,7 @@ kotlin {
 }
 
 dependencies {
+    implementation(libs.material3)
     ksp(libs.androidx.room.compiler)
     // 基础库
     implementation(libs.androidx.core.ktx)

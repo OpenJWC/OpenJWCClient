@@ -7,7 +7,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
@@ -36,7 +35,8 @@ import androidx.compose.ui.unit.dp
 fun AuthScreen(
     initialAuthKey: String,
     onConfirm: (String) -> Unit,
-    onBack: () -> Unit
+    onBack: () -> Unit,
+    deviceId: String,
 ) {
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
     var authKey by remember { mutableStateOf(initialAuthKey) }
@@ -93,9 +93,15 @@ fun AuthScreen(
                 }
             )
 
-//            Spacer(modifier = Modifier.height(16.dp))
             Text(
-                text = "提示：请联系管理员获取 API Key。",
+                text = "请联系管理员获取 API Key。",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.padding(top = 24.dp)
+            )
+            Spacer(modifier = Modifier.height(16.dp))
+            Text(
+                text = "本机 ID: $deviceId",
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.padding(top = 24.dp)

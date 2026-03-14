@@ -42,6 +42,7 @@ class SettingsViewModel(
     fun updateHost(host: String) = viewModelScope.launch { repository.updateHost(host) }
     fun updatePort(port: Int) = viewModelScope.launch { repository.updatePort(port) }
 
+
     // TODO: 设置里的每一个 Toggle 都得让 ViewModel 来保存状态。
     private val _toggleState = MutableStateFlow(
         mapOf(

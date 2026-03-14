@@ -29,6 +29,7 @@ roomCommonJvm = "2.8.4"
 roomKtx = "2.8.4"
 roomVersion = "2.8.4"
 kspVersion = "2.3.0"
+material3Version = "1.4.0"
 
 [libraries]
 # Androidx 核心
@@ -73,6 +74,7 @@ androidx-animation = { group = "androidx.compose.animation", name = "animation",
 androidx-room-common-jvm = { group = "androidx.room", name = "room-common-jvm", version.ref = "roomCommonJvm" }
 androidx-room-ktx = { group = "androidx.room", name = "room-ktx", version.ref = "roomKtx" }
 androidx-room-compiler = { module = "androidx.room:room-compiler", version.ref = "roomVersion" }
+material3 = { group = "androidx.compose.material3", name = "material3", version.ref = "material3Version" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

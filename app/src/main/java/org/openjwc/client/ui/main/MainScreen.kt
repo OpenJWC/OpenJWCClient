@@ -3,7 +3,6 @@ package org.openjwc.client.ui.main
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.consumeWindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
@@ -84,12 +83,13 @@ private fun MainTabContent(
     contentPadding: PaddingValues,
     windowSizeClass: WindowSizeClass,
 ){
+    val sessionId by chatViewModel.currentSessionId.collectAsState()
     Box(
         Modifier.fillMaxSize()
-        .consumeWindowInsets(contentPadding)
+//        .consumeWindowInsets(contentPadding)
     ) {
         when (currentTab) {
-            MainTab.Chat -> ChatScreen(contentPadding, windowSizeClass, chatViewModel)
+            MainTab.Chat -> ChatScreen(sessionId, contentPadding, windowSizeClass, chatViewModel)
             MainTab.News -> NewsScreen(contentPadding, windowSizeClass)
             MainTab.Me -> MeScreen(contentPadding, windowSizeClass, navController)
         }

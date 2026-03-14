@@ -6,6 +6,7 @@ import androidx.room.TypeConverter
 import org.openjwc.client.ui.theme.ColorType
 import org.openjwc.client.ui.theme.DarkThemeStyle
 import androidx.core.graphics.toColorInt
+import org.openjwc.client.net.chat.Role
 import org.openjwc.client.ui.theme.SeedDefault
 
 class Converters {
@@ -43,4 +44,18 @@ class Converters {
             ColorType.Dynamic
         }
     }
+    @TypeConverter
+    fun fromRole(role: Role): String {
+        return role.name
+    }
+
+    @TypeConverter
+    fun toRole(value: String): Role {
+        return try {
+            Role.valueOf(value)
+        } catch (e: IllegalArgumentException) {
+            Role.USER
+        }
+    }
+
 }

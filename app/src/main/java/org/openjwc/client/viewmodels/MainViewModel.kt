@@ -20,6 +20,12 @@ import org.openjwc.client.ui.theme.DarkThemeStyle
 class MainViewModel(
     private val repository: SettingsRepository
 ) : ViewModel() {
+    init {
+        viewModelScope.launch {
+            repository.getOrGenerateDeviceId()
+        }
+    }
+
     private val label = "MainViewModel"
     private val _currentTab = MutableStateFlow<MainTab>(MainTab.Chat)
     val currentTab = _currentTab.asStateFlow()
@@ -45,6 +51,7 @@ class MainViewModel(
             }
         }
     }
+
     // 假设你从 repository 获取 flow
     val themeColor: StateFlow<ColorType> = repository.userSettings
         .map { (it ?: UserSettings()).themeColor }
