@@ -1,4 +1,4 @@
-package org.openjwc.client.ui.me.settings.general
+package org.openjwc.client.ui.me.settings.connection
 
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -26,42 +26,32 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
-import androidx.navigation.NavController
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun HostScreen(
-    navController: NavController,
-    initialHost: String,
-    initialPort: Int,
-    onConfirm: (String, Int) -> Unit
+fun AuthScreen(
+    initialAuthKey: String,
+    onConfirm: (String) -> Unit,
+    onBack: () -> Unit
 ) {
-    var host by remember { mutableStateOf(initialHost) }
-    var portString by remember { mutableStateOf(initialPort.toString()) }
-
-    // 校验逻辑
-    val isHostValid = host.isNotBlank()
-    val portInt = portString.toIntOrNull()
-    val isPortValid = portInt != null && portInt in 0..65535
-    val canSave = isHostValid && isPortValid
-
+    var authKey by remember { mutableStateOf(initialAuthKey) }
+    val isAuthKeyValid = authKey.isNotBlank()
+    // 先拆开，后面还得加 UUID 绑定
+    val canSave = isAuthKeyValid
     Scaffold(
         containerColor = MaterialTheme.colorScheme.background,
         topBar = {
             LargeTopAppBar(
-                title = { Text("服务器配置") },
+                title = { Text("鉴权设置") },
                 navigationIcon = {
-                    if (navController.previousBackStackEntry != null) {
-                        IconButton(onClick = { navController.popBackStack() }) {
-                            Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "返回")
-                        }
+                    IconButton(onClick = onBack) {
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "返回")
                     }
                 },
                 actions = {
                     TextButton(
-                        onClick = { if (canSave) onConfirm(host, portInt) },
+                        onClick = { if (canSave) onConfirm(authKey) },
                         enabled = canSave
                     ) {
                         Text("保存")
@@ -80,41 +70,21 @@ fun HostScreen(
             Spacer(modifier = Modifier.height(16.dp))
 
             OutlinedTextField(
-                value = host,
-                onValueChange = { host = it.trim() },
-                label = { Text("主机地址") },
-                placeholder = { Text("例如: 10.0.0.1 或 seu.edu.cn") },
+                value = authKey,
+                onValueChange = { authKey = it.trim() },
+                label = { Text("API Key") },
+//                placeholder = { Text("例如: 10.0.0.1 或 seu.edu.cn") },
                 modifier = Modifier.fillMaxWidth(),
-                isError = !isHostValid,
+                isError = !isAuthKeyValid,
                 singleLine = true,
                 supportingText = {
-                    if (!isHostValid) Text("地址不能为空")
+                    if (!isAuthKeyValid) Text("API Key不能为空")
                 }
             )
 
             Spacer(modifier = Modifier.height(16.dp))
-
-            // 端口号输入
-            OutlinedTextField(
-                value = portString,
-                onValueChange = { newValue ->
-                    // 只允许输入数字
-                    if (newValue.all { it.isDigit() } || newValue.isEmpty()) {
-                        portString = newValue
-                    }
-                },
-                label = { Text("端口号") },
-                modifier = Modifier.fillMaxWidth(),
-                isError = !isPortValid,
-                singleLine = true,
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                supportingText = {
-                    if (!isPortValid) Text("请输入有效的端口 (0-65535)")
-                }
-            )
-
             Text(
-                text = "提示：请确保手机可以访问到该内网 IP，或已配置内网穿透。",
+                text = "提示：请联系管理员获取 API Key。",
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.padding(top = 24.dp)

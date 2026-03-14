@@ -30,7 +30,8 @@ import org.openjwc.client.viewmodels.SettingsViewModel
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SettingsScreen(
-    navController: NavHostController,
+    onRoute: (String) -> Unit,
+    onBack: () -> Unit,
     route: String, // 这个指向设置 viewModel 里面菜单的路径
     viewModel: SettingsViewModel
     // 这个 viewModel 用来监听里边 uiState 然后弹框，以及读取菜单用
@@ -46,11 +47,9 @@ fun SettingsScreen(
             LargeTopAppBar(
                 title = { Text(menu.title) },
                 navigationIcon = {
-                    if (navController.previousBackStackEntry != null) {
-                        IconButton(onClick = { navController.popBackStack() }) {
+                        IconButton(onClick = onBack) {
                             Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "返回")
                         }
-                    }
                 },
             )
         }
@@ -71,8 +70,7 @@ fun SettingsScreen(
                     onEvent = {
                         when (it) {
                             is Event.Route -> {
-                                // 处理 Menu 跳转
-                                navController.navigate(buildSettingsRoute(it.route))
+                                onRoute(buildSettingsRoute(it.route))
                             }
                             is Event.Action -> {
                                 // 处理 Action 执行

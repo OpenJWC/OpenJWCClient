@@ -1,7 +1,9 @@
 package org.openjwc.client.data.settings
 
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Dns
 import androidx.compose.material.icons.filled.Palette
+import androidx.compose.material.icons.filled.VpnKey
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.room.Entity
 import androidx.room.PrimaryKey
@@ -63,9 +65,14 @@ val menuTemplates = listOf(
             ), SettingSection(
                 title = "连接", items = listOf(
                     MenuItem.Route(
-                        icon = Icons.Default.Palette,
+                        icon = Icons.Default.Dns,
                         route = "host",
-                        title = "服务器地址",
+                        title = "服务器配置",
+                    ),
+                    MenuItem.Route(
+                        icon = Icons.Default.VpnKey,
+                        route = "auth",
+                        title = "鉴权设置",
                     )
                 )
             )
@@ -77,6 +84,8 @@ val menuTemplates = listOf(
 @Entity(tableName = "settings")
 data class UserSettings(
     @PrimaryKey val id: Int = 0,
+    val uuidString: String = "",
+    val authKey: String = "",
     val themeStyle: DarkThemeStyle = DarkThemeStyle.Auto,
     val themeColor: ColorType = ColorType.Dynamic,
     val host: String = "101.132.106.186",

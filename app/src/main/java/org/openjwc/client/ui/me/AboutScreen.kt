@@ -20,17 +20,15 @@ import androidx.navigation.NavController
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun AboutScreen(navController: NavController) {
+fun AboutScreen(onBack: () -> Unit) {
     Scaffold(
         containerColor = MaterialTheme.colorScheme.background,
         topBar = {
             LargeTopAppBar(
                 title = { Text("关于") },
                 navigationIcon = {
-                    if (navController.previousBackStackEntry != null) {
-                        IconButton(onClick = { navController.popBackStack() }) {
-                            Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "返回")
-                        }
+                    IconButton(onClick = onBack ) {
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "返回")
                     }
                 },
             )

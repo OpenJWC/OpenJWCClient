@@ -52,6 +52,15 @@ class SettingsViewModel(
             started = SharingStarted.WhileSubscribed(5000),
             initialValue = UserSettings().port
         )
+
+    val authKey: StateFlow<String> = repository.userSettings
+        .map { (it ?: UserSettings()).authKey }
+        .stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5000),
+            initialValue = UserSettings().authKey
+        )
+
     fun updateHost(host: String) {
         viewModelScope.launch {
             repository.updateHost(host)
@@ -61,6 +70,12 @@ class SettingsViewModel(
     fun updatePort(port: Int) {
         viewModelScope.launch {
             repository.updatePort(port)
+        }
+    }
+
+    fun updateAuthKey(key: String) {
+        viewModelScope.launch {
+            repository.updateAuthKey(key)
         }
     }
 

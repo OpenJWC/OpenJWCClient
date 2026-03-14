@@ -7,6 +7,7 @@ import kotlinx.serialization.json.JsonObject
 import okhttp3.ResponseBody
 import retrofit2.Response
 import retrofit2.http.Body
+import retrofit2.http.Header
 import retrofit2.http.POST
 import retrofit2.http.Streaming
 
@@ -17,7 +18,7 @@ data class ChatHistory(
 )
 
 @Serializable
-data class ChatRequest(
+data class ChatRequestBody(
     @SerialName("notice_id") val noticeId: String,
     @SerialName("user_query") val userQuery: String,
     val stream: Boolean = false,
@@ -56,10 +57,11 @@ sealed class NetworkResult {
 }
 
 interface ChatService {
-    @POST("api/chat")
-    suspend fun postQuery(@Body request: ChatRequest): Response<ResponseBody>
-
     @Streaming
     @POST("api/chat")
-    suspend fun postQueryStream(@Body request: ChatRequest): Response<ResponseBody>
+    suspend fun postQueryStream(
+        @Header("Authorization") auth: String,
+        @Header("X-Device-ID") deviceId: String,
+        @Body request: ChatRequestBody
+    ): Response<ResponseBody>
 }

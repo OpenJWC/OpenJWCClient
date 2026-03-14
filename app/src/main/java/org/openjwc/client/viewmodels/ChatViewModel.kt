@@ -20,7 +20,7 @@ import org.openjwc.client.net.chat.ChatClient
 import org.openjwc.client.net.chat.ChatMessage
 import org.openjwc.client.net.chat.sendMessageStream
 import org.openjwc.client.net.models.ChatHistory
-import org.openjwc.client.net.models.ChatRequest
+import org.openjwc.client.net.models.ChatRequestBody
 import org.openjwc.client.net.models.NetworkResult
 
 sealed class SendMessageState {
@@ -70,6 +70,8 @@ class ChatViewModel(
 
         viewModelScope.launch {
             val currentSettings = repository.getSettingsSnapshot() ?: UserSettings()
+            val deviceId = repository.getOrGenerateDeviceId()
+            val key = currentSettings.authKey
             val host = currentSettings.host
             val port = currentSettings.port
 
@@ -87,13 +89,13 @@ class ChatViewModel(
                     }
 
                 // TODO: noticeId 还不知道怎么用
-                val chatRequest = ChatRequest("test", message, true, historyList)
+                val chatRequestBody = ChatRequestBody("test", message, true, historyList)
 
                 // 插入占位符
                 _messages.update { it + ChatMessage(id = botMsgId, text = "", isUser = false, isLoading = true) }
                 Log.d(label, "Stream collection started, connected to $host:$port")
                 // 开始流式收集
-                apiService.sendMessageStream(chatRequest).collect { result ->
+                apiService.sendMessageStream(key, deviceId, chatRequestBody).collect { result ->
                     when (result) {
                         is NetworkResult.Success -> {
                             _messages.update { list ->

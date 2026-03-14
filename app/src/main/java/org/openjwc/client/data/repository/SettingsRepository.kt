@@ -8,6 +8,7 @@ import org.openjwc.client.data.dao.SettingsDao
 import org.openjwc.client.data.settings.UserSettings
 import org.openjwc.client.ui.theme.ColorType
 import org.openjwc.client.ui.theme.DarkThemeStyle
+import java.util.UUID
 
 class SettingsRepository(
     private val settingsDao: SettingsDao,
@@ -21,6 +22,18 @@ class SettingsRepository(
     }
     suspend fun getSettingsSnapshot(): UserSettings? {
         return settingsDao.getSettingsSnapshot()
+    }
+
+    // 懒加载
+    suspend fun getOrGenerateDeviceId(): String {
+        val current = settingsDao.getSettingsSnapshot() ?: UserSettings()
+
+        if (current.uuidString.isBlank()) {
+            val newId = UUID.randomUUID().toString()
+            settingsDao.updateSettings(current.copy(uuidString = newId))
+            return newId
+        }
+        return current.uuidString
     }
 
     private suspend fun updateSettingsInternal(transform: (UserSettings) -> UserSettings) {
@@ -46,5 +59,9 @@ class SettingsRepository(
     }
     suspend fun updatePort(port: Int)  = updateSettingsInternal {
         it.copy(port = port)
+    }
+
+    suspend fun updateAuthKey(key: String) = updateSettingsInternal {
+        it.copy(authKey = key)
     }
 }

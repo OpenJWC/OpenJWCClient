@@ -29,7 +29,6 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         val database = AppDatabase.getDatabase(applicationContext)
         val repository = SettingsRepository(database.settingsDao())
-
         enableEdgeToEdge()
         WindowCompat.setDecorFitsSystemWindows(window, false)
         setContent {

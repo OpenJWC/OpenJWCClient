@@ -21,7 +21,8 @@ import org.openjwc.client.navigation.Routes.SETTINGS_PATTERN
 import org.openjwc.client.ui.main.MainScreen
 import org.openjwc.client.ui.me.AboutScreen
 import org.openjwc.client.ui.me.settings.SettingsScreen
-import org.openjwc.client.ui.me.settings.general.HostScreen
+import org.openjwc.client.ui.me.settings.connection.AuthScreen
+import org.openjwc.client.ui.me.settings.connection.HostScreen
 import org.openjwc.client.ui.me.settings.general.ThemeScreen
 import org.openjwc.client.ui.theme.seedColors
 import org.openjwc.client.viewmodels.ChatViewModel
@@ -94,22 +95,34 @@ fun NavGraph(
                 Log.d(LABEL, "route: $route")
                 when (route) {
                     /** 目前的打算是把所有非主屏幕的 Route 都归结为 settings/{} */
-                    // 这个地方我先让所有屏幕都拿一个 navController，但是可能在根部操作更规范？
                     "about" -> {
-                        AboutScreen(navController)
+                        AboutScreen(
+                            onBack = { if (navController.previousBackStackEntry != null) navController.popBackStack() }
+                        )
                     }
                     "host" -> {
                         val currentHost by settingsViewModel.host.collectAsState()
                         val currentPort by settingsViewModel.port.collectAsState()
                         HostScreen(
-                            navController = navController,
                             onConfirm = { host, port ->
                                 settingsViewModel.updateHost(host)
                                 settingsViewModel.updatePort(port)
                                 navController.popBackStack()
                             },
+                            onBack = {if (navController.previousBackStackEntry != null)navController.popBackStack()},
                             initialHost = currentHost,
                             initialPort = currentPort
+                        )
+                    }
+                    "auth" -> {
+                        val currentAuthKey by settingsViewModel.authKey.collectAsState()
+                        AuthScreen(
+                            onConfirm = { key ->
+                                settingsViewModel.updateAuthKey(key)
+                                navController.popBackStack()
+                            },
+                            initialAuthKey = currentAuthKey,
+                            onBack = {if (navController.previousBackStackEntry != null)navController.popBackStack()},
                         )
                     }
                     "theme" -> {
@@ -117,7 +130,7 @@ fun NavGraph(
                         val currentStyle by mainViewModel.darkThemeStyle.collectAsState()
 
                         ThemeScreen(
-                            navController = navController,
+                            onBack = { if (navController.previousBackStackEntry != null)navController.popBackStack() },
                             onSelect = { color, darkTheme ->
                                 mainViewModel.updateThemeColor(color)
                                 mainViewModel.updateDarkThemeStyle(darkTheme)
@@ -129,7 +142,12 @@ fun NavGraph(
                     }
 
                     else -> {
-                        SettingsScreen(navController, route, settingsViewModel)
+                        SettingsScreen(
+                            onRoute = { navController.navigate(it) },
+                            onBack = { if (navController.previousBackStackEntry != null) navController.popBackStack() },
+                            route = route,
+                            viewModel = settingsViewModel
+                        )
                     }
                 }
             }

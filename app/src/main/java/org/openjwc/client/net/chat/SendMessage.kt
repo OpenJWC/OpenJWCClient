@@ -8,7 +8,7 @@ import kotlinx.coroutines.flow.flowOn
 import kotlinx.serialization.json.Json
 import okhttp3.MediaType.Companion.toMediaType
 import okio.ByteString.Companion.encodeUtf8
-import org.openjwc.client.net.models.ChatRequest
+import org.openjwc.client.net.models.ChatRequestBody
 import org.openjwc.client.net.models.ChatService
 import org.openjwc.client.net.models.ErrorResponse
 import org.openjwc.client.net.models.NetworkResult
@@ -42,10 +42,12 @@ object ChatClient {
 }
 
 fun ChatService.sendMessageStream(
-    chatRequest: ChatRequest,
+    auth: String,
+    deviceId: String,
+    chatRequestBody: ChatRequestBody,
 ): Flow<NetworkResult> = flow {
     try {
-        val response = postQueryStream(chatRequest)
+        val response = postQueryStream(auth, "Bearer sk-$deviceId", chatRequestBody)
         if (!response.isSuccessful) {
             Log.e(LABEL, "Failure: ${response.code()} ${response.message()}")
             emit(NetworkResult.Failure(response.code(), response.message()))
