@@ -32,10 +32,6 @@ import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -45,7 +41,6 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import org.openjwc.client.ui.theme.ColorType
 import org.openjwc.client.ui.theme.DarkThemeStyle
-import org.openjwc.client.ui.theme.SeedDefault
 import org.openjwc.client.ui.theme.seedColors
 
 @Preview(widthDp = 300, heightDp = 500)
@@ -56,8 +51,6 @@ fun TestThemeScreen() {
         },
         onBack = {},
         colorPresets = seedColors,
-        initialColorType = ColorType.Custom(SeedDefault),
-        initialThemeStyle = DarkThemeStyle.Auto
     )
 }
 
@@ -67,13 +60,9 @@ fun ThemeScreen(
     onBack: () -> Unit,
     onSelect: (ColorType, DarkThemeStyle) -> Unit,
     colorPresets: List<Color>,
-    initialColorType: ColorType = ColorType.Dynamic,
-    initialThemeStyle: DarkThemeStyle = DarkThemeStyle.Auto
+    selectedColorType: ColorType = ColorType.Dynamic,
+    darkThemeStyle: DarkThemeStyle = DarkThemeStyle.Auto
 ) {
-    // 状态管理
-    var selectedColorType by remember { mutableStateOf(initialColorType) }
-    var darkThemeStyle by remember { mutableStateOf(initialThemeStyle) }
-
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
 
     Scaffold(
@@ -106,8 +95,7 @@ fun ThemeScreen(
             ThemeStyleSelector(
                 selectedStyle = darkThemeStyle,
                 onStyleSelected = {
-                    darkThemeStyle = it
-                    onSelect(selectedColorType, darkThemeStyle)
+                    onSelect(selectedColorType, it)
                 }
             )
 
@@ -126,9 +114,7 @@ fun ThemeScreen(
                     Switch(
                         checked = selectedColorType is ColorType.Dynamic,
                         onCheckedChange = { isChecked ->
-                            selectedColorType =
-                                if (isChecked) ColorType.Dynamic else ColorType.Custom(colorPresets.first())
-                            onSelect(selectedColorType, darkThemeStyle)
+                            onSelect(if (isChecked) ColorType.Dynamic else ColorType.Custom(colorPresets.first()), darkThemeStyle)
                         }
                     )
                 },
@@ -153,10 +139,9 @@ fun ThemeScreen(
                     colorPresets.forEach { color ->
                         ColorItem(
                             color = color,
-                            isSelected = (selectedColorType as? ColorType.Custom)?.color == color,
+                            isSelected = selectedColorType.color == color,
                             onClick = {
-                                selectedColorType = ColorType.Custom(color)
-                                onSelect(selectedColorType, darkThemeStyle)
+                                onSelect(ColorType.Custom(color), darkThemeStyle)
                             }
                         )
                     }

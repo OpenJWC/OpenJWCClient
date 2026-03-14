@@ -101,8 +101,7 @@ fun NavGraph(
                         )
                     }
                     "host" -> {
-                        val currentHost by settingsViewModel.host.collectAsState()
-                        val currentPort by settingsViewModel.port.collectAsState()
+                        val currentSettings by settingsViewModel.settings.collectAsState()
                         HostScreen(
                             onConfirm = { host, port ->
                                 settingsViewModel.updateHost(host)
@@ -110,19 +109,18 @@ fun NavGraph(
                                 navController.popBackStack()
                             },
                             onBack = {if (navController.previousBackStackEntry != null)navController.popBackStack()},
-                            initialHost = currentHost,
-                            initialPort = currentPort
+                            initialHost = currentSettings.host,
+                            initialPort = currentSettings.port
                         )
                     }
                     "auth" -> {
-                        val currentAuthKey by settingsViewModel.authKey.collectAsState()
+                        val currentSettings by settingsViewModel.settings.collectAsState()
                         AuthScreen(
+                            initialAuthKey = currentSettings.authKey,
                             onConfirm = { key ->
                                 settingsViewModel.updateAuthKey(key)
-                                navController.popBackStack()
-                            },
-                            initialAuthKey = currentAuthKey,
-                            onBack = {if (navController.previousBackStackEntry != null)navController.popBackStack()},
+                                navController.popBackStack() },
+                            onBack = { navController.popBackStack() }
                         )
                     }
                     "theme" -> {
@@ -136,8 +134,8 @@ fun NavGraph(
                                 mainViewModel.updateDarkThemeStyle(darkTheme)
                             },
                             colorPresets = seedColors,
-                            initialColorType = currentColor,
-                            initialThemeStyle = currentStyle
+                            selectedColorType = currentColor,
+                            darkThemeStyle = currentStyle
                         )
                     }
 

@@ -15,9 +15,11 @@ import androidx.compose.material3.LargeTopAppBar
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
@@ -36,21 +38,25 @@ fun SettingsScreen(
     viewModel: SettingsViewModel
     // 这个 viewModel 用来监听里边 uiState 然后弹框，以及读取菜单用
 ) {
-    val menu = viewModel.menus.collectAsState().value.find { it.route == route } ?: Menu (
+    val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
+    val menu = viewModel.menus.collectAsState().value.find { it.route == route } ?: Menu(
         route = "test",
         title = "空菜单",
         sections = emptyList()
     )
+
     Scaffold(
         containerColor = MaterialTheme.colorScheme.background,
+        modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
         topBar = {
             LargeTopAppBar(
                 title = { Text(menu.title) },
                 navigationIcon = {
-                        IconButton(onClick = onBack) {
-                            Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "返回")
-                        }
+                    IconButton(onClick = onBack) {
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "返回")
+                    }
                 },
+                scrollBehavior = scrollBehavior
             )
         }
     ) { innerPadding ->
@@ -72,10 +78,12 @@ fun SettingsScreen(
                             is Event.Route -> {
                                 onRoute(buildSettingsRoute(it.route))
                             }
+
                             is Event.Action -> {
                                 // 处理 Action 执行
                                 it.onAction()
                             }
+
                             is Event.Toggle -> {
                                 viewModel.toggle(it.id)
                             }

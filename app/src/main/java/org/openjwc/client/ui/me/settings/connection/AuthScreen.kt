@@ -20,12 +20,15 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.unit.dp
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -35,12 +38,19 @@ fun AuthScreen(
     onConfirm: (String) -> Unit,
     onBack: () -> Unit
 ) {
+    val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
     var authKey by remember { mutableStateOf(initialAuthKey) }
+
+    LaunchedEffect(initialAuthKey) {
+        authKey = initialAuthKey
+    }
+
     val isAuthKeyValid = authKey.isNotBlank()
     // 先拆开，后面还得加 UUID 绑定
     val canSave = isAuthKeyValid
     Scaffold(
         containerColor = MaterialTheme.colorScheme.background,
+        modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
         topBar = {
             LargeTopAppBar(
                 title = { Text("鉴权设置") },
@@ -56,7 +66,8 @@ fun AuthScreen(
                     ) {
                         Text("保存")
                     }
-                }
+                },
+                scrollBehavior = scrollBehavior
             )
         }
     ) { innerPadding ->
@@ -82,7 +93,7 @@ fun AuthScreen(
                 }
             )
 
-            Spacer(modifier = Modifier.height(16.dp))
+//            Spacer(modifier = Modifier.height(16.dp))
             Text(
                 text = "提示：请联系管理员获取 API Key。",
                 style = MaterialTheme.typography.bodySmall,

@@ -37,47 +37,10 @@ class SettingsViewModel(
             initialValue = UserSettings()
         )
 
-    val host: StateFlow<String> = repository.userSettings
-        .map { (it ?: UserSettings()).host }
-        .stateIn(
-            scope = viewModelScope,
-            started = SharingStarted.WhileSubscribed(5000),
-            initialValue = UserSettings().host
-        )
-
-    val port: StateFlow<Int> = repository.userSettings
-        .map { (it ?: UserSettings()).port }
-        .stateIn(
-            scope = viewModelScope,
-            started = SharingStarted.WhileSubscribed(5000),
-            initialValue = UserSettings().port
-        )
-
-    val authKey: StateFlow<String> = repository.userSettings
-        .map { (it ?: UserSettings()).authKey }
-        .stateIn(
-            scope = viewModelScope,
-            started = SharingStarted.WhileSubscribed(5000),
-            initialValue = UserSettings().authKey
-        )
-
-    fun updateHost(host: String) {
-        viewModelScope.launch {
-            repository.updateHost(host)
-        }
-    }
-
-    fun updatePort(port: Int) {
-        viewModelScope.launch {
-            repository.updatePort(port)
-        }
-    }
-
-    fun updateAuthKey(key: String) {
-        viewModelScope.launch {
-            repository.updateAuthKey(key)
-        }
-    }
+    // 更新函数直接调用 repository
+    fun updateAuthKey(key: String) = viewModelScope.launch { repository.updateAuthKey(key) }
+    fun updateHost(host: String) = viewModelScope.launch { repository.updateHost(host) }
+    fun updatePort(port: Int) = viewModelScope.launch { repository.updatePort(port) }
 
     // TODO: 设置里的每一个 Toggle 都得让 ViewModel 来保存状态。
     private val _toggleState = MutableStateFlow(

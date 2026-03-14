@@ -51,7 +51,7 @@ class MainViewModel(
         .stateIn(
             scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(5000),
-            initialValue = ColorType.Dynamic
+            initialValue = UserSettings().themeColor
         )
 
     val darkThemeStyle: StateFlow<DarkThemeStyle> = repository.userSettings
@@ -59,7 +59,7 @@ class MainViewModel(
         .stateIn(
             scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(5000),
-            initialValue = DarkThemeStyle.Auto
+            initialValue = UserSettings().themeStyle
         )
 
 
