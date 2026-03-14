@@ -1,6 +1,7 @@
 package org.openjwc.client.data.repository
 
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.map
 import org.openjwc.client.data.dao.ChatDao
 import org.openjwc.client.net.chat.ChatMessage
 import org.openjwc.client.net.chat.ChatMetadata
@@ -26,6 +27,9 @@ class ChatRepository(private val chatDao: ChatDao) {
     fun getChatSessions(): Flow<List<ChatSession>> = chatDao.getAllChatSessions()
 
     fun getChatSessionById(id: Long): Flow<ChatSession?> = chatDao.getChatSessionById(id)
+
+    fun getChatMetadataById(id: Long): Flow<ChatMetadata?> =
+        chatDao.getChatSessionById(id).map { it?.metadata }
 
     // 和上面那个函数作用类似，但是这个保证 ChatMessage 按照时间顺序排列
     fun getMessagesBySessionId(sessionId: Long): Flow<List<ChatMessage>> =

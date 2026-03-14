@@ -9,6 +9,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.receiveAsFlow
@@ -19,7 +20,7 @@ import org.openjwc.client.data.repository.SettingsRepository
 import org.openjwc.client.data.settings.UserSettings
 import org.openjwc.client.net.chat.ChatClient
 import org.openjwc.client.net.chat.ChatMessage
-import org.openjwc.client.net.chat.ChatSession
+import org.openjwc.client.net.chat.ChatMetadata
 import org.openjwc.client.net.chat.Role
 import org.openjwc.client.net.chat.sendMessageStream
 import org.openjwc.client.net.models.ChatHistory
@@ -41,37 +42,33 @@ class ChatViewModel(
     private val chatRepository: ChatRepository
 ) : ViewModel() {
 
-    private val _currentSessionId = MutableStateFlow<Long?>(null)
-    val currentSessionId = _currentSessionId.asStateFlow()
+    // 1. 状态定义
+    private val _currentSessionMetadata = MutableStateFlow<ChatMetadata?>(null)
+    val currentSessionMetadata = _currentSessionMetadata.asStateFlow()
 
     private val _sendMessageState = MutableStateFlow<SendMessageState>(SendMessageState.Idle)
-    val sendMessageState: StateFlow<SendMessageState> = _sendMessageState.asStateFlow()
+    val sendMessageState = _sendMessageState.asStateFlow()
 
-    private val _eventChannel = Channel<ChatEvent>()
+    private val _eventChannel = Channel<ChatEvent>(Channel.BUFFERED)
     val events = _eventChannel.receiveAsFlow()
 
-    // 💡 唯一的数据源：自动响应 ID 变化切换监听
     @OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)
-    val messages: StateFlow<List<ChatMessage>> = _currentSessionId
-        .flatMapLatest { id ->
-            if (id == null) flowOf(emptyList())
-            else chatRepository.getMessagesBySessionId(id)
+    val messages: StateFlow<List<ChatMessage>> = _currentSessionMetadata
+        .flatMapLatest { metadata ->
+            if (metadata == null) flowOf(emptyList())
+            else chatRepository.getMessagesBySessionId(metadata.sessionId)
         }
-        .stateIn(
-            scope = viewModelScope,
-            started = SharingStarted.WhileSubscribed(5000),
-            initialValue = emptyList()
-        )
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
-    val allSessions: StateFlow<List<ChatSession>> = chatRepository.getChatSessions()
-        .stateIn(
-            scope = viewModelScope,
-            started = SharingStarted.WhileSubscribed(5000),
-            initialValue = emptyList()
-        )
+    val allSessions = chatRepository.getChatSessions()
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
+    // 3. 业务逻辑
     fun loadSession(sessionId: Long) {
-        _currentSessionId.value = sessionId
+        viewModelScope.launch {
+            val metadata = chatRepository.getChatMetadataById(sessionId)
+            _currentSessionMetadata.value = metadata.first()
+        }
     }
 
     fun sendMessage(messageContent: String) {
@@ -80,42 +77,42 @@ class ChatViewModel(
         _sendMessageState.value = SendMessageState.Sending
 
         viewModelScope.launch {
-            var aiMsgId: Long? = null // 提升作用域以便在 catch 中访问
+            var aiMsgId: Long? = null
             try {
-                val sessionId = _currentSessionId.value ?: chatRepository.createChatSession(messageContent.take(20))
-                if (_currentSessionId.value == null) _currentSessionId.value = sessionId
+                var sessionId = _currentSessionMetadata.value?.sessionId
+                if (sessionId == null) {
+                    sessionId = chatRepository.createChatSession(messageContent.take(20))
+                    // 立即更新 metadata 以便让 messages 流切换到新会话
+                    _currentSessionMetadata.value = ChatMetadata(sessionId = sessionId, title = messageContent.take(20))
+                }
 
-                // 1. 发送用户消息
                 chatRepository.sendMessage(ChatMessage(ownerSessionId = sessionId, text = messageContent, role = Role.USER))
 
-                // 2. 准备上下文 (使用 messages.value 代替 _messages.value)
                 val historyList = messages.value
                     .filter { it.text.isNotBlank() }
                     .map { ChatHistory(role = if (it.role == Role.USER) "user" else "assistant", content = it.text) }
 
-                // 3. 准备网络服务
                 val currentSettings = settingsRepository.getSettingsSnapshot() ?: UserSettings()
                 val apiService = ChatClient.createService(currentSettings.host, currentSettings.port)
-                val chatRequestBody = ChatRequestBody("test", messageContent, true, historyList)
 
-                // 4. 插入 AI 占位消息
                 aiMsgId = chatRepository.sendMessage(ChatMessage(ownerSessionId = sessionId, text = "", role = Role.ASSISTANT))
 
-                // 5. 流式更新
-                apiService.sendMessageStream(currentSettings.authKey, settingsRepository.getOrGenerateDeviceId(), chatRequestBody)
-                    .collect { result ->
-                        when (result) {
-                            is NetworkResult.Success -> {
-                                chatRepository.updateMessageText(aiMsgId, result.content)
-                            }
-                            is NetworkResult.ValidationError -> handleFailure("验证失败: ${result.errors.detail}", aiMsgId)
-                            is NetworkResult.Failure -> handleFailure("请求失败(${result.code}): ${result.msg}", aiMsgId)
-                            is NetworkResult.Error -> handleFailure(result.msg, aiMsgId)
+                apiService.sendMessageStream(currentSettings.authKey, settingsRepository.getOrGenerateDeviceId(),
+                    ChatRequestBody("test", messageContent, true, historyList)
+                ).collect { result ->
+                    when (result) {
+                        is NetworkResult.Success -> {
+                            chatRepository.updateMessageText(aiMsgId, result.content)
                         }
+                        is NetworkResult.Failure -> throw Exception("请求失败(${result.code}): ${result.msg}")
+                        is NetworkResult.Error -> throw Exception(result.msg)
+                        is NetworkResult.ValidationError -> throw Exception("验证失败: ${result.errors.detail}")
                     }
+                }
 
             } catch (e: Exception) {
-                handleFailure("连接异常: ${e.localizedMessage}", aiMsgId)
+                Log.e("ChatViewModel", "sendMessage Error", e)
+                handleFailure(e.localizedMessage ?: "Unknown error", aiMsgId)
             } finally {
                 Log.d("ChatViewModel", "Setting state to Idle")
                 _sendMessageState.value = SendMessageState.Idle
@@ -124,8 +121,6 @@ class ChatViewModel(
     }
 
     private suspend fun handleFailure(errorMsg: String, aiMsgId: Long? = null) {
-        // 💡 如果报错了，可以考虑删除占位符，避免留下空白气泡
-        Log.d("ChatViewModel", "handleFailure: $errorMsg")
         aiMsgId?.let { chatRepository.deleteMessageById(it) }
         _eventChannel.send(ChatEvent.ShowToast(errorMsg))
     }

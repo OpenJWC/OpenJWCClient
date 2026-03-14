@@ -19,6 +19,9 @@ import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ChatBubbleOutline
+import androidx.compose.material3.DismissibleDrawerSheet
+import androidx.compose.material3.DismissibleNavigationDrawer
+import androidx.compose.material3.DrawerState
 import androidx.compose.material3.DrawerValue
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -80,13 +83,12 @@ fun ChatScreen(
     sessionId: Long? = null,
     contentPadding: PaddingValues,
     windowSizeClass: WindowSizeClass,
+    drawerState: DrawerState,
     viewModel: ChatViewModel
 ) {
     // 观察所有历史会话
     val historySessions by viewModel.allSessions.collectAsStateWithLifecycle(emptyList())
-    val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
     val scope = rememberCoroutineScope()
-    val events by viewModel.events.collectAsStateWithLifecycle(null)
     val context = LocalContext.current
     LaunchedEffect(Unit) {
         viewModel.events.collect { event ->
@@ -101,10 +103,8 @@ fun ChatScreen(
             }
         }
     }
-    // 决定布局模式
-    val isExpanded = windowSizeClass.widthSizeClass == WindowWidthSizeClass.Expanded
+//    val isExpanded = windowSizeClass.widthSizeClass == WindowWidthSizeClass.Expanded
 
-    // 定义侧边栏内容
     val drawerContent = @Composable {
         ModalDrawerSheet {
             ChatHistoryList(
@@ -118,50 +118,23 @@ fun ChatScreen(
         }
     }
 
-    if (isExpanded) {
-        Row(
-            Modifier
-                .fillMaxSize()
-                .padding(contentPadding)
-                .consumeWindowInsets(paddingValues = contentPadding)
-        ) {
-            PermanentNavigationDrawer(
-                drawerContent = {
-                    PermanentDrawerSheet(Modifier.width(300.dp)) {
-                        ChatHistoryList(
-                            sessions = historySessions,
-                            currentSessionId = sessionId,
-                            onSessionClick = { viewModel.loadSession(it) }
-                        )
-                    }
-                },
-                modifier = Modifier.weight(1f)
-            ) {
-                ChatMainContent(
-                    viewModel = viewModel,
-                    windowSizeClass = windowSizeClass,
-                    contentPadding = PaddingValues()
-                )
-            }
-        }
-    } else {
-        ModalNavigationDrawer(
-            drawerState = drawerState,
-            drawerContent = drawerContent,
-            modifier = Modifier.padding(contentPadding).consumeWindowInsets(paddingValues = contentPadding)
-        ) {
-            Box(Modifier.fillMaxSize()) {
-                ChatMainContent(
-                    viewModel = viewModel,
-                    windowSizeClass = windowSizeClass,
-                    contentPadding = PaddingValues()
-                )
-
-                // TODO: 在外层加上菜单按钮
-            }
+    ModalNavigationDrawer(
+        drawerState = drawerState,
+        drawerContent = drawerContent,
+        modifier = Modifier
+            .padding(contentPadding)
+            .consumeWindowInsets(paddingValues = contentPadding)
+    ) {
+        Box(Modifier.fillMaxSize()) {
+            ChatMainContent(
+                viewModel = viewModel,
+                windowSizeClass = windowSizeClass,
+                contentPadding = PaddingValues()
+            )
         }
     }
 }
+
 @Composable
 fun ChatHistoryList(
     sessions: List<ChatSession>,
@@ -225,7 +198,9 @@ private fun ChatMainContent(
     ) {
         ChatList(
             listState = listState,
-            modifier = Modifier.weight(1f).fillMaxWidth(),
+            modifier = Modifier
+                .weight(1f)
+                .fillMaxWidth(),
             chatMessages = messages,
             sendMessageState = sendMessageState,
         )
@@ -233,7 +208,10 @@ private fun ChatMainContent(
         ChatInputBar(
             onSendMessage = { viewModel.sendMessage(it) },
             onAttachment = {},
-            modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp).imePadding(),
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(vertical = 8.dp)
+                .imePadding(),
             sendButtonEnabled = sendMessageState is SendMessageState.Idle
         )
     }
