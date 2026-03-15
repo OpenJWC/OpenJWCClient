@@ -1,6 +1,11 @@
 package org.openjwc.client.viewmodels
 
+import android.content.ClipData
+import android.content.Context
 import android.util.Log
+import android.widget.Toast
+import androidx.compose.ui.platform.ClipEntry
+import androidx.compose.ui.platform.Clipboard
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
@@ -15,14 +20,14 @@ import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
-import org.openjwc.client.data.repository.ChatRepository
-import org.openjwc.client.data.repository.SettingsRepository
-import org.openjwc.client.data.settings.UserSettings
-import org.openjwc.client.net.models.ChatClient
 import org.openjwc.client.data.models.ChatMessage
 import org.openjwc.client.data.models.ChatMetadata
 import org.openjwc.client.data.models.Role
+import org.openjwc.client.data.repository.ChatRepository
+import org.openjwc.client.data.repository.SettingsRepository
+import org.openjwc.client.data.settings.UserSettings
 import org.openjwc.client.net.chat.sendMessageStream
+import org.openjwc.client.net.models.ChatClient
 import org.openjwc.client.net.models.ChatHistory
 import org.openjwc.client.net.models.ChatRequestBody
 import org.openjwc.client.net.models.NetworkResult
@@ -134,6 +139,29 @@ class ChatViewModel(
             if (_currentSessionMetadata.value?.sessionId == sessionId) {
                 _currentSessionMetadata.value = null
             }
+        }
+    }
+
+    fun copyMessage(
+        message: ChatMessage,
+        clipboardManager: Clipboard,
+        context: Context
+    ) {
+        viewModelScope.launch {
+            Toast.makeText(context, "复制成功", Toast.LENGTH_SHORT).show()
+            clipboardManager.setClipEntry(ClipEntry(ClipData.newPlainText(message.text, message.text)))
+        }
+    }
+    fun deleteMessage(messageId: Long) {
+        viewModelScope.launch {
+            chatRepository.deleteMessageById(messageId)
+        }
+    }
+
+    fun updateMetadata(metadata: ChatMetadata) {
+        viewModelScope.launch {
+            chatRepository.updateMetadata(metadata)
+            _currentSessionMetadata.value = metadata
         }
     }
 }

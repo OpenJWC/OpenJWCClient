@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ContentCopy
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Share
 import androidx.compose.material3.CircularWavyProgressIndicator
 import androidx.compose.material3.DropdownMenu
@@ -47,13 +48,13 @@ import org.openjwc.client.data.models.Role
 fun MessageBubble(
     message: ChatMessage,
     isLoading: Boolean,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    onCopy: (ChatMessage) -> Unit = {},
+    onShare: (ChatMessage) -> Unit = {},
+    onDelete: (ChatMessage) -> Unit = {}
 ) {
     var showMenu by remember { mutableStateOf(false) }
-    val clipboardManager = LocalClipboard.current
     val uriCurrent = LocalUriHandler.current
-    val scope = rememberCoroutineScope()
-    val context = LocalContext.current
     val isUser = message.role == Role.USER
 
     val containerColor = if (isUser) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surfaceVariant
@@ -128,18 +129,36 @@ fun MessageBubble(
                     DropdownMenuItem(
                         text = { Text("复制") },
                         onClick = {
-                            Toast.makeText(context, "复制成功", Toast.LENGTH_SHORT).show()
-                            scope.launch {
-                                clipboardManager.setClipEntry(ClipEntry(ClipData.newPlainText(message.text, message.text)))
-                            }
+                            onCopy(message)
                             showMenu = false
                         },
                         leadingIcon = { Icon(Icons.Default.ContentCopy, contentDescription = null) }
                     )
                     DropdownMenuItem(
                         text = { Text("转发") },
-                        onClick = { showMenu = false },
+                        onClick = {
+                            onShare(message)
+                            showMenu = false },
                         leadingIcon = { Icon(Icons.Filled.Share, contentDescription = null) }
+                    )
+                    DropdownMenuItem(
+                        text = {
+                            Text(
+                                "删除",
+                                color = MaterialTheme.colorScheme.error
+                            )
+                        },
+                        leadingIcon = {
+                            Icon(
+                                Icons.Default.Delete,
+                                contentDescription = null,
+                                tint = MaterialTheme.colorScheme.error
+                            )
+                        },
+                        onClick = {
+                            onDelete(message)
+                            showMenu = false
+                        }
                     )
                 }
             }

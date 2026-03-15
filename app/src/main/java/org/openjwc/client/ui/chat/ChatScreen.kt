@@ -1,5 +1,6 @@
 package org.openjwc.client.ui.chat
 
+import android.content.ClipData
 import android.widget.Toast
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -20,6 +21,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ChatBubbleOutline
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material3.DrawerState
 import androidx.compose.material3.DropdownMenu
@@ -42,16 +44,22 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.ClipEntry
+import androidx.compose.ui.platform.LocalClipboard
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.viewmodel.compose.viewModel
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
 import org.openjwc.client.data.models.ChatMessage
+import org.openjwc.client.data.models.ChatMetadata
 import org.openjwc.client.data.models.ChatSession
 import org.openjwc.client.viewmodels.ChatEvent
 import org.openjwc.client.viewmodels.ChatViewModel
 import org.openjwc.client.viewmodels.SendMessageState
+import androidx.compose.runtime.collectAsState
 
 
 @Composable
@@ -59,7 +67,10 @@ fun ChatList(
     listState: LazyListState,
     chatMessages: List<ChatMessage>,
     modifier: Modifier = Modifier,
-    sendMessageState: SendMessageState
+    sendMessageState: SendMessageState,
+    onDelete: (ChatMessage) -> Unit = {},
+    onCopy: (ChatMessage) -> Unit = {},
+    onShare: (ChatMessage) -> Unit = {}
 ) {
     LazyColumn(
         state = listState,
@@ -73,7 +84,10 @@ fun ChatList(
 
             MessageBubble(
                 message = message,
-                isLoading = isSending
+                isLoading = isSending,
+                onCopy = onCopy,
+                onShare = onShare,
+                onDelete = onDelete
             )
         }
     }
@@ -88,10 +102,10 @@ fun ChatScreen(
     drawerState: DrawerState,
     viewModel: ChatViewModel
 ) {
-    // 观察所有历史会话
     val historySessions by viewModel.allSessions.collectAsStateWithLifecycle(emptyList())
     val scope = rememberCoroutineScope()
     val context = LocalContext.current
+    val showEditMetadataDialog = remember { MutableStateFlow(false) }
     LaunchedEffect(Unit) {
         viewModel.events.collect { event ->
             when (event) {
@@ -120,7 +134,10 @@ fun ChatScreen(
                     viewModel.toNewChat()
                     scope.launch { drawerState.close() }
                 },
-                onDeleteSession = { id -> viewModel.deleteSession(id) }
+                onDeleteSession = { id -> viewModel.deleteSession(id) },
+                onUpdateSessionMetadata = {
+                    showEditMetadataDialog.value = true
+                }
             )
         }
     }
@@ -140,6 +157,19 @@ fun ChatScreen(
             )
         }
     }
+
+    if (showEditMetadataDialog.collectAsState().value) {
+        EditMetadataDialog(
+            onDismiss = { showEditMetadataDialog.value = false },
+            onConfirm = { newTitle ->
+                showEditMetadataDialog.value = false
+                viewModel.currentSessionMetadata.value?.let {
+                    viewModel.updateMetadata(it.copy(title = newTitle))
+                }
+            },
+            initialTitle = viewModel.currentSessionMetadata.value?.title ?: ""
+        )
+    }
 }
 
 @Composable
@@ -149,6 +179,7 @@ fun ChatHistoryList(
     onNewChat: () -> Unit,
     onSessionClick: (Long) -> Unit,
     onDeleteSession: (Long) -> Unit,
+    onUpdateSessionMetadata: (ChatMetadata) -> Unit,
     modifier: Modifier = Modifier
 ) {
     LazyColumn(
@@ -174,7 +205,8 @@ fun ChatHistoryList(
                 session = session,
                 isSelected = session.metadata.sessionId == currentSessionId,
                 onSessionClick = onSessionClick,
-                onDeleteSession = onDeleteSession
+                onDeleteSession = onDeleteSession,
+                onUpdateSessionMetadata = onUpdateSessionMetadata
             )
         }
     }
@@ -185,7 +217,8 @@ fun ChatHistoryItem(
     session: ChatSession,
     isSelected: Boolean,
     onSessionClick: (Long) -> Unit,
-    onDeleteSession: (Long) -> Unit
+    onDeleteSession: (Long) -> Unit,
+    onUpdateSessionMetadata: (ChatMetadata) -> Unit
 ) {
     var showMenu by remember { mutableStateOf(false) }
 
@@ -225,6 +258,23 @@ fun ChatHistoryItem(
                     DropdownMenuItem(
                         text = {
                             Text(
+                                "编辑会话名称",
+                            )
+                        },
+                        leadingIcon = {
+                            Icon(
+                                Icons.Default.Edit,
+                                contentDescription = null,
+                            )
+                        },
+                        onClick = {
+                            onUpdateSessionMetadata(session.metadata)
+                            showMenu = false
+                        }
+                    )
+                    DropdownMenuItem(
+                        text = {
+                            Text(
                                 "删除会话",
                                 color = MaterialTheme.colorScheme.error
                             )
@@ -256,6 +306,8 @@ private fun ChatMainContent(
     val messages by viewModel.messages.collectAsStateWithLifecycle()
     val sendMessageState by viewModel.sendMessageState.collectAsStateWithLifecycle()
     val listState = rememberLazyListState()
+    val clipboardManager = LocalClipboard.current
+    val context = LocalContext.current
 
     val horizontalPadding = when (windowSizeClass.widthSizeClass) {
         WindowWidthSizeClass.Compact -> 12.dp
@@ -277,6 +329,11 @@ private fun ChatMainContent(
                 .fillMaxWidth(),
             chatMessages = messages,
             sendMessageState = sendMessageState,
+            onCopy = {
+
+                viewModel.copyMessage(it, clipboardManager, context) },
+            onShare = { /*TODO: viewModel.shareMessage(it)*/ },
+            onDelete = { viewModel.deleteMessage(it.messageId) }
         )
 
         ChatInputBar(
