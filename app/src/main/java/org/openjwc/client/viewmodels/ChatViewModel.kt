@@ -18,10 +18,10 @@ import kotlinx.coroutines.launch
 import org.openjwc.client.data.repository.ChatRepository
 import org.openjwc.client.data.repository.SettingsRepository
 import org.openjwc.client.data.settings.UserSettings
-import org.openjwc.client.net.chat.ChatClient
-import org.openjwc.client.net.chat.ChatMessage
-import org.openjwc.client.net.chat.ChatMetadata
-import org.openjwc.client.net.chat.Role
+import org.openjwc.client.net.models.ChatClient
+import org.openjwc.client.data.models.ChatMessage
+import org.openjwc.client.data.models.ChatMetadata
+import org.openjwc.client.data.models.Role
 import org.openjwc.client.net.chat.sendMessageStream
 import org.openjwc.client.net.models.ChatHistory
 import org.openjwc.client.net.models.ChatRequestBody

@@ -1,4 +1,4 @@
-package org.openjwc.client.net.chat
+package org.openjwc.client.data.models
 
 import androidx.room.Embedded
 import androidx.room.Entity

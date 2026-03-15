@@ -25,13 +25,13 @@ data class ChatRequestBody(
     val history: List<ChatHistory> = emptyList()
 )
 @Serializable
-data class SuccessResponse(
+data class ChatSuccessResponse(
     val status: String,
     val reply: String
 )
 
 @Serializable
-data class ErrorResponse(
+data class ChatErrorResponse(
     val detail: List<ValidationError>
 )
 
@@ -43,18 +43,6 @@ data class ValidationError(
     val input: String? = null,
     val ctx: JsonObject? = null
 )
-
-sealed class NetworkResult {
-    data class Success(val content: String) : NetworkResult()
-    data class ValidationError(val errors: ErrorResponse) : NetworkResult()
-    data class Failure(
-        val code: Int,
-        val msg: String
-    ) : NetworkResult()
-    data class Error(
-        val msg: String
-    ) : NetworkResult()
-}
 
 interface ChatService {
     @Streaming

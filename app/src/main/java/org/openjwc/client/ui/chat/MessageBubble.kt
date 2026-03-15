@@ -39,8 +39,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import dev.jeziellago.compose.markdowntext.MarkdownText
 import kotlinx.coroutines.launch
-import org.openjwc.client.net.chat.ChatMessage
-import org.openjwc.client.net.chat.Role
+import org.openjwc.client.data.models.ChatMessage
+import org.openjwc.client.data.models.Role
 
 @OptIn(ExperimentalMaterial3ExpressiveApi::class) // 启用 Expressive API
 @Composable

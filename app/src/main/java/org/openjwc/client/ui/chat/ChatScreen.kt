@@ -47,8 +47,8 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import kotlinx.coroutines.launch
-import org.openjwc.client.net.chat.ChatMessage
-import org.openjwc.client.net.chat.ChatSession
+import org.openjwc.client.data.models.ChatMessage
+import org.openjwc.client.data.models.ChatSession
 import org.openjwc.client.viewmodels.ChatEvent
 import org.openjwc.client.viewmodels.ChatViewModel
 import org.openjwc.client.viewmodels.SendMessageState

@@ -3,9 +3,9 @@ package org.openjwc.client.data.repository
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import org.openjwc.client.data.dao.ChatDao
-import org.openjwc.client.net.chat.ChatMessage
-import org.openjwc.client.net.chat.ChatMetadata
-import org.openjwc.client.net.chat.ChatSession
+import org.openjwc.client.data.models.ChatMessage
+import org.openjwc.client.data.models.ChatMetadata
+import org.openjwc.client.data.models.ChatSession
 class ChatRepository(private val chatDao: ChatDao) {
     // 返回 session 的 metadata 里面的 id
     suspend fun createChatSession(title: String): Long {

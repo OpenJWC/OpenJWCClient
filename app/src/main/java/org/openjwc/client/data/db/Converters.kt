@@ -6,7 +6,7 @@ import androidx.room.TypeConverter
 import org.openjwc.client.ui.theme.ColorType
 import org.openjwc.client.ui.theme.DarkThemeStyle
 import androidx.core.graphics.toColorInt
-import org.openjwc.client.net.chat.Role
+import org.openjwc.client.data.models.Role
 import org.openjwc.client.ui.theme.SeedDefault
 
 class Converters {

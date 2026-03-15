@@ -6,9 +6,9 @@ import androidx.room.Query
 import androidx.room.Transaction
 import androidx.room.Update
 import kotlinx.coroutines.flow.Flow
-import org.openjwc.client.net.chat.ChatMessage
-import org.openjwc.client.net.chat.ChatMetadata
-import org.openjwc.client.net.chat.ChatSession
+import org.openjwc.client.data.models.ChatMessage
+import org.openjwc.client.data.models.ChatMetadata
+import org.openjwc.client.data.models.ChatSession
 @Dao
 interface ChatDao {
     @Transaction

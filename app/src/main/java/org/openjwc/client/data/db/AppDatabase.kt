@@ -8,8 +8,8 @@ import androidx.room.TypeConverters
 import org.openjwc.client.data.dao.ChatDao
 import org.openjwc.client.data.dao.SettingsDao
 import org.openjwc.client.data.settings.UserSettings
-import org.openjwc.client.net.chat.ChatMessage
-import org.openjwc.client.net.chat.ChatMetadata
+import org.openjwc.client.data.models.ChatMessage
+import org.openjwc.client.data.models.ChatMetadata
 
 @Database(
     entities = [

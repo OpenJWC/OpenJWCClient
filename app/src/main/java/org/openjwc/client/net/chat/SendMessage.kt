@@ -6,40 +6,13 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.serialization.json.Json
-import okhttp3.MediaType.Companion.toMediaType
 import okio.ByteString.Companion.encodeUtf8
 import org.openjwc.client.net.models.ChatRequestBody
 import org.openjwc.client.net.models.ChatService
-import org.openjwc.client.net.models.ErrorResponse
+import org.openjwc.client.net.models.ChatErrorResponse
 import org.openjwc.client.net.models.NetworkResult
-import retrofit2.Retrofit
-import retrofit2.converter.kotlinx.serialization.asConverterFactory
 
 private const val LABEL = "SendMessage"
-object ChatClient {
-    private val loggingInterceptor = okhttp3.logging.HttpLoggingInterceptor().apply {
-        level = okhttp3.logging.HttpLoggingInterceptor.Level.HEADERS
-    }
-
-    val okHttpClient = okhttp3.OkHttpClient.Builder()
-        .addInterceptor(loggingInterceptor)
-        .connectTimeout(15, java.util.concurrent.TimeUnit.SECONDS)
-        .readTimeout(60, java.util.concurrent.TimeUnit.SECONDS) // 流式读取需要较长的 ReadTimeout
-        .build()
-    private val json = Json {
-        ignoreUnknownKeys = true
-        coerceInputValues = true
-    }
-    fun createService(host: String, port: Int): ChatService {
-        val baseUrl = "http://$host:$port/"
-        return Retrofit.Builder()
-            .baseUrl(baseUrl)
-            .client(okHttpClient)
-            .addConverterFactory(json.asConverterFactory("application/json".toMediaType()))
-            .build()
-            .create(ChatService::class.java)
-    }
-}
 
 fun ChatService.sendMessageStream(
     auth: String,
@@ -66,7 +39,7 @@ fun ChatService.sendMessageStream(
             }
 
             try {
-                val errorObj = Json.decodeFromString<ErrorResponse>(errorBody)
+                val errorObj = Json.decodeFromString<ChatErrorResponse>(errorBody)
                 emit(NetworkResult.ValidationError(errorObj))
                 return@flow
             } catch (e: Exception) {
