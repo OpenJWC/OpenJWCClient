@@ -8,24 +8,24 @@ import kotlinx.coroutines.flow.flowOn
 import kotlinx.serialization.json.Json
 import okio.ByteString.Companion.encodeUtf8
 import org.openjwc.client.net.models.ChatRequestBody
-import org.openjwc.client.net.models.ChatService
+import org.openjwc.client.net.models.NetService
 import org.openjwc.client.net.models.ChatErrorResponse
-import org.openjwc.client.net.models.NetworkResult
+import org.openjwc.client.net.models.ChatNetworkResult
 
 private const val LABEL = "SendMessage"
 
-fun ChatService.sendMessageStream(
+fun NetService.sendMessageStream(
     auth: String,
     deviceId: String,
     chatRequestBody: ChatRequestBody,
-): Flow<NetworkResult> = flow {
+): Flow<ChatNetworkResult> = flow {
     try {
-        val response = postQueryStream("Bearer $auth", deviceId, chatRequestBody)
+        val response = postChatQueryStream("Bearer $auth", deviceId, chatRequestBody)
         Log.d(LABEL, auth)
         Log.d(LABEL, "Response: $response")
         if (!response.isSuccessful) {
             Log.e(LABEL, "Failure: ${response.code()} ${response.message()}")
-            emit(NetworkResult.Failure(response.code(), response.message()))
+            emit(ChatNetworkResult.Failure(response.code(), response.message()))
             return@flow
         }
         if (response.code() == 422) {
@@ -34,17 +34,17 @@ fun ChatService.sendMessageStream(
 
             if (errorBody.isNullOrBlank()) {
                 Log.e(LABEL, "422: Unknown error")
-                emit(NetworkResult.Failure(422, "Unknown error"))
+                emit(ChatNetworkResult.Failure(422, "Unknown error"))
                 return@flow
             }
 
             try {
                 val errorObj = Json.decodeFromString<ChatErrorResponse>(errorBody)
-                emit(NetworkResult.ValidationError(errorObj))
+                emit(ChatNetworkResult.ValidationError(errorObj))
                 return@flow
             } catch (e: Exception) {
                 Log.e(LABEL, "Parsing 422 message failure: ${e.message}")
-                emit(NetworkResult.Failure(422, "Parsing 422 message failure"))
+                emit(ChatNetworkResult.Failure(422, "Parsing 422 message failure"))
                 return@flow
             }
         }
@@ -85,7 +85,7 @@ fun ChatService.sendMessageStream(
                 }
 
                 accumulatedText += chunk
-                emit(NetworkResult.Success(accumulatedText))
+                emit(ChatNetworkResult.Success(accumulatedText))
 
                 if (next == -1L) break
             }
@@ -93,7 +93,8 @@ fun ChatService.sendMessageStream(
         }
 
     } catch (e: Exception) {
-        emit(NetworkResult.Error("连接中断: ${e.localizedMessage}"))
+        emit(ChatNetworkResult.Error("连接中断: ${e.localizedMessage}"))
     }
 
 }.flowOn(Dispatchers.IO)
+

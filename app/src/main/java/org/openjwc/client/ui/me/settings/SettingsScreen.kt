@@ -1,5 +1,6 @@
 package org.openjwc.client.ui.me.settings
 
+import android.widget.Toast
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
@@ -17,15 +18,19 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import org.openjwc.client.navigation.Routes.buildSettingsRoute
 import org.openjwc.client.data.settings.Event
 import org.openjwc.client.data.settings.Menu
+import org.openjwc.client.viewmodels.ChatEvent
+import org.openjwc.client.viewmodels.SettingsEvent
 import org.openjwc.client.viewmodels.SettingsViewModel
 
 
@@ -38,6 +43,20 @@ fun SettingsScreen(
     viewModel: SettingsViewModel
     // 这个 viewModel 用来监听里边 uiState 然后弹框，以及读取菜单用
 ) {
+    val context = LocalContext.current
+    LaunchedEffect(Unit) {
+        viewModel.events.collect { event ->
+            when (event) {
+                is SettingsEvent.ShowToast -> {
+                    Toast.makeText(context, event.message, Toast.LENGTH_SHORT).show()
+                }
+
+                is SettingsEvent.ShowSnackBar -> {
+                    // TODO: 显示 SnackBar
+                }
+            }
+        }
+    }
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
     val menu = viewModel.menus.collectAsState().value.find { it.route == route } ?: Menu(
         route = "test",

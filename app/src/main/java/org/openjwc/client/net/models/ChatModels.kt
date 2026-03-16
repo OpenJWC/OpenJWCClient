@@ -44,12 +44,15 @@ data class ValidationError(
     val ctx: JsonObject? = null
 )
 
-interface ChatService {
-    @Streaming
-    @POST("api/chat")
-    suspend fun postQueryStream(
-        @Header("Authorization") auth: String,
-        @Header("X-Device-ID") deviceId: String,
-        @Body request: ChatRequestBody
-    ): Response<ResponseBody>
+sealed class ChatNetworkResult {
+    data class Success(val content: String) : ChatNetworkResult()
+    data class ValidationError(val errors: ChatErrorResponse) : ChatNetworkResult()
+    data class Failure(
+        val code: Int,
+        val msg: String
+    ) : ChatNetworkResult()
+    data class Error(
+        val msg: String
+    ) : ChatNetworkResult()
 }
+

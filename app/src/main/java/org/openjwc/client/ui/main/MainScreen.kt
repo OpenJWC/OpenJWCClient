@@ -1,5 +1,6 @@
 package org.openjwc.client.ui.main
 
+import android.app.Activity
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -24,9 +25,12 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.navigation.NavController
+import cn.jpush.android.api.JPushInterface.requestRequiredPermission
 import kotlinx.coroutines.launch
+import org.openjwc.client.notification.RequestNotificationPermissionButton
 import org.openjwc.client.ui.chat.ChatScreen
 import org.openjwc.client.ui.me.MeScreen
 import org.openjwc.client.ui.news.NewsScreen
@@ -86,6 +90,9 @@ private fun MainScaffoldContent(
                         ) {
                             Icon(Icons.Default.Menu, contentDescription = "Menu")
                         }
+                    },
+                    actions = {
+                        RequestNotificationPermissionButton()
                     }
                 )
             },

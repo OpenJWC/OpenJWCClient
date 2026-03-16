@@ -27,10 +27,10 @@ import org.openjwc.client.data.repository.ChatRepository
 import org.openjwc.client.data.repository.SettingsRepository
 import org.openjwc.client.data.settings.UserSettings
 import org.openjwc.client.net.chat.sendMessageStream
-import org.openjwc.client.net.models.ChatClient
+import org.openjwc.client.net.models.NetClient
 import org.openjwc.client.net.models.ChatHistory
 import org.openjwc.client.net.models.ChatRequestBody
-import org.openjwc.client.net.models.NetworkResult
+import org.openjwc.client.net.models.ChatNetworkResult
 
 sealed class SendMessageState {
     data object Idle : SendMessageState()
@@ -94,27 +94,27 @@ class ChatViewModel(
                     _currentSessionMetadata.value = ChatMetadata(sessionId = sessionId, title = messageContent.take(20))
                 }
 
-                chatRepository.sendMessage(ChatMessage(ownerSessionId = sessionId, text = messageContent, role = Role.USER))
+                chatRepository.insertMessage(ChatMessage(ownerSessionId = sessionId, text = messageContent, role = Role.USER))
 
                 val historyList = messages.value
                     .filter { it.text.isNotBlank() }
                     .map { ChatHistory(role = if (it.role == Role.USER) "user" else "assistant", content = it.text) }
 
                 val currentSettings = settingsRepository.getSettingsSnapshot() ?: UserSettings()
-                val apiService = ChatClient.createService(currentSettings.host, currentSettings.port)
+                val apiService = NetClient.getService(currentSettings.host, currentSettings.port)
 
-                aiMsgId = chatRepository.sendMessage(ChatMessage(ownerSessionId = sessionId, text = "", role = Role.ASSISTANT))
+                aiMsgId = chatRepository.insertMessage(ChatMessage(ownerSessionId = sessionId, text = "", role = Role.ASSISTANT))
 
                 apiService.sendMessageStream(currentSettings.authKey, settingsRepository.getOrGenerateDeviceId(),
                     ChatRequestBody("test", messageContent, true, historyList)
                 ).collect { result ->
                     when (result) {
-                        is NetworkResult.Success -> {
+                        is ChatNetworkResult.Success -> {
                             chatRepository.updateMessageText(aiMsgId, result.content)
                         }
-                        is NetworkResult.Failure -> throw Exception("请求失败(${result.code}): ${result.msg}")
-                        is NetworkResult.Error -> throw Exception(result.msg)
-                        is NetworkResult.ValidationError -> throw Exception("验证失败: ${result.errors.detail}")
+                        is ChatNetworkResult.Failure -> throw Exception("请求失败(${result.code}): ${result.msg}")
+                        is ChatNetworkResult.Error -> throw Exception(result.msg)
+                        is ChatNetworkResult.ValidationError -> throw Exception("验证失败: ${result.errors.detail}")
                     }
                 }
 

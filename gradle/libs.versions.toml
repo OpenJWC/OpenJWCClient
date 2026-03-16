@@ -8,6 +8,7 @@ kotlin = "2.3.10"
 coreKtx = "1.18.0"
 lifecycle = "2.10.0"
 activityCompose = "1.13.0"
+core-splashscreen = "1.0.1"
 
 composeBom = "2026.03.00"
 material3 = "1.5.0-alpha15"
@@ -31,12 +32,16 @@ roomVersion = "2.8.4"
 kspVersion = "2.3.0"
 material3Version = "1.4.0"
 
+jpush = "6.0.2"
+jcore = "5.3.1"
+
 [libraries]
 # Androidx 核心
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
 androidx-lifecycle-runtime-ktx = { group = "androidx.lifecycle", name = "lifecycle-runtime-ktx", version.ref = "lifecycle" }
 androidx-lifecycle-viewmodel-compose = { group = "androidx.lifecycle", name = "lifecycle-viewmodel-compose", version.ref = "lifecycle" }
 androidx-activity-compose = { group = "androidx.activity", name = "activity-compose", version.ref = "activityCompose" }
+androidx-core-splashscreen = { group = "androidx.core", name = "core-splashscreen", version.ref = "core-splashscreen" }
 
 # Compose 基础
 androidx-compose-bom = { group = "androidx.compose", name = "compose-bom", version.ref = "composeBom" }
@@ -75,6 +80,8 @@ androidx-room-common-jvm = { group = "androidx.room", name = "room-common-jvm", 
 androidx-room-ktx = { group = "androidx.room", name = "room-ktx", version.ref = "roomKtx" }
 androidx-room-compiler = { module = "androidx.room:room-compiler", version.ref = "roomVersion" }
 material3 = { group = "androidx.compose.material3", name = "material3", version.ref = "material3Version" }
+jpush-sdk = { group = "cn.jiguang.sdk", name = "jpush", version.ref = "jpush" }
+jpush-jcore = { group = "cn.jiguang.sdk", name = "jcore", version.ref = "jcore" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

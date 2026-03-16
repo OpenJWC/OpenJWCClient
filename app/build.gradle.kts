@@ -1,3 +1,5 @@
+import java.util.Properties
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
@@ -5,6 +7,12 @@ plugins {
     alias(libs.plugins.kotlin.serialization)
     alias(libs.plugins.ksp)
 }
+val localProperties = Properties()
+val localPropertiesFile = rootProject.file("local.properties")
+if (localPropertiesFile.exists()) {
+    localProperties.load(localPropertiesFile.inputStream())
+}
+val jpushAppKey = localProperties.getProperty("jpush.appkey") ?: ""
 
 android {
     namespace = "org.openjwc.client"
@@ -18,6 +26,11 @@ android {
         versionName = "1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+        manifestPlaceholders["JPUSH_PKGNAME"] = applicationId.toString()
+        manifestPlaceholders["JPUSH_APPKEY"] = jpushAppKey
+        manifestPlaceholders["JPUSH_CHANNEL"] = "developer-default"
+
+        buildConfigField("String", "JPUSH_APPKEY", "\"$jpushAppKey\"")
     }
 
     buildTypes {
@@ -39,6 +52,7 @@ android {
 
     buildFeatures {
         compose = true
+        buildConfig = true
     }
 }
 
@@ -60,6 +74,7 @@ dependencies {
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.activity.compose)
     implementation(platform(libs.androidx.compose.bom))
+    implementation(libs.androidx.core.splashscreen)
 
     // Compose 核心 UI (可以使用 bundle 进一步简化，这里先按你要求的列表展示)
     implementation(libs.androidx.ui)
@@ -78,7 +93,8 @@ dependencies {
     // 架构与功能
     implementation(libs.androidx.lifecycle.viewmodel.compose)
     implementation(libs.compose.markdown)
-
+    implementation(libs.jpush.sdk)
+    implementation(libs.jpush.jcore)
     // 网络层 (Retrofit + OkHttp) - 这里的点号访问会自动匹配 toml 中的中划线
     implementation(libs.retrofit.core)
     implementation(libs.retrofit.converter.serialization)

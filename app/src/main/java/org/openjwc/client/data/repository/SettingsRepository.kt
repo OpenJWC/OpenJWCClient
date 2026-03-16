@@ -59,7 +59,6 @@ class SettingsRepository(
     suspend fun updatePort(port: Int)  = updateSettingsInternal {
         it.copy(port = port)
     }
-
     suspend fun updateAuthKey(key: String) = updateSettingsInternal {
         it.copy(authKey = key)
     }

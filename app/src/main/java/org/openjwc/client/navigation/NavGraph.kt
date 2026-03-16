@@ -115,13 +115,21 @@ fun NavGraph(
                     }
                     "auth" -> {
                         val currentSettings by settingsViewModel.settings.collectAsState()
+                        val deviceResult by settingsViewModel.deviceResult.collectAsState()
                         AuthScreen(
                             initialAuthKey = currentSettings.authKey,
                             onConfirm = { key ->
                                 settingsViewModel.updateAuthKey(key)
-                                navController.popBackStack() },
+                                navController.popBackStack()
+                            },
                             onBack = { navController.popBackStack() },
-                            deviceId = currentSettings.uuidString
+                            onRefreshDevices = {
+                                settingsViewModel.devicesQuery()
+                            },
+                            thisDeviceId = currentSettings.uuidString,
+                            onUnbindDevice = { /*TODO()*/},
+                            devicesResult = deviceResult
+
                         )
                     }
                     "theme" -> {

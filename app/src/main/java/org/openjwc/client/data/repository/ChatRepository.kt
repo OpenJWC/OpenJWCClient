@@ -13,7 +13,7 @@ class ChatRepository(private val chatDao: ChatDao) {
         return chatDao.insertMetadata(metadata)
     }
     // 返回 message 的 id
-    suspend fun sendMessage(chatMessage: ChatMessage): Long {
+    suspend fun insertMessage(chatMessage: ChatMessage): Long {
         val msgId = chatDao.insertMessage(chatMessage)
         chatDao.updateLastUpdated(chatMessage.ownerSessionId)
         return msgId

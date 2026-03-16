@@ -1,20 +1,25 @@
 package org.openjwc.client
 
+import android.os.Build
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
+import androidx.annotation.RequiresApi
 import androidx.compose.material3.windowsizeclass.ExperimentalMaterial3WindowSizeClassApi
 import androidx.compose.material3.windowsizeclass.calculateWindowSizeClass
 import androidx.compose.runtime.collectAsState
-import androidx.core.view.WindowCompat
+import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
+import androidx.lifecycle.lifecycleScope
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.launch
 import org.openjwc.client.data.db.AppDatabase
 import org.openjwc.client.data.repository.ChatRepository
 import org.openjwc.client.data.repository.SettingsRepository
+import org.openjwc.client.data.settings.UserSettings
 import org.openjwc.client.navigation.NavGraph
-import org.openjwc.client.ui.theme.ColorType
-import org.openjwc.client.ui.theme.DarkThemeStyle
+import org.openjwc.client.notification.PushManager
 import org.openjwc.client.ui.theme.OpenJWCClientTheme
 import org.openjwc.client.viewmodels.ChatViewModel
 import org.openjwc.client.viewmodels.ChatViewModelFactory
@@ -22,34 +27,43 @@ import org.openjwc.client.viewmodels.MainViewModel
 import org.openjwc.client.viewmodels.MainViewModelFactory
 import org.openjwc.client.viewmodels.SettingsViewModel
 import org.openjwc.client.viewmodels.SettingsViewModelFactory
-import kotlin.getValue
+
 
 class MainActivity : ComponentActivity() {
+
+    private val database by lazy { AppDatabase.getDatabase(applicationContext) }
+    private val settingsRepository by lazy { SettingsRepository(database.settingsDao()) }
+    private val chatRepository by lazy { ChatRepository(database.chatDao()) }
+
+    private val mainViewModel: MainViewModel by viewModels { MainViewModelFactory(settingsRepository) }
+    private val settingsViewModel: SettingsViewModel by viewModels { SettingsViewModelFactory(settingsRepository) }
+    private val chatViewModel: ChatViewModel by viewModels { ChatViewModelFactory(settingsRepository, chatRepository) }
+    @RequiresApi(Build.VERSION_CODES.TIRAMISU)
     @OptIn(ExperimentalMaterial3WindowSizeClassApi::class)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        val database = AppDatabase.getDatabase(applicationContext)
-        val settingsRepository = SettingsRepository(database.settingsDao())
-        val chatRepository = ChatRepository(database.chatDao())
+        PushManager.init(context = applicationContext, appId = BuildConfig.JPUSH_APPKEY, debugMode = true) {}
+        PushManager.resumePush(applicationContext) {}
+        val splashScreen = installSplashScreen()
+        var isReady = false
+
+        lifecycleScope.launch {
+            // 预热 ViewModel 中的数据
+            mainViewModel.themeColor.first()
+            mainViewModel.darkThemeStyle.first()
+            isReady = true
+        }
+
+        splashScreen.setKeepOnScreenCondition { !isReady }
         enableEdgeToEdge()
-        WindowCompat.setDecorFitsSystemWindows(window, false)
         setContent {
             val windowSizeClass = calculateWindowSizeClass(this)
-            val mainViewModel: MainViewModel by viewModels {
-                MainViewModelFactory(settingsRepository)
-            }
-            val settingsViewModel: SettingsViewModel by viewModels {
-                SettingsViewModelFactory(settingsRepository)
-            }
-            val chatViewModel: ChatViewModel by viewModels {
-                ChatViewModelFactory(settingsRepository, chatRepository)
-            }
             OpenJWCClientTheme(
                 color = mainViewModel.themeColor.collectAsState(
-                    initial = ColorType.Dynamic
+                    initial = UserSettings().themeColor
                 ).value,
                 darkThemeStyle = mainViewModel.darkThemeStyle.collectAsState(
-                    initial = DarkThemeStyle.Auto
+                    initial = UserSettings().themeStyle
                 ).value
             ) {
                 NavGraph(windowSizeClass, mainViewModel, settingsViewModel, chatViewModel)
