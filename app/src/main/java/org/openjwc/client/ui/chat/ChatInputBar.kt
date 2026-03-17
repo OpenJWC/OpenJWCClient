@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.Send
@@ -26,6 +27,12 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.input.key.Key
+import androidx.compose.ui.input.key.KeyEventType
+import androidx.compose.ui.input.key.isCtrlPressed
+import androidx.compose.ui.input.key.key
+import androidx.compose.ui.input.key.onKeyEvent
+import androidx.compose.ui.input.key.type
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 
@@ -46,13 +53,15 @@ fun ChatInputBar(
     ) {
         Surface(
             modifier = Modifier.weight(1f),
-            shape = CircleShape,
+            shape = RoundedCornerShape(24.dp),
             color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.6f)
         ) {
             Row(
-                verticalAlignment = Alignment.CenterVertically,
+                verticalAlignment = Alignment.Bottom
             ) {
-                IconButton(onClick = onAttachment) {
+                IconButton(
+                    onClick = onAttachment
+                ) {
                     Icon(
                         Icons.Outlined.Add,
                         contentDescription = "Attach",
@@ -63,22 +72,40 @@ fun ChatInputBar(
                 BasicTextField(
                     value = textState,
                     onValueChange = { textState = it },
+                    maxLines = 5,
                     modifier = Modifier
                         .weight(1f)
-                        .padding(vertical = 12.dp),
+                        .padding(vertical = 12.dp)
+                        .padding(end = 6.dp)
+                        .onKeyEvent { event ->
+                            if (event.type == KeyEventType.KeyDown && event.key == Key.Enter && event.isCtrlPressed) {
+                                if (isNotEmpty && !isSending) {
+                                    onSendMessage(textState)
+                                    textState = ""
+                                }
+                                true
+                            } else {
+                                false
+                            }
+                        },
                     textStyle = MaterialTheme.typography.bodyLarge.copy(
                         color = MaterialTheme.colorScheme.onSurface
                     ),
                     cursorBrush = SolidColor(MaterialTheme.colorScheme.primary),
                     decorationBox = { innerTextField ->
-                        if (textState.isEmpty()) {
-                            Text(
-                                "问些什么",
-                                style = MaterialTheme.typography.bodyLarge,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
-                            )
+                        Box(
+                            modifier = Modifier.fillMaxWidth(),
+                            contentAlignment = Alignment.CenterStart
+                        ) {
+                            if (textState.isEmpty()) {
+                                Text(
+                                    "问些什么",
+                                    style = MaterialTheme.typography.bodyLarge,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
+                                )
+                            }
+                            innerTextField()
                         }
-                        innerTextField()
                     }
                 )
             }
@@ -86,14 +113,13 @@ fun ChatInputBar(
 
         Spacer(modifier = Modifier.width(8.dp))
 
-        if(isSending) {
+        if (isSending) {
             ContainedLoadingIndicator(
                 modifier = Modifier.size(48.dp),
                 containerColor = MaterialTheme.colorScheme.surfaceVariant,
                 indicatorColor = MaterialTheme.colorScheme.primary
             )
-        } else
-        Surface(
+        } else Surface(
             onClick = {
                 if (isNotEmpty) {
                     onSendMessage(textState)
@@ -109,7 +135,9 @@ fun ChatInputBar(
                 Icon(
                     imageVector = Icons.AutoMirrored.Rounded.Send,
                     contentDescription = "Send",
-                    tint = if (isNotEmpty) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant.copy(0.4f),
+                    tint = if (isNotEmpty) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant.copy(
+                        0.4f
+                    ),
                     modifier = Modifier.size(20.dp)
                 )
             }
