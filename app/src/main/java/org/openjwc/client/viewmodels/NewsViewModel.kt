@@ -1,95 +1,114 @@
 
 package org.openjwc.client.viewmodels
+import android.util.Log
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.launch
-import kotlin.collections.plus
-import kotlin.collections.set
+import org.openjwc.client.data.repository.SettingsRepository
+import org.openjwc.client.data.settings.UserSettings
+import org.openjwc.client.net.models.FetchNewsNetworkResult
+import org.openjwc.client.net.models.NetClient
+import org.openjwc.client.net.models.Notice
+import org.openjwc.client.net.news.fetchNews
 
-class NewsViewModel : ViewModel() {
-    /*
-    private val _newsCache = mutableStateMapOf<String, List<NewsItem>>()
+class NewsViewModel(
+    private val repository: SettingsRepository
+) : ViewModel() {
+    private val tag = "NewsViewModel"
+
+    private val _newsCache = mutableStateMapOf<String, List<Notice>>()
     private val _pageMap = mutableMapOf<String, Int>()
     private val _isEndMap = mutableStateMapOf<String, Boolean>()
-
     private val _errorMap = mutableStateMapOf<String, String?>()
-
+    private val _labels = mutableStateOf(listOf<String>())
     var isLoading by mutableStateOf(false)
         private set
 
     var isRefreshing by mutableStateOf(false)
         private set
 
-    fun getNewsState(path: String): List<NewsItem> = _newsCache[path] ?: emptyList()
+    fun getNewsState(label: String): List<Notice> = _newsCache[label] ?: emptyList()
+    fun getError(label: String): String? = _errorMap[label]
+    fun isEnd(label: String): Boolean = _isEndMap[label] ?: false
 
-    fun getError(path: String): String? = _errorMap[path]
-
-    fun isEnd(path: String): Boolean = _isEndMap[path] ?: false
-
-    fun loadCategory(path: String, isRefresh: Boolean = false) {
-        if (!isRefresh && _newsCache.containsKey(path)) return
-        executeLoad(path, 1, isRefresh)
+    fun loadCategory(label: String, isRefresh: Boolean = false) {
+        if (!isRefresh && _newsCache.containsKey(label)) return
+        executeLoad(label, page = 1, size = 20, isRefresh = isRefresh)
     }
 
-    fun loadNextPage(path: String) {
-        if (_errorMap[path] != null) {
-            _errorMap[path] = null
-        }
-
-        if (isLoading || isRefreshing || isEnd(path)) return
-
-        val nextPage = (_pageMap[path] ?: 1) + 1
-        executeLoad(path, nextPage, isRefresh = false)
+    fun loadNextPage(label: String) {
+        if (isLoading || isRefreshing || isEnd(label)) return
+        val nextPage = (_pageMap[label] ?: 1) + 1
+        executeLoad(label, page = nextPage, size = 20, isRefresh = false)
     }
 
-    private fun executeLoad(path: String, page: Int, isRefresh: Boolean) {
+    private fun executeLoad(label: String, page: Int, size: Int, isRefresh: Boolean) {
         if (isRefresh) isRefreshing = true else isLoading = true
-        _errorMap[path] = null
+        _errorMap[label] = null
 
         viewModelScope.launch {
             try {
-                // 1. 获取封装后的结果对象
-                val result = JwcCrawler.fetchNews(path, page)
-                val newData = result.newsItems
+                val settings = repository.getSettingsSnapshot() ?: UserSettings()
+                val apiService = NetClient.getService(settings.host, settings.port)
 
-                // 2. 使用爬虫解析出的 hasNextPage 来更新结尾状态
-                // 只有当 hasNextPage 为 false 时，才标记为 End
-                _isEndMap[path] = !result.hasNextPage
+                val result = apiService.fetchNews(
+                    settings.authKey,
+                    settings.uuidString,
+                    label,
+                    page,
+                    size
+                )
 
-                if (isRefresh || page == 1) {
-                    _newsCache[path] = newData
-                    _pageMap[path] = 1
-                    // 刷新时，如果数据不为空且爬虫说还有下一页，确保重置 End 状态
-                    if (newData.isNotEmpty() && result.hasNextPage) {
-                        _isEndMap[path] = false
+                when (result) {
+                    is FetchNewsNetworkResult.Success -> {
+                        val newData = result.response.data.notices
+                        for (notice in newData) {
+                            Log.d(tag, "notice: $notice")
+                        }
+                        _isEndMap[label] = newData.size < size
+
+                        if (isRefresh || page == 1) {
+                            _newsCache[label] = newData
+                            _pageMap[label] = 1
+                        } else {
+                            val currentList = _newsCache[label] ?: emptyList()
+                            _newsCache[label] = (currentList + newData).distinctBy { it.id }
+                            _pageMap[label] = page
+                        }
                     }
-                } else {
-                    if (newData.isNotEmpty()) {
-                        val currentList = _newsCache[path] ?: emptyList()
-                        // 关键点：将新老数据合并后，根据 detailUrl 进行去重
-                        val combinedList = (currentList + newData).distinctBy { it.detailUrl }
-
-                        _newsCache[path] = combinedList
-                        _pageMap[path] = page
+                    is FetchNewsNetworkResult.Failure -> {
+                        _errorMap[label] = "加载错误(${result.code}): ${result.msg}"
+                    }
+                    is FetchNewsNetworkResult.Error -> {
+                        _errorMap[label] = result.msg
                     }
                 }
-
-                // 额外保险：如果数据确实为空，强制标记为结束
-                if (newData.isEmpty()) _isEndMap[path] = true
-                _errorMap[path] = null
-
             } catch (e: Exception) {
-                e.printStackTrace()
-                // 网络异常时记录异常信息
-                _errorMap[path] = e.localizedMessage ?: "网络异常，请重试"
+                Log.e(tag, "executeLoad Error", e)
+                _errorMap[label] = e.localizedMessage ?: "未知错误"
             } finally {
                 isLoading = false
                 isRefreshing = false
             }
         }
-    }*/
+    }
+}
+
+
+class NewsViewModelFactory(
+    private val settingsRepository: SettingsRepository
+) : ViewModelProvider.Factory {
+    override fun <T : ViewModel> create(modelClass: Class<T>): T {
+        if (modelClass.isAssignableFrom(NewsViewModel::class.java)) {
+            @Suppress("UNCHECKED_CAST")
+            // 💡 传入两个 Repository
+            return NewsViewModel(settingsRepository) as T
+        }
+        throw IllegalArgumentException("Unknown ViewModel class")
+    }
 }

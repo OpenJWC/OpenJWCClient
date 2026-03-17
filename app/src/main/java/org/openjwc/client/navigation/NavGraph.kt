@@ -28,6 +28,7 @@ import org.openjwc.client.ui.me.settings.general.ThemeScreen
 import org.openjwc.client.ui.theme.seedColors
 import org.openjwc.client.viewmodels.ChatViewModel
 import org.openjwc.client.viewmodels.MainViewModel
+import org.openjwc.client.viewmodels.NewsViewModel
 import org.openjwc.client.viewmodels.SettingsViewModel
 
 private const val LABEL = "NavGraph"
@@ -37,7 +38,8 @@ fun NavGraph(
     windowSizeClass: WindowSizeClass,
     mainViewModel: MainViewModel,
     settingsViewModel: SettingsViewModel,
-    chatViewModel: ChatViewModel
+    chatViewModel: ChatViewModel,
+    newsViewModel: NewsViewModel
 ) {
     val navController = rememberNavController()
     val uriHandler = LocalUriHandler.current
@@ -81,7 +83,8 @@ fun NavGraph(
                     windowSizeClass,
                     navController = navController,
                     mainViewModel,
-                    chatViewModel
+                    chatViewModel,
+                    newsViewModel,
                 )
             }
 

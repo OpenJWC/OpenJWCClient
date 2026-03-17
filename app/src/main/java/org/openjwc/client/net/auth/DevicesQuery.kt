@@ -14,22 +14,28 @@ suspend fun NetService.devicesQuery(
     auth: String,
     deviceId: String
 ): DevicesQueryNetworkResult = withContext(Dispatchers.IO) {
-    try {
+    runCatching {
         Log.d(LABEL, "Requesting devices...")
         val response = getDevicesQuery("Bearer $auth", deviceId)
-        val rawBody = response.body()?.string()
 
-        if (response.isSuccessful && rawBody != null) {
-            try {
+        if (response.isSuccessful) {
+            // 注意：string() 读取流是耗时操作且只能调用一次
+            val rawBody = response.body()?.string()
+            Log.d(LABEL, "Success: $rawBody")
+
+            if (rawBody != null) {
                 val successResponse = Json.decodeFromString<DevicesQuerySuccessResponse>(rawBody)
                 DevicesQueryNetworkResult.Success(successResponse)
-            } catch (e: Exception) {
-                DevicesQueryNetworkResult.Failure(response.code(), "Parsing failure: ${e.message}")
+            } else {
+                DevicesQueryNetworkResult.Failure(response.code(), "Empty response body")
             }
         } else {
-            DevicesQueryNetworkResult.Failure(response.code(), response.message())
+            val errorMsg = response.errorBody()?.string() ?: response.message()
+            Log.e(LABEL, "Failure: ${response.code()} $errorMsg")
+            DevicesQueryNetworkResult.Failure(response.code(), errorMsg)
         }
-    } catch (e: Exception) {
+    }.getOrElse { e ->
+        Log.e(LABEL, "Exception in devicesQuery: ${e.message}", e)
         DevicesQueryNetworkResult.Error("Error: ${e.localizedMessage}")
     }
 }

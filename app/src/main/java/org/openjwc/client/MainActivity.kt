@@ -27,6 +27,8 @@ import org.openjwc.client.viewmodels.ChatViewModel
 import org.openjwc.client.viewmodels.ChatViewModelFactory
 import org.openjwc.client.viewmodels.MainViewModel
 import org.openjwc.client.viewmodels.MainViewModelFactory
+import org.openjwc.client.viewmodels.NewsViewModel
+import org.openjwc.client.viewmodels.NewsViewModelFactory
 import org.openjwc.client.viewmodels.SettingsViewModel
 import org.openjwc.client.viewmodels.SettingsViewModelFactory
 
@@ -40,6 +42,9 @@ class MainActivity : ComponentActivity() {
     private val mainViewModel: MainViewModel by viewModels { MainViewModelFactory(settingsRepository) }
     private val settingsViewModel: SettingsViewModel by viewModels { SettingsViewModelFactory(settingsRepository) }
     private val chatViewModel: ChatViewModel by viewModels { ChatViewModelFactory(settingsRepository, chatRepository) }
+
+    private val newsViewModel: NewsViewModel by viewModels { NewsViewModelFactory(settingsRepository) }
+
     @RequiresApi(Build.VERSION_CODES.TIRAMISU)
     @OptIn(ExperimentalMaterial3WindowSizeClassApi::class)
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -69,7 +74,7 @@ class MainActivity : ComponentActivity() {
                     initial = UserSettings().themeStyle
                 ).value
             ) {
-                NavGraph(windowSizeClass, mainViewModel, settingsViewModel, chatViewModel)
+                NavGraph(windowSizeClass, mainViewModel, settingsViewModel, chatViewModel, newsViewModel)
             }
         }
     }

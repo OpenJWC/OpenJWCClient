@@ -88,6 +88,7 @@ fun AuthScreen(
     var deviceToUnbind by remember { mutableStateOf<String?>(null) }
     LaunchedEffect(initialAuthKey) {
         authKey = initialAuthKey
+        onRefreshDevices()
     }
 
     val isAuthKeyValid = authKey.isNotBlank()

@@ -1,6 +1,5 @@
 package org.openjwc.client.ui.main
 
-import android.app.Activity
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -20,15 +19,12 @@ import androidx.compose.material3.rememberDrawerState
 import androidx.compose.material3.windowsizeclass.WindowSizeClass
 import androidx.compose.material3.windowsizeclass.WindowWidthSizeClass
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.navigation.NavController
-import cn.jpush.android.api.JPushInterface.requestRequiredPermission
 import kotlinx.coroutines.launch
 import org.openjwc.client.notification.RequestNotificationPermissionButton
 import org.openjwc.client.ui.chat.ChatScreen
@@ -36,19 +32,22 @@ import org.openjwc.client.ui.me.MeScreen
 import org.openjwc.client.ui.news.NewsScreen
 import org.openjwc.client.viewmodels.ChatViewModel
 import org.openjwc.client.viewmodels.MainViewModel
+import org.openjwc.client.viewmodels.NewsViewModel
 
 @Composable
 fun MainScreen(
     windowSizeClass: WindowSizeClass,
     navController: NavController,
     mainViewModel: MainViewModel,
-    chatViewModel: ChatViewModel
+    chatViewModel: ChatViewModel,
+    newsViewModel: NewsViewModel
 ) {
     MainScaffoldContent(
         windowSizeClass,
         navController,
         mainViewModel,
-        chatViewModel
+        chatViewModel,
+        newsViewModel,
     )
 }
 
@@ -58,7 +57,8 @@ private fun MainScaffoldContent(
     windowSizeClass: WindowSizeClass,
     navController: NavController,
     mainViewModel: MainViewModel,
-    chatViewModel: ChatViewModel
+    chatViewModel: ChatViewModel,
+    newsViewModel: NewsViewModel
 ) {
     val currentTab by mainViewModel.currentTab.collectAsState()
     val chatTitle = chatViewModel.currentSessionMetadata.collectAsState().value?.title ?: "无标题"
@@ -103,6 +103,7 @@ private fun MainScaffoldContent(
         ) { contentPadding ->
             MainTabContent(
                 chatViewModel,
+                newsViewModel,
                 currentTab,
                 navController,
                 drawerState,
@@ -116,6 +117,7 @@ private fun MainScaffoldContent(
 @Composable
 private fun MainTabContent(
     chatViewModel: ChatViewModel,
+    newsViewModel: NewsViewModel,
     currentTab: MainTab,
     navController: NavController,
     drawerState: DrawerState,
@@ -130,7 +132,7 @@ private fun MainTabContent(
     ) {
         when (currentTab) {
             MainTab.Chat -> ChatScreen(sessionId, contentPadding, windowSizeClass, drawerState, chatViewModel)
-            MainTab.News -> NewsScreen(contentPadding, windowSizeClass)
+            MainTab.News -> NewsScreen(contentPadding, windowSizeClass, newsViewModel)
             MainTab.Me -> MeScreen(contentPadding, windowSizeClass, navController)
         }
     }
