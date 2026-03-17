@@ -4,6 +4,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material3.DrawerState
@@ -74,14 +75,15 @@ private fun MainScaffoldContent(
             containerColor = MaterialTheme.colorScheme.background,
             modifier = Modifier.weight(1f),
             topBar = {
-                TopAppBar({
-                    when(currentTab) {
-                        MainTab.Chat -> Text (text = chatTitle)
-                        else -> Text(stringResource(currentTab.titleRes))
-                    }
-                },
+                TopAppBar(
+                    {
+                        when (currentTab) {
+                            MainTab.Chat -> Text(text = chatTitle)
+                            else -> Text(stringResource(currentTab.titleRes))
+                        }
+                    },
                     navigationIcon = {
-                        if(currentTab == MainTab.Chat)IconButton(
+                        if (currentTab == MainTab.Chat) IconButton(
                             onClick = {
                                 scope.launch {
                                     if (drawerState.isOpen) drawerState.close() else drawerState.open()
@@ -123,16 +125,24 @@ private fun MainTabContent(
     drawerState: DrawerState,
     contentPadding: PaddingValues,
     windowSizeClass: WindowSizeClass,
-){
+) {
     val metadata by chatViewModel.currentSessionMetadata.collectAsState()
     val sessionId = metadata?.sessionId
     Box(
         Modifier.fillMaxSize()
     ) {
         when (currentTab) {
-            MainTab.Chat -> ChatScreen(sessionId, contentPadding, windowSizeClass, drawerState, chatViewModel)
-            MainTab.News -> NewsScreen(contentPadding, windowSizeClass, newsViewModel)
-            MainTab.Me -> MeScreen(contentPadding, windowSizeClass, navController)
+            MainTab.Chat -> ChatScreen(
+                modifier = Modifier,
+                sessionId,
+                windowSizeClass,
+                drawerState,
+                chatViewModel,
+                contentPadding
+            )
+
+            MainTab.News -> NewsScreen(modifier = Modifier.padding(contentPadding), windowSizeClass, newsViewModel)
+            MainTab.Me -> MeScreen(modifier = Modifier.padding(contentPadding),windowSizeClass, navController)
         }
     }
 }

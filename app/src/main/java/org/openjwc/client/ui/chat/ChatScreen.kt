@@ -1,9 +1,9 @@
 package org.openjwc.client.ui.chat
 
-import android.content.ClipData
 import android.widget.Toast
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -38,19 +38,18 @@ import androidx.compose.material3.windowsizeclass.WindowSizeClass
 import androidx.compose.material3.windowsizeclass.WindowWidthSizeClass
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.ClipEntry
 import androidx.compose.ui.platform.LocalClipboard
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.lifecycle.viewmodel.compose.viewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
 import org.openjwc.client.data.models.ChatMessage
@@ -59,7 +58,6 @@ import org.openjwc.client.data.models.ChatSession
 import org.openjwc.client.viewmodels.ChatEvent
 import org.openjwc.client.viewmodels.ChatViewModel
 import org.openjwc.client.viewmodels.SendMessageState
-import androidx.compose.runtime.collectAsState
 
 
 @Composable
@@ -72,35 +70,44 @@ fun ChatList(
     onCopy: (ChatMessage) -> Unit = {},
     onShare: (ChatMessage) -> Unit = {}
 ) {
-    LazyColumn(
-        state = listState,
-        modifier = modifier,
-        contentPadding = PaddingValues(vertical = 16.dp),
-        verticalArrangement = Arrangement.spacedBy(8.dp)
+    BoxWithConstraints(
+        modifier = modifier.fillMaxSize()
     ) {
-        itemsIndexed(chatMessages) { index, message ->
-            val isLastMessage = index == chatMessages.lastIndex
-            val isSending = sendMessageState is SendMessageState.Sending && isLastMessage
+        val bubbleMaxWidth = maxWidth * 0.85f
 
-            MessageBubble(
-                message = message,
-                isLoading = isSending,
-                onCopy = onCopy,
-                onShare = onShare,
-                onDelete = onDelete
-            )
+        LazyColumn(
+            state = listState,
+            modifier = Modifier.fillMaxSize(),
+            contentPadding = PaddingValues(vertical = 16.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            itemsIndexed(chatMessages) { index, message ->
+                val isLastMessage = index == chatMessages.lastIndex
+                val isSending = sendMessageState is SendMessageState.Sending && isLastMessage
+
+                MessageBubble(
+                    message = message,
+                    isLoading = isSending,
+                    onCopy = onCopy,
+                    onShare = onShare,
+                    onDelete = onDelete,
+                    maxWidth = bubbleMaxWidth
+                )
+            }
         }
     }
 }
 
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ChatScreen(
+    modifier: Modifier = Modifier,
     sessionId: Long? = null,
-    contentPadding: PaddingValues,
     windowSizeClass: WindowSizeClass,
     drawerState: DrawerState,
-    viewModel: ChatViewModel
+    viewModel: ChatViewModel,
+    contentPadding: PaddingValues,
 ) {
     val historySessions by viewModel.allSessions.collectAsStateWithLifecycle(emptyList())
     val scope = rememberCoroutineScope()
@@ -123,37 +130,42 @@ fun ChatScreen(
 
     val drawerContent = @Composable {
         ModalDrawerSheet {
-            ChatHistoryList(
-                sessions = historySessions,
-                currentSessionId = sessionId,
-                onSessionClick = { id ->
-                    viewModel.loadSession(id)
-                    scope.launch { drawerState.close() }
-                },
-                onNewChat = {
-                    viewModel.toNewChat()
-                    scope.launch { drawerState.close() }
-                },
-                onDeleteSession = { id -> viewModel.deleteSession(id) },
-                onUpdateSessionMetadata = {
-                    showEditMetadataDialog.value = true
-                }
-            )
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(top = contentPadding.calculateTopPadding())
+            ) {
+                ChatHistoryList(
+                    sessions = historySessions,
+                    currentSessionId = sessionId,
+                    onSessionClick = { id ->
+                        viewModel.loadSession(id)
+                        scope.launch { drawerState.close() }
+                    },
+                    onNewChat = {
+                        viewModel.toNewChat()
+                        scope.launch { drawerState.close() }
+                    },
+                    onDeleteSession = { id -> viewModel.deleteSession(id) },
+                    onUpdateSessionMetadata = {
+                        showEditMetadataDialog.value = true
+                    },
+                    modifier = Modifier
+                )
+            }
         }
     }
 
     ModalNavigationDrawer(
         drawerState = drawerState,
         drawerContent = drawerContent,
-        modifier = Modifier
-            .padding(contentPadding)
-            .consumeWindowInsets(paddingValues = contentPadding)
+        modifier = modifier
     ) {
         Box(Modifier.fillMaxSize()) {
             ChatMainContent(
                 viewModel = viewModel,
                 windowSizeClass = windowSizeClass,
-                contentPadding = PaddingValues()
+                contentPadding = contentPadding
             )
         }
     }
@@ -180,10 +192,10 @@ fun ChatHistoryList(
     onSessionClick: (Long) -> Unit,
     onDeleteSession: (Long) -> Unit,
     onUpdateSessionMetadata: (ChatMetadata) -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier
 ) {
     LazyColumn(
-        modifier = modifier.fillMaxSize(),
+        modifier = modifier,
         contentPadding = PaddingValues(16.dp),
         verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
@@ -320,6 +332,7 @@ private fun ChatMainContent(
         modifier = Modifier
             .fillMaxSize()
             .padding(contentPadding)
+            .consumeWindowInsets(contentPadding)
             .padding(horizontal = horizontalPadding)
     ) {
         ChatList(
@@ -330,8 +343,8 @@ private fun ChatMainContent(
             chatMessages = messages,
             sendMessageState = sendMessageState,
             onCopy = {
-
-                viewModel.copyMessage(it, clipboardManager, context) },
+                viewModel.copyMessage(it, clipboardManager, context)
+            },
             onShare = { /*TODO: viewModel.shareMessage(it)*/ },
             onDelete = { viewModel.deleteMessage(it.messageId) }
         )

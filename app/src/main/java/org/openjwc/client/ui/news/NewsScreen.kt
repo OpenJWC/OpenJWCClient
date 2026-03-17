@@ -2,9 +2,7 @@ package org.openjwc.client.ui.news
 
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
@@ -34,7 +32,7 @@ import org.openjwc.client.viewmodels.NewsViewModel
 
 @Composable
 fun NewsScreen(
-    contentPadding: PaddingValues,
+    modifier: Modifier = Modifier,
     windowSizeClass: WindowSizeClass,
     viewModel: NewsViewModel
 ) {
@@ -49,9 +47,7 @@ fun NewsScreen(
         viewModel.loadLabels()
     }
     Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(contentPadding)
+        modifier = modifier
     ) {
         PullToRefreshBox(
             isRefreshing = viewModel.isRefreshing,

@@ -1,7 +1,5 @@
 package org.openjwc.client.ui.chat
 
-import android.content.ClipData
-import android.widget.Toast
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -27,19 +25,15 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.ClipEntry
-import androidx.compose.ui.platform.LocalClipboard
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import dev.jeziellago.compose.markdowntext.MarkdownText
-import kotlinx.coroutines.launch
 import org.openjwc.client.data.models.ChatMessage
 import org.openjwc.client.data.models.Role
 
@@ -49,9 +43,10 @@ fun MessageBubble(
     message: ChatMessage,
     isLoading: Boolean,
     modifier: Modifier = Modifier,
+    maxWidth: Dp,
     onCopy: (ChatMessage) -> Unit = {},
     onShare: (ChatMessage) -> Unit = {},
-    onDelete: (ChatMessage) -> Unit = {}
+    onDelete: (ChatMessage) -> Unit = {},
 ) {
     var showMenu by remember { mutableStateOf(false) }
     val uriCurrent = LocalUriHandler.current
@@ -59,6 +54,9 @@ fun MessageBubble(
 
     val containerColor = if (isUser) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surfaceVariant
     val contentColor = if (isUser) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurfaceVariant
+
+//    val screenWidth = LocalWindowInfo.current.containerSize
+//    val maxBubbleWidth = screenWidth.width * 0.7f
 
     val bubbleShape = RoundedCornerShape(
         topStart = 20.dp,
@@ -107,7 +105,7 @@ fun MessageBubble(
                             text = message.text,
                             modifier = Modifier
                                 .padding(horizontal = 16.dp, vertical = 10.dp)
-                                .widthIn(max = 280.dp),
+                                .widthIn(max = maxWidth),
                             style = MaterialTheme.typography.bodyLarge.copy(lineHeight = 24.sp)
                         )
                     } else {
@@ -115,7 +113,7 @@ fun MessageBubble(
                             markdown = message.text,
                             modifier = Modifier
                                 .padding(horizontal = 16.dp, vertical = 10.dp)
-                                .widthIn(max = 280.dp),
+                                .widthIn(max = maxWidth),
                             style = MaterialTheme.typography.bodyLarge.copy(
                                 color = contentColor,
                                 lineHeight = 24.sp
@@ -192,7 +190,8 @@ fun TestMessageBubbleFromUser() {
     )
     MessageBubble(
         mockChatMessage,
-        true
+        true,
+        maxWidth = 300.dp
     )
 }
 
@@ -206,5 +205,5 @@ fun TestMessageBubbleFromAI() {
         ownerSessionId = 0,
         timestamp = System.currentTimeMillis()
     )
-    MessageBubble(mockChatMessage, true)
+    MessageBubble(mockChatMessage, true, maxWidth = 300.dp)
 }

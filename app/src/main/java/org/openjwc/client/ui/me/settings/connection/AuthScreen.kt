@@ -178,6 +178,7 @@ fun AuthScreen(
                 when (devicesResult) {
                     is DevicesQueryNetworkResult.Success -> {
                         val deviceIds = devicesResult.response.data.deviceIDs
+                        val limitedCount = devicesResult.response.data.limitedDeviceCount
                         Row(
                             modifier = Modifier
                                 .fillMaxWidth()
@@ -187,7 +188,7 @@ fun AuthScreen(
                         ) {
 
                             Text(
-                                text = "已绑定设备 (${deviceIds.size})",
+                                text = "已绑定设备 (${deviceIds.size}/$limitedCount)",
                                 style = MaterialTheme.typography.titleMedium,
                                 color = MaterialTheme.colorScheme.primary
                             )
