@@ -13,11 +13,11 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ContentCopy
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Share
-import androidx.compose.material3.CircularWavyProgressIndicator
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.Icon
+import androidx.compose.material3.LoadingIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -77,14 +77,10 @@ fun MessageBubble(
         ) {
             // 1. 如果是用户发送中，在气泡左侧显示加载动画
             if (isUser && isLoading) {
-                CircularWavyProgressIndicator(
+                LoadingIndicator(
                     modifier = Modifier
-                        .padding(end = 8.dp)
-                        .size(20.dp)
-                        .align(Alignment.Bottom),
-                    color = MaterialTheme.colorScheme.primary,
-                    amplitude = 0.5f, // 适中的波动幅度
-                    wavelength = 8.dp // 密集的波纹感
+                        .size(30.dp)
+                        .align(Alignment.Bottom)
                 )
             }
 
@@ -163,14 +159,10 @@ fun MessageBubble(
 
             // 2. 如果是 AI 正在生成，在气泡右侧显示加载动画
             if (!isUser && isLoading) {
-                CircularWavyProgressIndicator(
+                LoadingIndicator(
                     modifier = Modifier
-                        .padding(start = 8.dp)
-                        .size(20.dp)
-                        .align(Alignment.Bottom),
-                    color = MaterialTheme.colorScheme.secondary,
-                    amplitude = 0.5f,
-                    wavelength = 8.dp
+                        .size(30.dp)
+                        .align(Alignment.Bottom)
                 )
             }
         }
