@@ -25,7 +25,10 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusDirection
+import androidx.compose.ui.focus.focusProperties
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.input.key.Key
 import androidx.compose.ui.input.key.KeyEventType
@@ -36,6 +39,7 @@ import androidx.compose.ui.input.key.type
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 
+@OptIn(ExperimentalComposeUiApi::class)
 @Composable
 fun ChatInputBar(
     modifier: Modifier = Modifier,
@@ -77,6 +81,9 @@ fun ChatInputBar(
                         .weight(1f)
                         .padding(vertical = 12.dp)
                         .padding(end = 6.dp)
+                        .focusProperties {
+                            onExit = { cancelFocusChange() }
+                        }
                         .onKeyEvent { event ->
                             if (event.type == KeyEventType.KeyDown && event.key == Key.Enter && event.isCtrlPressed) {
                                 if (isNotEmpty && !isSending) {
