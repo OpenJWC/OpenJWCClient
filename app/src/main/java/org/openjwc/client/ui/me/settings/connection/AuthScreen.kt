@@ -14,6 +14,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.CircularWavyProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
@@ -36,6 +37,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import org.openjwc.client.net.models.DeviceUnbindNetworkResult
 import org.openjwc.client.net.models.DevicesQueryNetworkResult
 
 
@@ -49,6 +51,7 @@ fun TestAuthScreen() {
         onRefreshDevices = {},
         onUnbindDevice = {},
         thisDeviceId = "1",
+        isLoadingDeviceIds = false,
         devicesResult = DevicesQueryNetworkResult.Success(
             response = org.openjwc.client.net.models.DevicesQuerySuccessResponse(
                 message = "success",
@@ -56,6 +59,11 @@ fun TestAuthScreen() {
                     limitedDeviceCount = 3,
                     deviceIDs = listOf("1", "2", "3")
                 )
+            )
+        ),
+        unbindResult = DeviceUnbindNetworkResult.Success(
+            response = org.openjwc.client.net.models.DeviceUnbindSuccessResponse(
+                detail = ""
             )
         )
     )
@@ -68,9 +76,11 @@ fun AuthScreen(
     onConfirm: (String) -> Unit,
     onBack: () -> Unit,
     onRefreshDevices: () -> Unit,
+    isLoadingDeviceIds: Boolean,
     onUnbindDevice: (String) -> Unit,
     thisDeviceId: String,
     devicesResult: DevicesQueryNetworkResult,
+    unbindResult: DeviceUnbindNetworkResult,
 ) {
 
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
@@ -157,75 +167,98 @@ fun AuthScreen(
                 modifier = Modifier.padding(top = 24.dp)
             )
             Spacer(modifier = Modifier.height(32.dp))
-
-            // --- 设备列表部分 ---
-            when (devicesResult) {
-                is DevicesQueryNetworkResult.Success -> {
-                    val deviceIds = devicesResult.response.data.deviceIDs
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(vertical = 12.dp),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.SpaceBetween
-                    ) {
-
-                        Text(
-                            text = "已绑定设备 (${deviceIds.size})",
-                            style = MaterialTheme.typography.titleMedium,
-                            color = MaterialTheme.colorScheme.primary
-                        )
-                        TextButton(
-                            onClick = { onRefreshDevices() },
-                            enabled = true
+            if (isLoadingDeviceIds) {
+                CircularWavyProgressIndicator(
+                    modifier = Modifier.align(Alignment.CenterHorizontally),
+                    color = MaterialTheme.colorScheme.primary,
+                )
+            } else {
+                // --- 设备列表部分 ---
+                when (devicesResult) {
+                    is DevicesQueryNetworkResult.Success -> {
+                        val deviceIds = devicesResult.response.data.deviceIDs
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(vertical = 12.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.SpaceBetween
                         ) {
-                            Text("刷新")
+
+                            Text(
+                                text = "已绑定设备 (${deviceIds.size})",
+                                style = MaterialTheme.typography.titleMedium,
+                                color = MaterialTheme.colorScheme.primary
+                            )
+                            TextButton(
+                                onClick = { onRefreshDevices() },
+                                enabled = true
+                            ) {
+                                Text("刷新")
+                            }
+                        }
+                        Text(
+                            text = "请先点击保存再刷新设备列表。",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                        Spacer(modifier = Modifier.height(8.dp))
+                        when(unbindResult) {
+                            is DeviceUnbindNetworkResult.Success -> { }
+                            is DeviceUnbindNetworkResult.Failure -> {
+                                Text(
+                                    text = "解绑失败(${unbindResult.code}): ${unbindResult.msg}",
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = MaterialTheme.colorScheme.error
+                                )
+                            }
+                            is DeviceUnbindNetworkResult.Error -> {
+                                Text(
+                                    text = "解绑失败: ${unbindResult.msg}",
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = MaterialTheme.colorScheme.error
+                                )
+                            }
+                        }
+
+                        if (devicesResult.response.data.deviceIDs.isEmpty()) {
+                            Text("暂无绑定设备", style = MaterialTheme.typography.bodyMedium)
+                        } else {
+                            deviceIds.forEach { id ->
+                                DeviceItem(
+                                    id = id,
+                                    isCurrentDevice = id == thisDeviceId,
+                                    onUnbindClick = { deviceToUnbind = id }
+                                )
+                                HorizontalDivider(
+                                    thickness = 0.5.dp,
+                                    color = MaterialTheme.colorScheme.outlineVariant
+                                )
+                            }
                         }
                     }
-                    Text(
-                        text = "请先点击保存再刷新设备列表。",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    )
-                    Spacer(modifier = Modifier.height(8.dp))
 
-                    if (devicesResult.response.data.deviceIDs.isEmpty()) {
-                        Text("暂无绑定设备", style = MaterialTheme.typography.bodyMedium)
-                    } else {
-                        deviceIds.forEach { id ->
-                            DeviceItem(
-                                id = id,
-                                isCurrentDevice = id == thisDeviceId,
-                                onUnbindClick = { deviceToUnbind = id }
-                            )
-                            HorizontalDivider(
-                                thickness = 0.5.dp,
-                                color = MaterialTheme.colorScheme.outlineVariant
-                            )
-                        }
+                    is DevicesQueryNetworkResult.Error -> {
+                        ErrorMessageView(
+                            message = "查询设备失败: ${devicesResult.msg}",
+                            onRetry = onRefreshDevices
+                        )
+                    }
+
+                    is DevicesQueryNetworkResult.Failure -> {
+                        ErrorMessageView(
+                            message = "查询设备失败(${devicesResult.code}): ${devicesResult.msg}",
+                            onRetry = onRefreshDevices
+                        )
                     }
                 }
-
-                is DevicesQueryNetworkResult.Error -> {
-                    ErrorMessageView(
-                        message = "查询设备失败: ${devicesResult.msg}",
-                        onRetry = onRefreshDevices
-                    )
-                }
-
-                is DevicesQueryNetworkResult.Failure -> {
-                    ErrorMessageView(
-                        message = "查询设备失败(${devicesResult.code}): ${devicesResult.msg}",
-                        onRetry = onRefreshDevices
-                    )
-                }
+                Text(
+                    text = "本机 ID: $thisDeviceId",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.padding(top = 24.dp)
+                )
             }
-            Text(
-                text = "本机 ID: $thisDeviceId",
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier.padding(top = 24.dp)
-            )
         }
     }
 }

@@ -30,10 +30,10 @@ roomCommonJvm = "2.8.4"
 roomKtx = "2.8.4"
 roomVersion = "2.8.4"
 kspVersion = "2.3.0"
-material3Version = "1.4.0"
 
 jpush = "6.0.2"
 jcore = "5.3.1"
+jpush-huawei = "6.0.2"
 
 [libraries]
 # Androidx 核心
@@ -79,9 +79,9 @@ androidx-animation = { group = "androidx.compose.animation", name = "animation",
 androidx-room-common-jvm = { group = "androidx.room", name = "room-common-jvm", version.ref = "roomCommonJvm" }
 androidx-room-ktx = { group = "androidx.room", name = "room-ktx", version.ref = "roomKtx" }
 androidx-room-compiler = { module = "androidx.room:room-compiler", version.ref = "roomVersion" }
-material3 = { group = "androidx.compose.material3", name = "material3", version.ref = "material3Version" }
 jpush-sdk = { group = "cn.jiguang.sdk", name = "jpush", version.ref = "jpush" }
 jpush-jcore = { group = "cn.jiguang.sdk", name = "jcore", version.ref = "jcore" }
+jpush-plugin-huawei = { group = "cn.jiguang.sdk.plugin", name = "huawei", version.ref = "jpush-huawei" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

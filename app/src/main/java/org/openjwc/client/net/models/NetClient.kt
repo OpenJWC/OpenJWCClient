@@ -58,8 +58,15 @@ interface NetService {
         @Header("X-Device-ID") deviceId: String,
     ): Response<ResponseBody>
 
+//    @Headers("Content-Type: application/json")
     @GET("api/v1/client/device")
     suspend fun getDevicesQuery(
+        @Header("Authorization") auth: String,
+        @Header("X-Device-ID") deviceId: String,
+    ): Response<ResponseBody>
+
+    @POST("api/v1/client/device/unbind")
+    suspend fun unbindDevice(
         @Header("Authorization") auth: String,
         @Header("X-Device-ID") deviceId: String,
     ): Response<ResponseBody>

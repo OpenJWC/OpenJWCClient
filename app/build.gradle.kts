@@ -1,3 +1,4 @@
+import org.gradle.kotlin.dsl.invoke
 import java.util.Properties
 
 plugins {
@@ -6,7 +7,10 @@ plugins {
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.kotlin.serialization)
     alias(libs.plugins.ksp)
+
+    id("com.huawei.agconnect")
 }
+
 val localProperties = Properties()
 val localPropertiesFile = rootProject.file("local.properties")
 if (localPropertiesFile.exists()) {
@@ -67,7 +71,6 @@ kotlin {
 }
 
 dependencies {
-    implementation(libs.material3)
     ksp(libs.androidx.room.compiler)
     // 基础库
     implementation(libs.androidx.core.ktx)
@@ -95,6 +98,10 @@ dependencies {
     implementation(libs.compose.markdown)
     implementation(libs.jpush.sdk)
     implementation(libs.jpush.jcore)
+    implementation(libs.jpush.plugin.huawei)
+    implementation("com.huawei.hms:push:6.13.0.300")
+    implementation("cn.jiguang.sdk.plugin:huawei:5.6.0")
+    
     // 网络层 (Retrofit + OkHttp) - 这里的点号访问会自动匹配 toml 中的中划线
     implementation(libs.retrofit.core)
     implementation(libs.retrofit.converter.serialization)

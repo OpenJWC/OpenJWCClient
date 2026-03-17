@@ -19,7 +19,9 @@ import org.openjwc.client.data.settings.MenuItem
 import org.openjwc.client.data.settings.ToggleID
 import org.openjwc.client.data.settings.UserSettings
 import org.openjwc.client.data.settings.menuTemplates
+import org.openjwc.client.net.chat.deviceUnbind
 import org.openjwc.client.net.chat.devicesQuery
+import org.openjwc.client.net.models.DeviceUnbindNetworkResult
 import org.openjwc.client.net.models.DevicesQueryNetworkResult
 import org.openjwc.client.net.models.NetClient
 private const val label = "SettingsViewModel"
@@ -71,22 +73,79 @@ class SettingsViewModel(
             )
         )
     )
+    private var _isLoadingDeviceResult = MutableStateFlow(false)
+    val isLoadingDeviceResult = _isLoadingDeviceResult.asStateFlow()
     val deviceResult = _deviceResult.asStateFlow()
+
+    private var _deviceUnbindNetworkResult = MutableStateFlow<DeviceUnbindNetworkResult>(
+        DeviceUnbindNetworkResult.Success(
+            response = org.openjwc.client.net.models.DeviceUnbindSuccessResponse(
+                detail = ""
+            )
+        )
+    )
+
+    val deviceUnbindNetworkResult = _deviceUnbindNetworkResult.asStateFlow()
+
     fun devicesQuery(){
         viewModelScope.launch {
+            _isLoadingDeviceResult.value = true
+            Log.d(label, "devicesQuery: start")
             try {
                 val currentSettings = repository.getSettingsSnapshot() ?: UserSettings()
+                Log.d(label, "devicesQuery: $currentSettings")
                 val apiService = NetClient.getService(currentSettings.host, currentSettings.port)
                 val result = apiService.devicesQuery(
                     currentSettings.authKey,
-                    repository.getOrGenerateDeviceId()
+                    currentSettings.uuidString
                 )
                 Log.d(label, "devicesQuery: $result")
                 _deviceResult.value = result
             } catch (e: Exception) {
                 handleFailure(e.localizedMessage ?: "Unknown error")
+            } finally {
+                _isLoadingDeviceResult.value = false
             }
         }
+    }
+    fun unbindAndRefresh(deviceId: String) {
+        viewModelScope.launch {
+            _isLoadingDeviceResult.value = true
+            try {
+                val currentSettings = repository.getSettingsSnapshot() ?: UserSettings()
+                val apiService = NetClient.getService(currentSettings.host, currentSettings.port)
+
+                Log.d(label, "执行解绑...")
+                val unbindResult =
+                apiService.deviceUnbind(
+                    currentSettings.authKey,
+                    deviceId,
+                )
+                Log.d(label, "Unbind result: $unbindResult")
+                _deviceUnbindNetworkResult.value = unbindResult
+
+                if (unbindResult is DeviceUnbindNetworkResult.Success) {
+                    Log.d(label, "解绑成功，开始刷新列表...")
+                    val result = apiService.devicesQuery(
+                        currentSettings.authKey,
+                        currentSettings.uuidString
+                    )
+                    _deviceResult.value = result
+                }
+            } catch (e: Exception) {
+                handleFailure(e.localizedMessage ?: "操作失败")
+            } finally {
+                _isLoadingDeviceResult.value = false
+            }
+        }
+    }
+
+    fun clearUnbindResult() {
+        _deviceUnbindNetworkResult.value = DeviceUnbindNetworkResult.Success(
+            response = org.openjwc.client.net.models.DeviceUnbindSuccessResponse(
+                detail = ""
+            )
+        )
     }
 
     private suspend fun handleFailure(errorMsg: String) {

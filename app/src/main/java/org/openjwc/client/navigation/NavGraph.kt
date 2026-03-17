@@ -116,6 +116,7 @@ fun NavGraph(
                     "auth" -> {
                         val currentSettings by settingsViewModel.settings.collectAsState()
                         val deviceResult by settingsViewModel.deviceResult.collectAsState()
+                        val isLoadingDeviceIds by settingsViewModel.isLoadingDeviceResult.collectAsState()
                         AuthScreen(
                             initialAuthKey = currentSettings.authKey,
                             onConfirm = { key ->
@@ -124,12 +125,16 @@ fun NavGraph(
                             },
                             onBack = { navController.popBackStack() },
                             onRefreshDevices = {
+                                settingsViewModel.clearUnbindResult()
                                 settingsViewModel.devicesQuery()
                             },
                             thisDeviceId = currentSettings.uuidString,
-                            onUnbindDevice = { /*TODO()*/},
-                            devicesResult = deviceResult
-
+                            onUnbindDevice = {
+                                settingsViewModel.unbindAndRefresh(it)
+                            },
+                            devicesResult = deviceResult,
+                            isLoadingDeviceIds = isLoadingDeviceIds,
+                            unbindResult = settingsViewModel.deviceUnbindNetworkResult.collectAsState().value
                         )
                     }
                     "theme" -> {

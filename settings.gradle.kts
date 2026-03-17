@@ -9,6 +9,7 @@ pluginManagement {
         }
         mavenCentral()
         gradlePluginPortal()
+        maven {url = uri("https://developer.huawei.com/repo/")}
     }
 }
 dependencyResolutionManagement {
@@ -17,9 +18,11 @@ dependencyResolutionManagement {
         google()
         mavenCentral()
         maven { url = uri("https://jitpack.io") }
+        maven { url = uri("https://developer.huawei.com/repo/") }
     }
 }
 
 rootProject.name = "OpenJWC-Client"
 include(":app")
+include(":jiguang")
  

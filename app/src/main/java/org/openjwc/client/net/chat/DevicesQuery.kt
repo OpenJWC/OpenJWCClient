@@ -13,7 +13,8 @@ suspend fun NetService.devicesQuery(
     deviceId: String
 ): DevicesQueryNetworkResult {
     return try {
-        val response = getDevicesQuery(auth, deviceId)
+        Log.d(LABEL, "Requesting devices...")
+        val response = getDevicesQuery("Bearer $auth", deviceId)
         val rawBody = response.body()?.string()
 
         if (response.isSuccessful && rawBody != null) {

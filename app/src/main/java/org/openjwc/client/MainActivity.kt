@@ -2,6 +2,8 @@ package org.openjwc.client
 
 import android.os.Build
 import android.os.Bundle
+import android.util.Log
+import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -12,6 +14,8 @@ import androidx.compose.material3.windowsizeclass.calculateWindowSizeClass
 import androidx.compose.runtime.collectAsState
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.lifecycle.lifecycleScope
+import cn.jpush.android.api.JPushInterface
+import cn.jpush.android.api.JPushInterface.requestRequiredPermission
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import org.openjwc.client.data.db.AppDatabase
@@ -19,7 +23,6 @@ import org.openjwc.client.data.repository.ChatRepository
 import org.openjwc.client.data.repository.SettingsRepository
 import org.openjwc.client.data.settings.UserSettings
 import org.openjwc.client.navigation.NavGraph
-import org.openjwc.client.notification.PushManager
 import org.openjwc.client.ui.theme.OpenJWCClientTheme
 import org.openjwc.client.viewmodels.ChatViewModel
 import org.openjwc.client.viewmodels.ChatViewModelFactory
@@ -42,8 +45,6 @@ class MainActivity : ComponentActivity() {
     @OptIn(ExperimentalMaterial3WindowSizeClassApi::class)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        PushManager.init(context = applicationContext, appId = BuildConfig.JPUSH_APPKEY, debugMode = true) {}
-        PushManager.resumePush(applicationContext) {}
         val splashScreen = installSplashScreen()
         var isReady = false
 
@@ -55,6 +56,15 @@ class MainActivity : ComponentActivity() {
         }
 
         splashScreen.setKeepOnScreenCondition { !isReady }
+        requestRequiredPermission(this)
+        val code = com.huawei.hms.api.HuaweiApiAvailability.getInstance().isHuaweiMobileServicesAvailable(applicationContext)
+        if (code != com.huawei.hms.api.ConnectionResult.SUCCESS) {
+            Log.e("HMS_CHECK", "华为服务不可用，错误码: $code")
+            Toast.makeText(applicationContext, "华为服务不可用，错误码: $code", Toast.LENGTH_SHORT).show()
+            // 如果返回 6003，说明指纹（SHA256）不对
+            // 如果返回 907135000，说明 agconnect-services.json 没放对
+        }
+        val registrationId = JPushInterface.getRegistrationID(applicationContext)
         enableEdgeToEdge()
         setContent {
             val windowSizeClass = calculateWindowSizeClass(this)
