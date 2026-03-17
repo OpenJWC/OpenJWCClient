@@ -1,15 +1,11 @@
 
 package org.openjwc.client.viewmodels
 import android.util.Log
-import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateMapOf
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import org.openjwc.client.data.repository.SettingsRepository
 import org.openjwc.client.data.settings.UserSettings
@@ -35,10 +31,10 @@ class NewsViewModel(
     var labelError = MutableStateFlow<String?>(null)
         private set
 
-    var isLoading by mutableStateOf(false)
+    var isLoading = MutableStateFlow(false)
         private set
 
-    var isRefreshing by mutableStateOf(false)
+    var isRefreshing = MutableStateFlow(false)
         private set
 
     fun getNewsState(label: String): List<Notice> = _newsCache[label] ?: emptyList()
@@ -46,8 +42,8 @@ class NewsViewModel(
     fun isEnd(label: String): Boolean = _isEndMap[label] ?: false
 
     fun loadLabels() {
-        isRefreshing = true
         viewModelScope.launch {
+            isRefreshing.value = true
             try {
                 val settings = repository.getSettingsSnapshot() ?: UserSettings()
                 val apiService = NetClient.getService(settings.host, settings.port)
@@ -73,8 +69,10 @@ class NewsViewModel(
                 Log.e(tag, "loadLabels Error", e)
                 labelError.value = e.localizedMessage ?: "未知错误"
             }
+            finally {
+                isRefreshing.value = false
+            }
         }
-        isRefreshing = false
     }
 
     fun loadCategory(label: String, isRefresh: Boolean = false) {
@@ -83,13 +81,13 @@ class NewsViewModel(
     }
 
     fun loadNextPage(label: String) {
-        if (isLoading || isRefreshing || isEnd(label)) return
+        if (isLoading.value || isRefreshing.value || isEnd(label)) return
         val nextPage = (_pageMap[label] ?: 1) + 1
         executeLoadNews(label, page = nextPage, size = 20, isRefresh = false)
     }
 
     private fun executeLoadNews(label: String, page: Int, size: Int, isRefresh: Boolean) {
-        if (isRefresh) isRefreshing = true else isLoading = true
+        if (isRefresh) isRefreshing.value = true else isLoading.value = true
         _errorMap[label] = null
 
         viewModelScope.launch {
@@ -133,8 +131,8 @@ class NewsViewModel(
                 Log.e(tag, "executeLoad Error", e)
                 _errorMap[label] = e.localizedMessage ?: "未知错误"
             } finally {
-                isLoading = false
-                isRefreshing = false
+                isLoading.value = false
+                isRefreshing.value = false
             }
         }
     }

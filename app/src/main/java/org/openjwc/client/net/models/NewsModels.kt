@@ -23,7 +23,7 @@ data class Notice(
     val title: String,
     val date: String,
     @SerialName("detail_url") val detailUrl: String,
-    @SerialName("is_page") val isPage: Int
+    @SerialName("is_page") val isPage: Boolean
 )
 
 sealed class FetchNewsNetworkResult {

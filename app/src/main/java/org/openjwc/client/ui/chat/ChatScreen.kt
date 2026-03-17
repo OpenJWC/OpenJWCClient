@@ -356,7 +356,7 @@ private fun ChatMainContent(
                 .fillMaxWidth()
                 .padding(vertical = 8.dp)
                 .imePadding(),
-            sendButtonEnabled = sendMessageState is SendMessageState.Idle
+            isSending = sendMessageState is SendMessageState.Sending
         )
     }
 }

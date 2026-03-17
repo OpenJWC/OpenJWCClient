@@ -18,9 +18,9 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.GridItemSpan
-import androidx.compose.foundation.lazy.grid.LazyGridState
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
@@ -34,6 +34,7 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
+import androidx.compose.material3.LoadingIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
@@ -60,9 +61,7 @@ fun NewsList(
     label: String,
     windowSizeClass: WindowSizeClass,
     newsItems: List<Notice>,
-    listState: LazyGridState,
     isLoading: Boolean,
-//    isRefreshing: Boolean,
     isEnd: Boolean,
     error: String?,
 
@@ -71,6 +70,7 @@ fun NewsList(
     onItemClick: (Notice) -> Unit,
     onInitialLoad: () -> Unit = {}
 ) {
+    val listState = rememberLazyGridState()
     val snackbarHostState = remember { SnackbarHostState() }
 
     // 进入页面或切换标签时触发初始加载
@@ -168,7 +168,7 @@ fun ListFooter(isLoading: Boolean, isEnd: Boolean, error: String?, onRetry: () -
             }
 
             isLoading -> {
-                CircularWavyProgressIndicator(
+                LoadingIndicator(
                     modifier = Modifier.size(48.dp)
                 )
             }

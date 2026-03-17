@@ -12,6 +12,7 @@ import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.Send
 import androidx.compose.material.icons.outlined.Add
+import androidx.compose.material3.ContainedLoadingIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -33,7 +34,7 @@ fun ChatInputBar(
     modifier: Modifier = Modifier,
     onSendMessage: (String) -> Unit,
     onAttachment: () -> Unit,
-    sendButtonEnabled: Boolean = true,
+    isSending: Boolean = true,
 ) {
     var textState by remember { mutableStateOf("") }
     val isNotEmpty = textState.isNotBlank()
@@ -85,6 +86,13 @@ fun ChatInputBar(
 
         Spacer(modifier = Modifier.width(8.dp))
 
+        if(isSending) {
+            ContainedLoadingIndicator(
+                modifier = Modifier.size(48.dp),
+                containerColor = MaterialTheme.colorScheme.surfaceVariant,
+                indicatorColor = MaterialTheme.colorScheme.primary
+            )
+        } else
         Surface(
             onClick = {
                 if (isNotEmpty) {
@@ -92,16 +100,16 @@ fun ChatInputBar(
                     textState = ""
                 }
             },
-            enabled = isNotEmpty && sendButtonEnabled,
+            enabled = isNotEmpty,
             shape = CircleShape,
-            color = if (isNotEmpty && sendButtonEnabled) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceVariant,
+            color = if (isNotEmpty) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceVariant,
             modifier = Modifier.size(48.dp)
         ) {
             Box(contentAlignment = Alignment.Center) {
                 Icon(
                     imageVector = Icons.AutoMirrored.Rounded.Send,
                     contentDescription = "Send",
-                    tint = if (isNotEmpty && sendButtonEnabled) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f),
+                    tint = if (isNotEmpty) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant.copy(0.4f),
                     modifier = Modifier.size(20.dp)
                 )
             }

@@ -6,7 +6,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
-import androidx.compose.material3.CircularWavyProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SecondaryScrollableTabRow
 import androidx.compose.material3.SnackbarHost
@@ -42,6 +41,10 @@ fun NewsScreen(
     val scope = rememberCoroutineScope()
     val listState = rememberLazyGridState()
     val snackbarHostState = remember { SnackbarHostState() }
+    val isLoading = viewModel.isLoading.collectAsStateWithLifecycle().value
+    val isRefreshing = viewModel.isRefreshing.collectAsStateWithLifecycle().value
+    val labelError = viewModel.labelError.collectAsStateWithLifecycle().value
+
 
     LaunchedEffect(tabs) {
         viewModel.loadLabels()
@@ -49,67 +52,67 @@ fun NewsScreen(
     Box(
         modifier = modifier
     ) {
-        PullToRefreshBox(
-            isRefreshing = viewModel.isRefreshing,
-            onRefresh = { viewModel.loadLabels() },
-            modifier = Modifier.fillMaxSize()
-        ) {
-            if (tabs.isEmpty() && !viewModel.isLoading) {
-                EmptyLabelsPlaceholder(
-                    onRefresh = { viewModel.loadLabels() },
-                    errorMessage = viewModel.labelError.collectAsStateWithLifecycle().value
-                )
-            } else if (tabs.isNotEmpty()) {
-                Column(
-                    modifier = Modifier
-                        .fillMaxSize()
-                ) {
-                    SecondaryScrollableTabRow(
-                        selectedTabIndex = pagerState.currentPage,
-                        containerColor = MaterialTheme.colorScheme.surface,
-                        edgePadding = 16.dp,
-                        divider = {},
-                        indicator = {
-                            TabRowDefaults.SecondaryIndicator(
-                                modifier = Modifier.tabIndicatorOffset(pagerState.currentPage),
-                                color = MaterialTheme.colorScheme.primary
-                            )
-                        }
-                    ) {
-                        tabs.forEachIndexed { index, label ->
-                            val isSelected = pagerState.currentPage == index
-                            Tab(
-                                selected = isSelected,
-                                onClick = {
-                                    scope.launch { pagerState.animateScrollToPage(index) }
-                                },
-                                text = {
-                                    Text(
-                                        text = label,
-                                        maxLines = 1, // 强制单行，触发滚动
-                                        color = if (isSelected) MaterialTheme.colorScheme.primary
-                                        else MaterialTheme.colorScheme.onSurfaceVariant,
-                                        style = if (isSelected)
-                                            MaterialTheme.typography.titleSmall
-                                        else
-                                            MaterialTheme.typography.bodyMedium
-                                    )
-                                }
-                            )
-                        }
+
+        if (tabs.isEmpty() && !(isLoading || isRefreshing)) {
+            EmptyLabelsPlaceholder(
+                onRefresh = { viewModel.loadLabels() },
+                errorMessage = labelError
+            )
+        } else if (tabs.isNotEmpty()) {
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+            ) {
+                SecondaryScrollableTabRow(
+                    selectedTabIndex = pagerState.currentPage,
+                    containerColor = MaterialTheme.colorScheme.surface,
+                    edgePadding = 16.dp,
+                    divider = {},
+                    indicator = {
+                        TabRowDefaults.SecondaryIndicator(
+                            modifier = Modifier.tabIndicatorOffset(pagerState.currentPage),
+                            color = MaterialTheme.colorScheme.primary
+                        )
                     }
-                    HorizontalPager(
-                        state = pagerState,
+                ) {
+                    tabs.forEachIndexed { index, label ->
+                        val isSelected = pagerState.currentPage == index
+                        Tab(
+                            selected = isSelected,
+                            onClick = {
+                                scope.launch { pagerState.animateScrollToPage(index) }
+                            },
+                            text = {
+                                Text(
+                                    text = label,
+                                    maxLines = 1, // 强制单行，触发滚动
+                                    color = if (isSelected) MaterialTheme.colorScheme.primary
+                                    else MaterialTheme.colorScheme.onSurfaceVariant,
+                                    style = if (isSelected)
+                                        MaterialTheme.typography.titleSmall
+                                    else
+                                        MaterialTheme.typography.bodyMedium
+                                )
+                            }
+                        )
+                    }
+                }
+                HorizontalPager(
+                    state = pagerState,
+                    modifier = Modifier.fillMaxSize(),
+                    beyondViewportPageCount = 1
+                ) { pageIndex ->
+                    val currentLabel = tabs[pageIndex]
+                    PullToRefreshBox(
+                        isRefreshing = isRefreshing,
+                        onRefresh = { viewModel.loadLabels() },
                         modifier = Modifier.fillMaxSize(),
-                        beyondViewportPageCount = 1
-                    ) { pageIndex ->
-                        val currentLabel = tabs[pageIndex]
+                    ) {
                         NewsList(
                             label = currentLabel,
                             windowSizeClass = windowSizeClass,
                             newsItems = viewModel.getNewsState(currentLabel),
-                            listState = listState,
-                            isLoading = viewModel.isLoading,
+                            isLoading = isLoading,
                             isEnd = viewModel.isEnd(currentLabel),
                             error = viewModel.getError(currentLabel),
                             onRefresh = { viewModel.loadCategory(currentLabel, isRefresh = true) },
@@ -119,27 +122,23 @@ fun NewsScreen(
                             },
                             onInitialLoad = { viewModel.loadCategory(currentLabel) }
                         )
+                        val showBackToTop by remember { derivedStateOf { listState.firstVisibleItemIndex > 5 } }
+                        BackToTopButton(
+                            visible = showBackToTop,
+                            onClick = { scope.launch { listState.animateScrollToItem(0) } },
+                            modifier = Modifier.align(Alignment.BottomEnd)
+                        )
+
+                        SnackbarHost(
+                            hostState = snackbarHostState,
+                            modifier = Modifier.align(Alignment.BottomCenter)
+                        )
                     }
                 }
             }
-
-            if (viewModel.isLoading && tabs.isEmpty()) {
-                CircularWavyProgressIndicator(
-                    modifier = Modifier.align(Alignment.Center)
-                )
-            }
         }
 
-        val showBackToTop by remember { derivedStateOf { listState.firstVisibleItemIndex > 5 } }
-        BackToTopButton(
-            visible = showBackToTop,
-            onClick = { scope.launch { listState.animateScrollToItem(0) } },
-            modifier = Modifier.align(Alignment.BottomEnd)
-        )
-
-        SnackbarHost(
-            hostState = snackbarHostState,
-            modifier = Modifier.align(Alignment.BottomCenter)
-        )
     }
+
+
 }
