@@ -36,3 +36,25 @@ sealed class FetchNewsNetworkResult {
         val msg: String
     ) : FetchNewsNetworkResult()
 }
+
+@Serializable
+data class FetchLabelsSuccessResponse(
+    @SerialName("msg") val message: String,
+    val data: FetchLabelsResponseData
+)
+
+@Serializable
+data class FetchLabelsResponseData(
+    val labels: List<String>
+)
+
+sealed class FetchLabelsNetworkResult {
+    data class Success(val response: FetchLabelsSuccessResponse) : FetchLabelsNetworkResult()
+    data class Failure(
+        val code: Int,
+        val msg: String
+    ) : FetchLabelsNetworkResult()
+    data class Error(
+        val msg: String
+    ) : FetchLabelsNetworkResult()
+}

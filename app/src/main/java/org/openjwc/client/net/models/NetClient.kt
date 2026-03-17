@@ -74,4 +74,10 @@ interface NetService {
         @Query("page") page: Int,
         @Query("size") size: Int
     ): Response<ResponseBody>
+
+    @GET("api/v1/client/notices/labels")
+    suspend fun getLabels(
+        @Header("Authorization") auth: String,
+        @Header("X-Device-ID") deviceId: String,
+    ): Response<ResponseBody>
 }

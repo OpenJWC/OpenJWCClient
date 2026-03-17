@@ -128,7 +128,6 @@ private fun MainTabContent(
     val sessionId = metadata?.sessionId
     Box(
         Modifier.fillMaxSize()
-//        .consumeWindowInsets(contentPadding)
     ) {
         when (currentTab) {
             MainTab.Chat -> ChatScreen(sessionId, contentPadding, windowSizeClass, drawerState, chatViewModel)

@@ -5,10 +5,12 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.scaleIn
 import androidx.compose.animation.scaleOut
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -16,10 +18,12 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.GridItemSpan
+import androidx.compose.foundation.lazy.grid.LazyGridState
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
-import androidx.compose.foundation.lazy.grid.rememberLazyGridState
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowUpward
 import androidx.compose.material3.Button
@@ -27,14 +31,13 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularWavyProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.material3.windowsizeclass.WindowSizeClass
 import androidx.compose.material3.windowsizeclass.WindowWidthSizeClass
 import androidx.compose.runtime.Composable
@@ -42,14 +45,13 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import kotlinx.coroutines.launch
 import org.openjwc.client.net.models.Notice
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -58,9 +60,9 @@ fun NewsList(
     label: String,
     windowSizeClass: WindowSizeClass,
     newsItems: List<Notice>,
-
+    listState: LazyGridState,
     isLoading: Boolean,
-    isRefreshing: Boolean,
+//    isRefreshing: Boolean,
     isEnd: Boolean,
     error: String?,
 
@@ -69,8 +71,6 @@ fun NewsList(
     onItemClick: (Notice) -> Unit,
     onInitialLoad: () -> Unit = {}
 ) {
-    val listState = rememberLazyGridState()
-    val scope = rememberCoroutineScope()
     val snackbarHostState = remember { SnackbarHostState() }
 
     // 进入页面或切换标签时触发初始加载
@@ -107,70 +107,66 @@ fun NewsList(
     }
 
     Box(modifier = Modifier.fillMaxSize()) {
-        PullToRefreshBox(
-            isRefreshing = isRefreshing,
-            onRefresh = onRefresh,
-            modifier = Modifier.fillMaxSize()
-        ) {
-            if (isLoading && newsItems.isEmpty()) {
-                Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    CircularWavyProgressIndicator(
-                        modifier = Modifier.align(Alignment.Center),
-                        color = MaterialTheme.colorScheme.primary,
+        if (isLoading && newsItems.isEmpty()) {
+            Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                CircularWavyProgressIndicator(
+                    modifier = Modifier.align(Alignment.Center),
+                    color = MaterialTheme.colorScheme.primary,
+                )
+            }
+        } else if (error != null && newsItems.isEmpty()) {
+            EmptyErrorState(errorMessage = error, onRetry = onRefresh)
+        } else {
+            LazyVerticalGrid(
+                state = listState,
+                columns = columns,
+                modifier = Modifier.fillMaxSize(),
+                contentPadding = PaddingValues(16.dp, 16.dp, 16.dp, 88.dp),
+                horizontalArrangement = Arrangement.spacedBy(16.dp),
+                verticalArrangement = Arrangement.spacedBy(16.dp)
+            ) {
+                items(items = newsItems, key = { it.id }) { item ->
+                    InfoCard(
+                        notice = item,
+                        onClick = onItemClick,
+                        isFresh = false
                     )
                 }
-            } else if (error != null && newsItems.isEmpty()) {
-                EmptyErrorState(errorMessage = error, onRetry = onRefresh)
-            } else {
-                LazyVerticalGrid(
-                    state = listState,
-                    columns = columns,
-                    modifier = Modifier.fillMaxSize(),
-                    contentPadding = PaddingValues(16.dp, 16.dp, 16.dp, 88.dp),
-                    horizontalArrangement = Arrangement.spacedBy(16.dp),
-                    verticalArrangement = Arrangement.spacedBy(16.dp)
-                ) {
-                    items(items = newsItems, key = { it.id }) { item ->
-                        InfoCard(
-                            notice = item,
-                            onClick = onItemClick,
-                            isFresh = false
-                        )
-                    }
 
-                    item(span = { GridItemSpan(maxLineSpan) }) {
-                        ListFooter(
-                            isLoading = isLoading,
-                            isEnd = isEnd,
-                            error = error,
-                            onRetry = onLoadMore
-                        )
-                    }
+                item(span = { GridItemSpan(maxLineSpan) }) {
+                    ListFooter(
+                        isLoading = isLoading,
+                        isEnd = isEnd,
+                        error = error,
+                        onRetry = onLoadMore
+                    )
                 }
             }
         }
-
-        val showBackToTop by remember { derivedStateOf { listState.firstVisibleItemIndex > 5 } }
-        BackToTopButton(
-            visible = showBackToTop,
-            onClick = { scope.launch { listState.animateScrollToItem(0) } },
-            modifier = Modifier.align(Alignment.BottomEnd)
-        )
-
-        SnackbarHost(hostState = snackbarHostState, modifier = Modifier.align(Alignment.BottomCenter))
     }
 }
 
+
 @Composable
 fun ListFooter(isLoading: Boolean, isEnd: Boolean, error: String?, onRetry: () -> Unit) {
-    Box(Modifier.fillMaxWidth().padding(16.dp), contentAlignment = Alignment.Center) {
+    Box(
+        Modifier
+            .fillMaxWidth()
+            .padding(16.dp), contentAlignment = Alignment.Center
+    ) {
         when {
             error != null -> {
                 TextButton(onClick = onRetry) { Text("加载失败，点击重试") }
             }
+
             isEnd -> {
-                Text("— 已加载全部内容 —", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.outline)
+                Text(
+                    "— 已加载全部内容 —",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.outline
+                )
             }
+
             isLoading -> {
                 CircularWavyProgressIndicator(
                     modifier = Modifier.size(48.dp)
@@ -186,7 +182,9 @@ fun ListFooter(isLoading: Boolean, isEnd: Boolean, error: String?, onRetry: () -
 @Composable
 fun EmptyErrorState(errorMessage: String, onRetry: () -> Unit) {
     Column(
-        modifier = Modifier.fillMaxSize().padding(16.dp),
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(16.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
@@ -213,6 +211,7 @@ fun BackToTopButton(visible: Boolean, onClick: () -> Unit, modifier: Modifier) {
         }
     }
 }
+
 @Composable
 fun InfoCard(
     notice: Notice,
@@ -243,7 +242,7 @@ fun InfoCard(
                 text = notice.title,
                 style = MaterialTheme.typography.titleMedium,
                 color = if (isFresh) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface,
-                fontWeight = if(isFresh) FontWeight.Bold else FontWeight.Normal,
+                fontWeight = if (isFresh) FontWeight.Bold else FontWeight.Normal,
                 maxLines = 3,
                 overflow = TextOverflow.Ellipsis,
             )
@@ -258,5 +257,80 @@ fun InfoCard(
                 )
             }
         }
+    }
+}
+
+@Composable
+fun EmptyLabelsPlaceholder(
+    onRefresh: () -> Unit,
+    errorMessage: String?,
+    modifier: Modifier = Modifier
+) {
+    Column(
+        modifier = modifier
+            .fillMaxSize()
+            .padding(32.dp)
+            .verticalScroll(rememberScrollState()),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center
+    ) {
+        // 视觉焦点：一个带柔和背景的图标区
+        Box(
+            modifier = Modifier
+                .size(100.dp)
+                .background(
+                    MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.4f),
+                    CircleShape
+                ),
+            contentAlignment = Alignment.Center
+        ) {
+            Text("🏷️", fontSize = 40.sp)
+        }
+
+        Spacer(modifier = Modifier.height(24.dp))
+
+        Text(
+            text = "未发现资讯分类",
+            style = MaterialTheme.typography.headlineSmall,
+            color = MaterialTheme.colorScheme.onSurface,
+            fontWeight = FontWeight.Bold
+        )
+
+        Spacer(modifier = Modifier.height(8.dp))
+
+        Text(
+            text = "暂时无法获取到新闻标签，请检查网络连接或稍后重试",
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            textAlign = TextAlign.Center,
+            modifier = Modifier.padding(horizontal = 16.dp)
+        )
+
+        Spacer(modifier = Modifier.height(8.dp))
+
+        if (errorMessage != null) {
+            Text(
+                text = errorMessage,
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.error,
+            )
+        }
+        Spacer(modifier = Modifier.height(32.dp))
+
+        // 使用 FilledTonalButton，视觉上不会过于突兀，适合空状态
+        FilledTonalButton(
+            onClick = onRefresh,
+            contentPadding = PaddingValues(horizontal = 24.dp, vertical = 12.dp)
+        ) {
+            Text("重新获取分类")
+        }
+
+        // 提示用户也可以下拉刷新
+        Text(
+            text = "或从顶部下拉刷新",
+            style = MaterialTheme.typography.labelSmall,
+            color = MaterialTheme.colorScheme.outline,
+            modifier = Modifier.padding(top = 16.dp)
+        )
     }
 }
