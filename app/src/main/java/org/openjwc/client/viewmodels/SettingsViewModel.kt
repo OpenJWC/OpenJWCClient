@@ -19,8 +19,8 @@ import org.openjwc.client.data.settings.MenuItem
 import org.openjwc.client.data.settings.ToggleID
 import org.openjwc.client.data.settings.UserSettings
 import org.openjwc.client.data.settings.menuTemplates
-import org.openjwc.client.net.chat.deviceUnbind
-import org.openjwc.client.net.chat.devicesQuery
+import org.openjwc.client.net.auth.deviceUnbind
+import org.openjwc.client.net.auth.devicesQuery
 import org.openjwc.client.net.models.DeviceUnbindNetworkResult
 import org.openjwc.client.net.models.DevicesQueryNetworkResult
 import org.openjwc.client.net.models.NetClient

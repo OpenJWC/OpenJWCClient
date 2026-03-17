@@ -3,7 +3,6 @@ package org.openjwc.client
 import android.os.Build
 import android.os.Bundle
 import android.util.Log
-import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -57,14 +56,8 @@ class MainActivity : ComponentActivity() {
 
         splashScreen.setKeepOnScreenCondition { !isReady }
         requestRequiredPermission(this)
-        val code = com.huawei.hms.api.HuaweiApiAvailability.getInstance().isHuaweiMobileServicesAvailable(applicationContext)
-        if (code != com.huawei.hms.api.ConnectionResult.SUCCESS) {
-            Log.e("HMS_CHECK", "华为服务不可用，错误码: $code")
-            Toast.makeText(applicationContext, "华为服务不可用，错误码: $code", Toast.LENGTH_SHORT).show()
-            // 如果返回 6003，说明指纹（SHA256）不对
-            // 如果返回 907135000，说明 agconnect-services.json 没放对
-        }
         val registrationId = JPushInterface.getRegistrationID(applicationContext)
+        Log.d("MainActivity", "registrationId: $registrationId")
         enableEdgeToEdge()
         setContent {
             val windowSizeClass = calculateWindowSizeClass(this)

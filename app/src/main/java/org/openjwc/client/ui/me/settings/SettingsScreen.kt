@@ -24,12 +24,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.viewmodel.compose.viewModel
-import androidx.navigation.NavHostController
-import org.openjwc.client.navigation.Routes.buildSettingsRoute
 import org.openjwc.client.data.settings.Event
 import org.openjwc.client.data.settings.Menu
-import org.openjwc.client.viewmodels.ChatEvent
+import org.openjwc.client.navigation.Routes.buildSettingsRoute
 import org.openjwc.client.viewmodels.SettingsEvent
 import org.openjwc.client.viewmodels.SettingsViewModel
 

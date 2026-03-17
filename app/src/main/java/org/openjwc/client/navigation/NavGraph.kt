@@ -13,6 +13,7 @@ import androidx.compose.material3.windowsizeclass.WindowSizeClass
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.ui.platform.LocalUriHandler
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
@@ -39,6 +40,7 @@ fun NavGraph(
     chatViewModel: ChatViewModel
 ) {
     val navController = rememberNavController()
+    val uriHandler = LocalUriHandler.current
     Surface(
         color = MaterialTheme.colorScheme.background
     ) {
@@ -97,7 +99,10 @@ fun NavGraph(
                     /** 目前的打算是把所有非主屏幕的 Route 都归结为 settings/{} */
                     "about" -> {
                         AboutScreen(
-                            onBack = { if (navController.previousBackStackEntry != null) navController.popBackStack() }
+                            onBack = { if (navController.previousBackStackEntry != null) navController.popBackStack() },
+                            onToGitHub = {
+                                uriHandler.openUri("https://github.com/OpenJWC")
+                            }
                         )
                     }
                     "host" -> {

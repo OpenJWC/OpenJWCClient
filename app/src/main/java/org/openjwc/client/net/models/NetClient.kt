@@ -10,6 +10,7 @@ import retrofit2.http.Body
 import retrofit2.http.GET
 import retrofit2.http.Header
 import retrofit2.http.POST
+import retrofit2.http.Query
 import retrofit2.http.Streaming
 
 object NetClient {
@@ -65,9 +66,12 @@ interface NetService {
         @Header("X-Device-ID") deviceId: String,
     ): Response<ResponseBody>
 
-    @POST("api/v1/client/device/unbind")
-    suspend fun unbindDevice(
+    @GET("api/v1/client/notices")
+    suspend fun getNotices(
         @Header("Authorization") auth: String,
         @Header("X-Device-ID") deviceId: String,
+        @Query("label") label: String,
+        @Query("page") page: Int,
+        @Query("size") size: Int
     ): Response<ResponseBody>
 }
