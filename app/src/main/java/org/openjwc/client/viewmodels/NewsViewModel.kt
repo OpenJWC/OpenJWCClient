@@ -1,5 +1,5 @@
-
 package org.openjwc.client.viewmodels
+
 import android.util.Log
 import androidx.compose.runtime.mutableStateMapOf
 import androidx.lifecycle.ViewModel
@@ -9,10 +9,12 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
 import org.openjwc.client.data.repository.SettingsRepository
 import org.openjwc.client.data.settings.UserSettings
+import org.openjwc.client.net.models.DetailedNotice
 import org.openjwc.client.net.models.FetchLabelsNetworkResult
 import org.openjwc.client.net.models.FetchNewsNetworkResult
 import org.openjwc.client.net.models.NetClient
 import org.openjwc.client.net.models.Notice
+import org.openjwc.client.net.models.PostNoticeNetworkResult
 import org.openjwc.client.net.news.fetchLabels
 import org.openjwc.client.net.news.fetchNews
 
@@ -26,6 +28,9 @@ class NewsViewModel(
     private val _isEndMap = mutableStateMapOf<String, Boolean>()
     private val _errorMap = mutableStateMapOf<String, String?>()
     var labels = MutableStateFlow<List<String>>(emptyList())
+        private set
+
+    var uploadError = MutableStateFlow<String?>(null)
         private set
 
     var labelError = MutableStateFlow<String?>(null)
@@ -58,18 +63,19 @@ class NewsViewModel(
                         labels.value = result.response.data.labels
                         labelError.value = null
                     }
+
                     is FetchLabelsNetworkResult.Failure -> {
                         labelError.value = "加载错误(${result.code}): ${result.msg}"
                     }
+
                     is FetchLabelsNetworkResult.Error -> {
                         labelError.value = result.msg
                     }
                 }
-            } catch (e : Exception) {
+            } catch (e: Exception) {
                 Log.e(tag, "loadLabels Error", e)
                 labelError.value = e.localizedMessage ?: "未知错误"
-            }
-            finally {
+            } finally {
                 isRefreshing.value = false
             }
         }
@@ -120,9 +126,11 @@ class NewsViewModel(
                             _pageMap[label] = page
                         }
                     }
+
                     is FetchNewsNetworkResult.Failure -> {
                         _errorMap[label] = "加载错误(${result.code}): ${result.msg}"
                     }
+
                     is FetchNewsNetworkResult.Error -> {
                         _errorMap[label] = result.msg
                     }
@@ -135,6 +143,45 @@ class NewsViewModel(
                 isRefreshing.value = false
             }
         }
+    }
+
+    suspend fun uploadNews(detailedNotice: DetailedNotice): Boolean {
+        uploadError.value = null
+        return try {
+            val settings = repository.getSettingsSnapshot() ?: UserSettings()
+            val apiService = NetClient.getService(settings.host, settings.port)
+
+            val result = apiService.fetchNews(
+                settings.authKey,
+                settings.uuidString,
+                detailedNotice
+            )
+
+            when (result) {
+                is PostNoticeNetworkResult.Success -> {
+                    uploadError.value = null
+                    true
+                }
+
+                is PostNoticeNetworkResult.Failure -> {
+                    uploadError.value = "加载错误(${result.code}): ${result.msg}"
+                    false
+                }
+
+                is PostNoticeNetworkResult.Error -> {
+                    uploadError.value = result.msg
+                    false
+                }
+            }
+        } catch (e: Exception) {
+            Log.e(tag, "uploadNews Error", e)
+            uploadError.value = e.localizedMessage ?: "未知错误"
+            false
+        }
+    }
+
+    fun clearUploadError() {
+        uploadError.value = null
     }
 }
 

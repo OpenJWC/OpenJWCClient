@@ -1,6 +1,7 @@
 package org.openjwc.client.navigation
 
 import android.util.Log
+import android.widget.Toast
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
@@ -13,11 +14,14 @@ import androidx.compose.material3.windowsizeclass.WindowSizeClass
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
+import kotlinx.coroutines.launch
 import org.openjwc.client.navigation.Routes.SETTINGS_PATTERN
 import org.openjwc.client.ui.main.MainScreen
 import org.openjwc.client.ui.me.AboutScreen
@@ -25,6 +29,7 @@ import org.openjwc.client.ui.me.settings.SettingsScreen
 import org.openjwc.client.ui.me.settings.connection.AuthScreen
 import org.openjwc.client.ui.me.settings.connection.HostScreen
 import org.openjwc.client.ui.me.settings.general.ThemeScreen
+import org.openjwc.client.ui.news.upload.UploadNewsScreen
 import org.openjwc.client.ui.theme.seedColors
 import org.openjwc.client.viewmodels.ChatViewModel
 import org.openjwc.client.viewmodels.MainViewModel
@@ -108,6 +113,7 @@ fun NavGraph(
                             }
                         )
                     }
+
                     "host" -> {
                         val currentSettings by settingsViewModel.settings.collectAsState()
                         HostScreen(
@@ -116,11 +122,12 @@ fun NavGraph(
                                 settingsViewModel.updatePort(port)
                                 navController.popBackStack()
                             },
-                            onBack = {if (navController.previousBackStackEntry != null)navController.popBackStack()},
+                            onBack = { if (navController.previousBackStackEntry != null) navController.popBackStack() },
                             initialHost = currentSettings.host,
                             initialPort = currentSettings.port
                         )
                     }
+
                     "auth" -> {
                         val currentSettings by settingsViewModel.settings.collectAsState()
                         val deviceResult by settingsViewModel.deviceResult.collectAsState()
@@ -145,12 +152,13 @@ fun NavGraph(
                             unbindResult = settingsViewModel.deviceUnbindNetworkResult.collectAsState().value
                         )
                     }
+
                     "theme" -> {
                         val currentColor by mainViewModel.themeColor.collectAsState()
                         val currentStyle by mainViewModel.darkThemeStyle.collectAsState()
 
                         ThemeScreen(
-                            onBack = { if (navController.previousBackStackEntry != null)navController.popBackStack() },
+                            onBack = { if (navController.previousBackStackEntry != null) navController.popBackStack() },
                             onSelect = { color, darkTheme ->
                                 mainViewModel.updateThemeColor(color)
                                 mainViewModel.updateDarkThemeStyle(darkTheme)
@@ -158,6 +166,31 @@ fun NavGraph(
                             colorPresets = seedColors,
                             selectedColorType = currentColor,
                             darkThemeStyle = currentStyle
+                        )
+                    }
+
+                    "upload_news" -> {
+                        val errorMessage = newsViewModel.uploadError.collectAsState().value
+                        val context = LocalContext.current
+                        val lifecycleScope = rememberCoroutineScope()
+                        UploadNewsScreen(
+                            errorMessage = errorMessage,
+                            onBack = {
+                                if (navController.previousBackStackEntry != null)
+                                    navController.popBackStack()
+                                newsViewModel.clearUploadError()
+                            },
+                            onUpload = {
+                                lifecycleScope.launch {
+                                    val succeeded = newsViewModel.uploadNews(it)
+                                    if (succeeded) {
+                                        Toast.makeText(context, "上传成功", Toast.LENGTH_SHORT)
+                                            .show()
+                                        if (navController.previousBackStackEntry != null)
+                                            navController.popBackStack()
+                                    }
+                                }
+                            }
                         )
                     }
 

@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material3.DrawerState
 import androidx.compose.material3.DrawerValue
@@ -27,7 +28,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.navigation.NavController
 import kotlinx.coroutines.launch
-import org.openjwc.client.notification.RequestNotificationPermissionButton
+import org.openjwc.client.navigation.Routes.buildSettingsRoute
 import org.openjwc.client.ui.chat.ChatScreen
 import org.openjwc.client.ui.me.MeScreen
 import org.openjwc.client.ui.news.NewsScreen
@@ -94,7 +95,17 @@ private fun MainScaffoldContent(
                         }
                     },
                     actions = {
-                        RequestNotificationPermissionButton()
+                        /*RequestNotificationPermissionButton()*/
+                        when(currentTab) {
+                            MainTab.News -> IconButton(
+                                onClick = {
+                                    navController.navigate(buildSettingsRoute("upload_news"))
+                                }
+                            ) {
+                                Icon(Icons.Default.Edit, contentDescription = "Upload News")
+                            }
+                            else -> {}
+                        }
                     }
                 )
             },

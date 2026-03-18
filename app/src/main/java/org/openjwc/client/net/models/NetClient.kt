@@ -80,4 +80,11 @@ interface NetService {
         @Header("Authorization") auth: String,
         @Header("X-Device-ID") deviceId: String,
     ): Response<ResponseBody>
+
+    @POST("api/v1/client/submissions")
+    suspend fun postNotice(
+        @Header("Authorization") auth: String,
+        @Header("X-Device-ID") deviceId: String,
+        @Body detailedNotice: DetailedNotice
+    ): Response<ResponseBody>
 }
