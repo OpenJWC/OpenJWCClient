@@ -38,6 +38,7 @@ import org.openjwc.client.ui.news.upload.UploadNewsScreen
 import org.openjwc.client.ui.theme.seedColors
 import org.openjwc.client.viewmodels.ChatViewModel
 import org.openjwc.client.viewmodels.MainViewModel
+import org.openjwc.client.viewmodels.MeViewModel
 import org.openjwc.client.viewmodels.NewsViewModel
 import org.openjwc.client.viewmodels.SettingsViewModel
 import kotlin.reflect.typeOf
@@ -66,7 +67,8 @@ fun NavGraph(
     mainViewModel: MainViewModel,
     settingsViewModel: SettingsViewModel,
     chatViewModel: ChatViewModel,
-    newsViewModel: NewsViewModel
+    newsViewModel: NewsViewModel,
+    meViewModel: MeViewModel
 ) {
     val navController = rememberNavController()
     val uriHandler = LocalUriHandler.current
@@ -112,6 +114,7 @@ fun NavGraph(
                     mainViewModel = mainViewModel,
                     chatViewModel = chatViewModel,
                     newsViewModel = newsViewModel,
+                    meViewModel = meViewModel
                 )
             }
 

@@ -25,9 +25,9 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.navigation.NavController
 import kotlinx.coroutines.launch
 import org.openjwc.client.viewmodels.NewsViewModel
 
@@ -35,9 +35,9 @@ import org.openjwc.client.viewmodels.NewsViewModel
 fun NewsScreen(
     modifier: Modifier = Modifier,
     windowSizeClass: WindowSizeClass,
-    viewModel: NewsViewModel
+    viewModel: NewsViewModel,
+    navController: NavController
 ) {
-    val uriHandler = LocalUriHandler.current
     val tabs = viewModel.labels.collectAsStateWithLifecycle().value
     val pagerState = rememberPagerState { tabs.size }
     val scope = rememberCoroutineScope()
@@ -134,7 +134,7 @@ fun NewsScreen(
                             onRefresh = { viewModel.loadCategory(currentLabel, isRefresh = true) },
                             onLoadMore = { viewModel.loadNextPage(currentLabel) },
                             onItemClick = { notice ->
-                                uriHandler.openUri(notice.detailUrl)
+                                navController.navigate(Screen.NewsDetail(notice))
                             },
                             onInitialLoad = { viewModel.loadCategory(currentLabel) }
                         )

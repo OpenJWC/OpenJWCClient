@@ -33,6 +33,7 @@ import org.openjwc.client.ui.me.MeScreen
 import org.openjwc.client.ui.news.NewsScreen
 import org.openjwc.client.viewmodels.ChatViewModel
 import org.openjwc.client.viewmodels.MainViewModel
+import org.openjwc.client.viewmodels.MeViewModel
 import org.openjwc.client.viewmodels.NewsViewModel
 
 @Composable
@@ -41,7 +42,8 @@ fun MainScreen(
     navController: NavController,
     mainViewModel: MainViewModel,
     chatViewModel: ChatViewModel,
-    newsViewModel: NewsViewModel
+    newsViewModel: NewsViewModel,
+    meViewModel: MeViewModel
 ) {
     MainScaffoldContent(
         windowSizeClass,
@@ -49,6 +51,7 @@ fun MainScreen(
         mainViewModel,
         chatViewModel,
         newsViewModel,
+        meViewModel
     )
 }
 
@@ -59,7 +62,8 @@ private fun MainScaffoldContent(
     navController: NavController,
     mainViewModel: MainViewModel,
     chatViewModel: ChatViewModel,
-    newsViewModel: NewsViewModel
+    newsViewModel: NewsViewModel,
+    meViewModel: MeViewModel
 ) {
     val currentTab by mainViewModel.currentTab.collectAsState()
     val chatTitle = chatViewModel.currentSessionMetadata.collectAsState().value?.title ?: "无标题"
@@ -116,6 +120,7 @@ private fun MainScaffoldContent(
             MainTabContent(
                 chatViewModel,
                 newsViewModel,
+                meViewModel,
                 currentTab,
                 navController,
                 drawerState,
@@ -130,6 +135,7 @@ private fun MainScaffoldContent(
 private fun MainTabContent(
     chatViewModel: ChatViewModel,
     newsViewModel: NewsViewModel,
+    meViewModel: MeViewModel,
     currentTab: MainTab,
     navController: NavController,
     drawerState: DrawerState,
@@ -151,8 +157,8 @@ private fun MainTabContent(
                 contentPadding
             )
 
-            MainTab.News -> NewsScreen(modifier = Modifier.padding(contentPadding), windowSizeClass, newsViewModel)
-            MainTab.Me -> MeScreen(modifier = Modifier.padding(contentPadding),windowSizeClass, navController)
+            MainTab.News -> NewsScreen(modifier = Modifier.padding(contentPadding), windowSizeClass, newsViewModel, navController)
+            MainTab.Me -> MeScreen(modifier = Modifier.padding(contentPadding),windowSizeClass, meViewModel, navController)
         }
     }
 }
