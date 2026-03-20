@@ -92,7 +92,8 @@ fun AuthScreen(
     }
 
     val isAuthKeyValid = authKey.isNotBlank()
-    val canSave = isAuthKeyValid
+    val isChanged = initialAuthKey != authKey
+    val canSave = isAuthKeyValid && isChanged
 
     if (deviceToUnbind != null) {
         AlertDialog(

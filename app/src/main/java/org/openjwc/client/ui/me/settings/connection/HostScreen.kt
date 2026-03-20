@@ -53,7 +53,8 @@ fun HostScreen(
     val isHostValid = host.isNotBlank()
     val portInt = portString.toIntOrNull()
     val isPortValid = portInt != null && portInt in 0..65535
-    val canSave = isHostValid && isPortValid
+    val isChanged = initialHost != host || initialPort != portInt
+    val canSave = isHostValid && isPortValid && isChanged
 
     Scaffold(
         containerColor = MaterialTheme.colorScheme.background,

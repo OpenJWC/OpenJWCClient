@@ -55,11 +55,9 @@ fun NewsDisplaySettingsScreen(
     onSave: (Int) -> Unit,
     onBack: () -> Unit,
 ) {
-    // 使用 mutableStateOf 配合 remember 这里的写法可以稍微优化为 mutableStateOf(initialFreshDays.toString())
     var freshDaysString by remember { mutableStateOf(initialFreshDays.toString()) }
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
 
-    // 校验逻辑：必须是数字且大于等于 0
     val freshDaysInt = freshDaysString.toIntOrNull()
     val isValid = freshDaysInt != null && freshDaysInt >= 0
     val isChanged = freshDaysInt != initialFreshDays
@@ -165,7 +163,7 @@ fun NewsDisplaySettingsScreen(
             InfoCard(
                 fetchedNotice = FetchedNotice(
                     id = "preview",
-                    title = "这是一条示例新鲜资讯标题",
+                    title = "这是一条最新最热资讯标题",
                     date = LocalDate.now().toString(),
                     label = "通知",
                     detailUrl = "",
@@ -175,6 +173,20 @@ fun NewsDisplaySettingsScreen(
                 ),
                 onClick = {},
                 isFresh = isValid && freshDaysInt != 0
+            )
+            InfoCard(
+                fetchedNotice = FetchedNotice(
+                    id = "preview",
+                    title = "这是一条最旧最冷资讯标题",
+                    date = LocalDate.now().toString(),
+                    label = "通知",
+                    detailUrl = "",
+                    isPage = true,
+                    contentText = "",
+                    attachmentUrls = emptyList()
+                ),
+                onClick = {},
+                isFresh = false
             )
         }
     }
