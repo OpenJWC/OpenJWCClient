@@ -25,8 +25,9 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.Label
 import androidx.compose.material.icons.filled.ArrowUpward
-import androidx.compose.material3.Button
+import androidx.compose.material.icons.filled.ErrorOutline
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularWavyProgressIndicator
@@ -52,7 +53,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import org.openjwc.client.net.models.FetchedNotice
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -176,9 +176,7 @@ fun ListFooter(isLoading: Boolean, isEnd: Boolean, error: String?, onRetry: () -
     }
 }
 
-/**
- * 提取出来的全屏错误/空白状态
- */
+
 @Composable
 fun EmptyErrorState(errorMessage: String, onRetry: () -> Unit) {
     Column(
@@ -188,9 +186,15 @@ fun EmptyErrorState(errorMessage: String, onRetry: () -> Unit) {
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
-        Text("😥", fontSize = 48.sp)
+        Icon(
+            imageVector = Icons.Default.ErrorOutline,
+            contentDescription = null,
+            tint = MaterialTheme.colorScheme.error,
+            modifier = Modifier.size(48.dp)
+        )
+        Spacer(Modifier.height(8.dp))
         Text(text = errorMessage, modifier = Modifier.padding(top = 8.dp))
-        Button(onClick = onRetry, modifier = Modifier.padding(top = 16.dp)) { Text("重试") }
+        FilledTonalButton(onClick = onRetry, modifier = Modifier.padding(top = 16.dp)) { Text("重试") }
     }
 }
 
@@ -284,7 +288,12 @@ fun EmptyLabelsPlaceholder(
                 ),
             contentAlignment = Alignment.Center
         ) {
-            Text("🏷️", fontSize = 40.sp)
+            Icon(
+                imageVector = Icons.AutoMirrored.Filled.Label,
+                contentDescription = null,
+                modifier = Modifier.size(48.dp),
+                tint = MaterialTheme.colorScheme.primary
+            )
         }
 
         Spacer(modifier = Modifier.height(24.dp))

@@ -9,7 +9,7 @@ sealed interface Screen {
     @Serializable object Host : Screen
     @Serializable object Auth : Screen
     @Serializable object Theme : Screen
-
+    @Serializable object Review : Screen
     @Serializable
     data class NewsDetail(val fetchedNotice: FetchedNotice) : Screen
 }

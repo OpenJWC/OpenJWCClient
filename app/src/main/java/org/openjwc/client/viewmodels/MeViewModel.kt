@@ -2,6 +2,7 @@ package org.openjwc.client.viewmodels
 
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Info
+import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Settings
 import androidx.lifecycle.ViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -24,9 +25,19 @@ class MeViewModel : ViewModel() {
                         icon = Icons.Default.Info,
                         title = "关于",
                         route = Screen.About
-                    )
+                    ),
                 )
             ),
+            SettingSection(
+                title = "审核",
+                items = listOf(
+                    MenuItem.Route(
+                        icon = Icons.Default.Search,
+                        title = "查看投稿审核结果",
+                        route = Screen.Review,
+                    )
+                )
+            )
         )
     )
     val sections = _sections.asStateFlow()

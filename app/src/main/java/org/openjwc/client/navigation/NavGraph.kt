@@ -29,6 +29,7 @@ import kotlinx.serialization.json.Json
 import org.openjwc.client.net.models.FetchedNotice
 import org.openjwc.client.ui.main.MainScreen
 import org.openjwc.client.ui.me.AboutScreen
+import org.openjwc.client.ui.me.ReviewedNoticesScreen
 import org.openjwc.client.ui.me.settings.SettingsScreen
 import org.openjwc.client.ui.me.settings.connection.AuthScreen
 import org.openjwc.client.ui.me.settings.connection.HostScreen
@@ -227,6 +228,17 @@ fun NavGraph(
                     colorPresets = seedColors,
                     selectedColorType = currentColor,
                     darkThemeStyle = currentStyle
+                )
+            }
+
+            composable<Screen.Review> {
+                val error by newsViewModel.reviewedNoticesError.collectAsState()
+                val data by newsViewModel.reviewedNoticesData.collectAsState()
+                ReviewedNoticesScreen(
+                    error = error,
+                    reviewedNoticesData = data,
+                    onBack = { if (navController.previousBackStackEntry != null) navController.popBackStack() },
+                    onRefresh = { newsViewModel.fetchReviewedNotices() }
                 )
             }
         }

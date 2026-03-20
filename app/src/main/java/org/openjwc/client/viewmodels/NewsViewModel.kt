@@ -14,9 +14,12 @@ import org.openjwc.client.net.models.FetchLabelsNetworkResult
 import org.openjwc.client.net.models.FetchNewsNetworkResult
 import org.openjwc.client.net.models.NetClient
 import org.openjwc.client.net.models.FetchedNotice
+import org.openjwc.client.net.models.GetReviewedNoticeNetworkResult
 import org.openjwc.client.net.models.PostNoticeNetworkResult
+import org.openjwc.client.net.models.ReviewedNoticesData
 import org.openjwc.client.net.news.fetchLabels
 import org.openjwc.client.net.news.fetchNews
+import org.openjwc.client.net.news.fetchReviewedNews
 
 class NewsViewModel(
     private val repository: SettingsRepository
@@ -42,6 +45,10 @@ class NewsViewModel(
     var isRefreshing = MutableStateFlow(false)
         private set
 
+    var reviewedNoticesData = MutableStateFlow<ReviewedNoticesData?>(null)
+        private set
+
+    var reviewedNoticesError = MutableStateFlow<String?>(null)
     fun getNewsState(label: String): List<FetchedNotice> = _newsCache[label] ?: emptyList()
     fun getError(label: String): String? = _errorMap[label]
     fun isEnd(label: String): Boolean = _isEndMap[label] ?: false
@@ -182,6 +189,37 @@ class NewsViewModel(
 
     fun clearUploadError() {
         uploadError.value = null
+    }
+
+    fun fetchReviewedNotices() {
+        viewModelScope.launch {
+            try {
+                val settings = repository.getSettingsSnapshot() ?: UserSettings()
+                val apiService = NetClient.getService(settings.host, settings.port)
+
+                val result = apiService.fetchReviewedNews(
+                    settings.authKey,
+                    settings.uuidString,
+                )
+                when (result) {
+                    is GetReviewedNoticeNetworkResult.Success -> {
+                        reviewedNoticesData.value = result.response.data
+                        reviewedNoticesError.value = null
+                    }
+
+                    is GetReviewedNoticeNetworkResult.Failure -> {
+                        reviewedNoticesError.value = "加载错误(${result.code}): ${result.msg}"
+                    }
+
+                    is GetReviewedNoticeNetworkResult.Error -> {
+                        reviewedNoticesError.value = result.msg
+                    }
+                }
+            } catch (e: Exception) {
+                Log.e(tag, "fetchReviewedNotices Error", e)
+                reviewedNoticesError.value = e.localizedMessage
+            }
+        }
     }
 }
 

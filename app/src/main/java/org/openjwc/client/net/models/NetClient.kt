@@ -87,4 +87,10 @@ interface NetService {
         @Header("X-Device-ID") deviceId: String,
         @Body uploadedNotice: UploadedNotice
     ): Response<ResponseBody>
+
+    @GET("api/v1/client/submissions/my")
+    suspend fun getReviewedNotices(
+        @Header("Authorization") auth: String,
+        @Header("X-Device-ID") deviceId: String,
+    ): Response<ResponseBody>
 }

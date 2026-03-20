@@ -121,7 +121,7 @@ fun NewsScreen(
                     val currentLabel = tabs[pageIndex]
                     PullToRefreshBox(
                         isRefreshing = isRefreshing,
-                        onRefresh = { viewModel.loadLabels() },
+                        onRefresh = { viewModel.loadCategory(currentLabel, isRefresh = true) },
                         modifier = Modifier.fillMaxSize(),
                     ) {
                         NewsList(
