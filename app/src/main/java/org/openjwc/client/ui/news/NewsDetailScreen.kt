@@ -83,7 +83,7 @@ fun NewsDetailScreen(
                 title = {
                     Text(
                         text = fetchedNotice.title,
-                        maxLines = 1,
+//                        maxLines = 1,
                         overflow = TextOverflow.Ellipsis
                     )
                 },
@@ -129,7 +129,7 @@ fun NewsDetailScreen(
             }
 
             MarkdownText(
-                markdown = if (fetchedNotice.contentText.isNullOrBlank()) "暂无详细内容" else fetchedNotice.contentText,
+                markdown = if (fetchedNotice.contentText.isNullOrBlank()) "暂无详细内容，请在浏览器查看原文。" else fetchedNotice.contentText,
                 isTextSelectable = true,
                 linkColor = MaterialTheme.colorScheme.primary,
                 imageLoader = customImageLoader
@@ -171,13 +171,13 @@ fun NewsDetailScreen(
                                     overflow = TextOverflow.Ellipsis
                                 )
 
-                                Spacer(modifier = Modifier.weight(1f))
+//                                Spacer(modifier = Modifier.weight(1f))
                             }
                         }
                     }
                 }
             }
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(64.dp))
         }
     }
 }
