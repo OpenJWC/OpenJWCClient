@@ -17,7 +17,7 @@ data class ReviewedNotice(
 @Serializable
 data class ReviewedNoticesData(
     val total: Int,
-    val notices: List<ReviewedNotice>
+    val notices: List<ReviewedNotice>?
 )
 @Serializable
 data class GetReviewedNoticeSuccessResponse(

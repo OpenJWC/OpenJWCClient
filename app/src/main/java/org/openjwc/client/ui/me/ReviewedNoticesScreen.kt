@@ -123,7 +123,7 @@ fun ReviewedNoticesScreen(
                     CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
                 }
 
-                reviewedNoticesData.notices.isEmpty() -> {
+                reviewedNoticesData.notices.isNullOrEmpty() -> {
                     Text(
                         text = "暂无审核记录",
                         modifier = Modifier.align(Alignment.Center),
