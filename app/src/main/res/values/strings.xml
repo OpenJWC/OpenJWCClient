@@ -1,8 +1,8 @@
 <resources>
-    <string name="app_name">OpenJWC-Client</string>
-    <string name="chat">Chat</string>
-    <string name="news">News</string>
-    <string name="me">Me</string>
+    <string name="app_name">OpenJWC Client</string>
+    <string name="chat">聊天</string>
+    <string name="news">资讯</string>
+    <string name="me">我</string>
     <string name="openjwc_description">
         OpenJWC 团队建立旨在通过软件开发技术铲除教务信息递达学生的最后一道障碍。
         团队希望通过集中采集教务信息并分发推送的方式，让原本网站中悄无声息等待阅览的资讯真正走入每一个东大人的生活。\n\n
