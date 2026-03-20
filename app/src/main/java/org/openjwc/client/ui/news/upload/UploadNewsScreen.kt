@@ -110,7 +110,7 @@ fun UploadNewsScreen(
         containerColor = MaterialTheme.colorScheme.background,
         topBar = {
             LargeTopAppBar(
-                title = { Text("填写通知信息") },
+                title = { Text("投稿资讯") },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "返回")

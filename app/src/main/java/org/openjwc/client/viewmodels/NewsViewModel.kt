@@ -6,6 +6,11 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import org.openjwc.client.data.repository.SettingsRepository
 import org.openjwc.client.data.settings.UserSettings
@@ -30,6 +35,15 @@ class NewsViewModel(
     private val _pageMap = mutableMapOf<String, Int>()
     private val _isEndMap = mutableStateMapOf<String, Boolean>()
     private val _errorMap = mutableStateMapOf<String, String?>()
+
+    val freshDays: StateFlow<Int?> = repository.userSettings
+        .map { it?.freshDays ?: UserSettings().freshDays }
+        .distinctUntilChanged()
+        .stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5000),
+            initialValue = UserSettings().freshDays
+        )
     var labels = MutableStateFlow<List<String>>(emptyList())
         private set
 

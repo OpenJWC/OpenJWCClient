@@ -136,6 +136,7 @@ fun NewsScreen(
                             onItemClick = { notice ->
                                 navController.navigate(Screen.NewsDetail(notice))
                             },
+                            freshDays = viewModel.freshDays.collectAsStateWithLifecycle().value,
                             onInitialLoad = { viewModel.loadCategory(currentLabel) }
                         )
                         val showBackToTop by remember { derivedStateOf { listState.firstVisibleItemIndex > 5 } }

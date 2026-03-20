@@ -2,6 +2,7 @@ package org.openjwc.client.viewmodels
 
 import android.util.Log
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.CalendarMonth
 import androidx.compose.material.icons.filled.Dns
 import androidx.compose.material.icons.filled.Palette
 import androidx.compose.material.icons.filled.VpnKey
@@ -69,6 +70,14 @@ class SettingsViewModel(
                             title = "鉴权设置",
                         )
                     )
+                ), SettingSection(
+                    title = "资讯", items = listOf(
+                        MenuItem.Route(
+                            icon = Icons.Default.CalendarMonth,
+                            route = Screen.NewsSettings,
+                            title = "显示设置",
+                        )
+                    )
                 )
             )
         )
@@ -94,7 +103,7 @@ class SettingsViewModel(
     fun updateAuthKey(key: String) = viewModelScope.launch { repository.updateAuthKey(key) }
     fun updateHost(host: String) = viewModelScope.launch { repository.updateHost(host) }
     fun updatePort(port: Int) = viewModelScope.launch { repository.updatePort(port) }
-
+    fun updateFreshDays(freshDays: Int) = viewModelScope.launch { repository.updateFreshDays(freshDays) }
     private var _deviceResult = MutableStateFlow<DevicesQueryNetworkResult>(
         DevicesQueryNetworkResult.Success(
             response = org.openjwc.client.net.models.DevicesQuerySuccessResponse(

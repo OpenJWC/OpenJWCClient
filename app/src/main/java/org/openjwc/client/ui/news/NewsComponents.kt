@@ -54,6 +54,9 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import org.openjwc.client.net.models.FetchedNotice
+import java.time.LocalDate
+import java.time.format.DateTimeFormatter
+import java.time.temporal.ChronoUnit
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -61,6 +64,7 @@ fun NewsList(
     label: String,
     windowSizeClass: WindowSizeClass,
     newsItems: List<FetchedNotice>,
+    freshDays: Int?,
     isLoading: Boolean,
     isEnd: Boolean,
     error: String?,
@@ -72,7 +76,6 @@ fun NewsList(
 ) {
     val listState = rememberLazyGridState()
     val snackbarHostState = remember { SnackbarHostState() }
-
     // 进入页面或切换标签时触发初始加载
     LaunchedEffect(label) {
         onInitialLoad()
@@ -126,10 +129,14 @@ fun NewsList(
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
                 items(items = newsItems, key = { it.id }) { item ->
+                    val isFresh = remember(item.id, freshDays) {
+                        isDateFresh(item.date, freshDays)
+                    }
+
                     InfoCard(
                         fetchedNotice = item,
                         onClick = onItemClick,
-                        isFresh = false
+                        isFresh = isFresh
                     )
                 }
 
@@ -333,5 +340,18 @@ fun EmptyLabelsPlaceholder(
         ) {
             Text("重新获取分类")
         }
+    }
+}
+
+fun isDateFresh(dateString: String, freshDays: Int?): Boolean {
+    if (freshDays == null || freshDays <= 0 || dateString.isBlank()) return false
+    return try {
+        val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd")
+        val noticeDate = LocalDate.parse(dateString, formatter)
+        val today = LocalDate.now()
+        val daysBetween = ChronoUnit.DAYS.between(noticeDate, today)
+        daysBetween in 0..freshDays.toLong()
+    } catch (e: Exception) {
+        false
     }
 }

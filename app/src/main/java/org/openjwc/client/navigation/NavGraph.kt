@@ -34,6 +34,7 @@ import org.openjwc.client.ui.me.settings.SettingsScreen
 import org.openjwc.client.ui.me.settings.connection.AuthScreen
 import org.openjwc.client.ui.me.settings.connection.HostScreen
 import org.openjwc.client.ui.me.settings.general.ThemeScreen
+import org.openjwc.client.ui.me.settings.news.NewsDisplaySettingsScreen
 import org.openjwc.client.ui.news.NewsDetailScreen
 import org.openjwc.client.ui.news.upload.UploadNewsScreen
 import org.openjwc.client.ui.theme.seedColors
@@ -239,6 +240,17 @@ fun NavGraph(
                     reviewedNoticesData = data,
                     onBack = { if (navController.previousBackStackEntry != null) navController.popBackStack() },
                     onRefresh = { newsViewModel.fetchReviewedNotices() }
+                )
+            }
+
+            composable<Screen.NewsSettings> {
+                NewsDisplaySettingsScreen(
+                    initialFreshDays = settingsViewModel.settings.collectAsState().value.freshDays,
+                    onSave = {
+                        settingsViewModel.updateFreshDays(it)
+                        navController.popBackStack()
+                    },
+                    onBack = { if (navController.previousBackStackEntry != null) navController.popBackStack() }
                 )
             }
         }

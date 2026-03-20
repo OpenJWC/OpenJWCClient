@@ -1,12 +1,13 @@
 package org.openjwc.client.ui.main
 
+import Screen
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material3.DrawerState
 import androidx.compose.material3.DrawerValue
@@ -105,7 +106,7 @@ private fun MainScaffoldContent(
                                     navController.navigate(Screen.UploadNews)
                                 }
                             ) {
-                                Icon(Icons.Default.Edit, contentDescription = "Upload News")
+                                Icon(Icons.Default.Add, contentDescription = "Upload News")
                             }
                             else -> {}
                         }

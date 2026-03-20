@@ -62,4 +62,8 @@ class SettingsRepository(
     suspend fun updateAuthKey(key: String) = updateSettingsInternal {
         it.copy(authKey = key)
     }
+
+    suspend fun updateFreshDays(days: Int) = updateSettingsInternal {
+        it.copy(freshDays = days)
+    }
 }
