@@ -213,7 +213,7 @@ fun TestMenuSectionCard() {
     val s3 = MenuItem.Route(
         icon = Icons.Default.Info,
         title = "测试菜单",
-        route = "",
+        route = Screen.About,
     )
 
     val ss = SettingSection(

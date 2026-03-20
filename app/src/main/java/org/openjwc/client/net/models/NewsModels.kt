@@ -13,17 +13,19 @@ data class FetchNewsSuccessResponse(
 data class FetchNewsResponseData(
     @SerialName("total_returned") val totalReturned: Int,
     @SerialName("total_label") val totalLabel: Int,
-    @SerialName("notices") val notices: List<Notice>
+    @SerialName("notices") val fetchedNotices: List<FetchedNotice>
 )
 
 @Serializable
-data class Notice(
+data class FetchedNotice(
     @SerialName("id") val id: String,
     val label: String,
     val title: String,
     val date: String,
     @SerialName("detail_url") val detailUrl: String,
-    @SerialName("is_page") val isPage: Boolean
+    @SerialName("is_page") val isPage: Boolean,
+    @SerialName("content_text") val contentText: String?,
+    @SerialName("attachments") val attachmentUrls: List<String>?
 )
 
 sealed class FetchNewsNetworkResult {

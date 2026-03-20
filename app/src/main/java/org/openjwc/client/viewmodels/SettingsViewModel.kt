@@ -1,6 +1,10 @@
 package org.openjwc.client.viewmodels
 
 import android.util.Log
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Dns
+import androidx.compose.material.icons.filled.Palette
+import androidx.compose.material.icons.filled.VpnKey
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
@@ -15,10 +19,11 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import org.openjwc.client.data.repository.SettingsRepository
+import org.openjwc.client.data.settings.Menu
 import org.openjwc.client.data.settings.MenuItem
+import org.openjwc.client.data.settings.SettingSection
 import org.openjwc.client.data.settings.ToggleID
 import org.openjwc.client.data.settings.UserSettings
-import org.openjwc.client.data.settings.menuTemplates
 import org.openjwc.client.net.auth.deviceUnbind
 import org.openjwc.client.net.auth.devicesQuery
 import org.openjwc.client.net.models.DeviceUnbindNetworkResult
@@ -40,6 +45,34 @@ sealed class SettingsEvent {
 class SettingsViewModel(
     private val repository: SettingsRepository
 ) : ViewModel() {
+    private val menuTemplates = listOf(
+        Menu(
+            route = Screen.Settings, title = "设置", sections = listOf(
+                SettingSection(
+                    title = "通用", items = listOf(
+                        MenuItem.Route(
+                            icon = Icons.Default.Palette,
+                            route = Screen.Theme,
+                            title = "主题",
+                        )
+                    )
+                ), SettingSection(
+                    title = "连接", items = listOf(
+                        MenuItem.Route(
+                            icon = Icons.Default.Dns,
+                            route = Screen.Host,
+                            title = "服务器配置",
+                        ),
+                        MenuItem.Route(
+                            icon = Icons.Default.VpnKey,
+                            route = Screen.Auth,
+                            title = "鉴权设置",
+                        )
+                    )
+                )
+            )
+        )
+    )
 
     private val _uiState = MutableStateFlow(UiState())
     val uiState = _uiState.asStateFlow()

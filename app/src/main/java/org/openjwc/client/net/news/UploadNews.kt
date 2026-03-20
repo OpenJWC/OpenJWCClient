@@ -4,7 +4,7 @@ import android.util.Log
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.Json
-import org.openjwc.client.net.models.DetailedNotice
+import org.openjwc.client.net.models.UploadedNotice
 import org.openjwc.client.net.models.NetService
 import org.openjwc.client.net.models.PostNoticeNetworkResult
 import org.openjwc.client.net.models.PostNoticeSuccessResponse
@@ -14,14 +14,14 @@ private const val LABEL = "UploadNews"
 suspend fun NetService.fetchNews(
     auth: String,
     deviceId: String,
-    detailedNotice: DetailedNotice
+    uploadedNotice: UploadedNotice
 ): PostNoticeNetworkResult = withContext(Dispatchers.IO) {
     runCatching {
         Log.d(LABEL, "Requesting news...")
         val response = postNotice(
             "Bearer $auth",
             deviceId,
-            detailedNotice,
+            uploadedNotice,
         )
         if (response.isSuccessful) {
             val rawBody = response.body()?.string()

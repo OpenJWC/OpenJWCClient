@@ -85,6 +85,6 @@ interface NetService {
     suspend fun postNotice(
         @Header("Authorization") auth: String,
         @Header("X-Device-ID") deviceId: String,
-        @Body detailedNotice: DetailedNotice
+        @Body uploadedNotice: UploadedNotice
     ): Response<ResponseBody>
 }

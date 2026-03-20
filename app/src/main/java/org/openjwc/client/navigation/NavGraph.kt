@@ -1,6 +1,8 @@
 package org.openjwc.client.navigation
 
-import android.util.Log
+import Screen
+import android.net.Uri
+import android.os.Bundle
 import android.widget.Toast
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.tween
@@ -17,26 +19,46 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalUriHandler
+import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import androidx.navigation.navArgument
+import androidx.navigation.toRoute
 import kotlinx.coroutines.launch
-import org.openjwc.client.navigation.Routes.SETTINGS_PATTERN
+import kotlinx.serialization.json.Json
+import org.openjwc.client.net.models.FetchedNotice
 import org.openjwc.client.ui.main.MainScreen
 import org.openjwc.client.ui.me.AboutScreen
 import org.openjwc.client.ui.me.settings.SettingsScreen
 import org.openjwc.client.ui.me.settings.connection.AuthScreen
 import org.openjwc.client.ui.me.settings.connection.HostScreen
 import org.openjwc.client.ui.me.settings.general.ThemeScreen
+import org.openjwc.client.ui.news.NewsDetailScreen
 import org.openjwc.client.ui.news.upload.UploadNewsScreen
 import org.openjwc.client.ui.theme.seedColors
 import org.openjwc.client.viewmodels.ChatViewModel
 import org.openjwc.client.viewmodels.MainViewModel
 import org.openjwc.client.viewmodels.NewsViewModel
 import org.openjwc.client.viewmodels.SettingsViewModel
+import kotlin.reflect.typeOf
 
-private const val LABEL = "NavGraph"
+val NoticeNavType = object : NavType<FetchedNotice>(isNullableAllowed = false) {
+    override fun get(bundle: Bundle, key: String): FetchedNotice? {
+        return bundle.getString(key)?.let { Json.decodeFromString(it) }
+    }
+
+    override fun parseValue(value: String): FetchedNotice {
+        return Json.decodeFromString(Uri.decode(value))
+    }
+
+    override fun serializeAsValue(value: FetchedNotice): String {
+        return Uri.encode(Json.encodeToString(value))
+    }
+
+    override fun put(bundle: Bundle, key: String, value: FetchedNotice) {
+        bundle.putString(key, Json.encodeToString(value))
+    }
+}
 
 @Composable
 fun NavGraph(
@@ -53,7 +75,7 @@ fun NavGraph(
     ) {
         NavHost(
             navController = navController,
-            startDestination = Routes.MAIN,
+            startDestination = Screen.Main,
             enterTransition = {
                 slideInHorizontally(
                     initialOffsetX = { it / 10 },
@@ -83,126 +105,126 @@ fun NavGraph(
                         fadeOut(animationSpec = tween(300))
             }
         ) {
-            composable(Routes.MAIN) {
+            composable<Screen.Main> {
                 MainScreen(
-                    windowSizeClass,
+                    windowSizeClass = windowSizeClass,
                     navController = navController,
-                    mainViewModel,
-                    chatViewModel,
-                    newsViewModel,
+                    mainViewModel = mainViewModel,
+                    chatViewModel = chatViewModel,
+                    newsViewModel = newsViewModel,
                 )
             }
 
-            composable(
-                route = SETTINGS_PATTERN,
-                arguments = listOf(navArgument("route") {
-                    nullable = true
-                    defaultValue = "default_menu"
-                })
+            composable<Screen.NewsDetail>(
+                typeMap = mapOf(
+                    typeOf<FetchedNotice>() to NoticeNavType
+                )
             ) { backStackEntry ->
-                val route = backStackEntry.arguments?.getString("route")
-                    ?: return@composable // 找不到 route 就空白吧
-                Log.d(LABEL, "route: $route")
-                when (route) {
-                    /** 目前的打算是把所有非主屏幕的 Route 都归结为 settings/{} */
-                    "about" -> {
-                        AboutScreen(
-                            onBack = { if (navController.previousBackStackEntry != null) navController.popBackStack() },
-                            onToGitHub = {
-                                uriHandler.openUri("https://github.com/OpenJWC")
-                            }
-                        )
-                    }
+                val args = backStackEntry.toRoute<Screen.NewsDetail>()
+                NewsDetailScreen(
+                    fetchedNotice = args.fetchedNotice,
+                    onBack = { navController.popBackStack() },
+                    onToBrowser = { uri -> uriHandler.openUri(uri) }
+                )
+            }
 
-                    "host" -> {
-                        val currentSettings by settingsViewModel.settings.collectAsState()
-                        HostScreen(
-                            onConfirm = { host, port ->
-                                settingsViewModel.updateHost(host)
-                                settingsViewModel.updatePort(port)
-                                navController.popBackStack()
-                            },
-                            onBack = { if (navController.previousBackStackEntry != null) navController.popBackStack() },
-                            initialHost = currentSettings.host,
-                            initialPort = currentSettings.port
-                        )
-                    }
-
-                    "auth" -> {
-                        val currentSettings by settingsViewModel.settings.collectAsState()
-                        val deviceResult by settingsViewModel.deviceResult.collectAsState()
-                        val isLoadingDeviceIds by settingsViewModel.isLoadingDeviceResult.collectAsState()
-                        AuthScreen(
-                            initialAuthKey = currentSettings.authKey,
-                            onConfirm = { key ->
-                                settingsViewModel.updateAuthKey(key)
-                                navController.popBackStack()
-                            },
-                            onBack = { navController.popBackStack() },
-                            onRefreshDevices = {
-                                settingsViewModel.clearUnbindResult()
-                                settingsViewModel.devicesQuery()
-                            },
-                            thisDeviceId = currentSettings.uuidString,
-                            onUnbindDevice = {
-                                settingsViewModel.unbindAndRefresh(it)
-                            },
-                            devicesResult = deviceResult,
-                            isLoadingDeviceIds = isLoadingDeviceIds,
-                            unbindResult = settingsViewModel.deviceUnbindNetworkResult.collectAsState().value
-                        )
-                    }
-
-                    "theme" -> {
-                        val currentColor by mainViewModel.themeColor.collectAsState()
-                        val currentStyle by mainViewModel.darkThemeStyle.collectAsState()
-
-                        ThemeScreen(
-                            onBack = { if (navController.previousBackStackEntry != null) navController.popBackStack() },
-                            onSelect = { color, darkTheme ->
-                                mainViewModel.updateThemeColor(color)
-                                mainViewModel.updateDarkThemeStyle(darkTheme)
-                            },
-                            colorPresets = seedColors,
-                            selectedColorType = currentColor,
-                            darkThemeStyle = currentStyle
-                        )
-                    }
-
-                    "upload_news" -> {
-                        val errorMessage = newsViewModel.uploadError.collectAsState().value
-                        val context = LocalContext.current
-                        val lifecycleScope = rememberCoroutineScope()
-                        UploadNewsScreen(
-                            errorMessage = errorMessage,
-                            onBack = {
+            composable<Screen.UploadNews> {
+                val errorMessage = newsViewModel.uploadError.collectAsState().value
+                val context = LocalContext.current
+                val lifecycleScope = rememberCoroutineScope()
+                UploadNewsScreen(
+                    errorMessage = errorMessage,
+                    onBack = {
+                        if (navController.previousBackStackEntry != null)
+                            navController.popBackStack()
+                        newsViewModel.clearUploadError()
+                    },
+                    onUpload = {
+                        lifecycleScope.launch {
+                            val succeeded = newsViewModel.uploadNews(it)
+                            if (succeeded) {
+                                Toast.makeText(context, "上传成功", Toast.LENGTH_SHORT)
+                                    .show()
                                 if (navController.previousBackStackEntry != null)
                                     navController.popBackStack()
-                                newsViewModel.clearUploadError()
-                            },
-                            onUpload = {
-                                lifecycleScope.launch {
-                                    val succeeded = newsViewModel.uploadNews(it)
-                                    if (succeeded) {
-                                        Toast.makeText(context, "上传成功", Toast.LENGTH_SHORT)
-                                            .show()
-                                        if (navController.previousBackStackEntry != null)
-                                            navController.popBackStack()
-                                    }
-                                }
                             }
-                        )
+                        }
                     }
+                )
+            }
+            composable<Screen.Settings> {
+                SettingsScreen(
+                    onRoute = {
+                        navController.navigate(it)
+                    },
+                    onBack = {
+                        if (navController.previousBackStackEntry != null)
+                            navController.popBackStack()
+                    },
+                    route = Screen.Settings,
+                    viewModel = settingsViewModel
+                )
+            }
+            composable<Screen.About> {
+                AboutScreen(
+                    onBack = { navController.popBackStack() },
+                    onToGitHub = { uriHandler.openUri("https://github.com/OpenJWC") }
+                )
+            }
 
-                    else -> {
-                        SettingsScreen(
-                            onRoute = { navController.navigate(it) },
-                            onBack = { if (navController.previousBackStackEntry != null) navController.popBackStack() },
-                            route = route,
-                            viewModel = settingsViewModel
-                        )
-                    }
-                }
+            composable<Screen.Host> {
+                val currentSettings by settingsViewModel.settings.collectAsState()
+                HostScreen(
+                    onConfirm = { host, port ->
+                        settingsViewModel.updateHost(host)
+                        settingsViewModel.updatePort(port)
+                        navController.popBackStack()
+                    },
+                    onBack = { if (navController.previousBackStackEntry != null) navController.popBackStack() },
+                    initialHost = currentSettings.host,
+                    initialPort = currentSettings.port
+                )
+            }
+
+            composable<Screen.Auth> {
+                val currentSettings by settingsViewModel.settings.collectAsState()
+                val deviceResult by settingsViewModel.deviceResult.collectAsState()
+                val isLoadingDeviceIds by settingsViewModel.isLoadingDeviceResult.collectAsState()
+                AuthScreen(
+                    initialAuthKey = currentSettings.authKey,
+                    onConfirm = { key ->
+                        settingsViewModel.updateAuthKey(key)
+                        navController.popBackStack()
+                    },
+                    onBack = { navController.popBackStack() },
+                    onRefreshDevices = {
+                        settingsViewModel.clearUnbindResult()
+                        settingsViewModel.devicesQuery()
+                    },
+                    thisDeviceId = currentSettings.uuidString,
+                    onUnbindDevice = {
+                        settingsViewModel.unbindAndRefresh(it)
+                    },
+                    devicesResult = deviceResult,
+                    isLoadingDeviceIds = isLoadingDeviceIds,
+                    unbindResult = settingsViewModel.deviceUnbindNetworkResult.collectAsState().value
+                )
+            }
+
+            composable<Screen.Theme> {
+                val currentColor by mainViewModel.themeColor.collectAsState()
+                val currentStyle by mainViewModel.darkThemeStyle.collectAsState()
+
+                ThemeScreen(
+                    onBack = { if (navController.previousBackStackEntry != null) navController.popBackStack() },
+                    onSelect = { color, darkTheme ->
+                        mainViewModel.updateThemeColor(color)
+                        mainViewModel.updateDarkThemeStyle(darkTheme)
+                    },
+                    colorPresets = seedColors,
+                    selectedColorType = currentColor,
+                    darkThemeStyle = currentStyle
+                )
             }
         }
     }

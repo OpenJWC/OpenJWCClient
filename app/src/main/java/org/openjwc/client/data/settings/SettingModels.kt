@@ -1,9 +1,6 @@
 package org.openjwc.client.data.settings
 
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Dns
-import androidx.compose.material.icons.filled.Palette
-import androidx.compose.material.icons.filled.VpnKey
+import Screen
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.room.Entity
 import androidx.room.PrimaryKey
@@ -14,7 +11,7 @@ sealed class MenuItem {
     data class Route(
         val icon: ImageVector,
         val title: String,
-        val route: String,
+        val route: Screen,
         val trailing: String? = null,
     ) : MenuItem()
 
@@ -38,7 +35,7 @@ data class SettingSection(
 )
 
 data class Menu(
-    val route: String, val title: String, val sections: List<SettingSection>
+    val route: Screen, val title: String, val sections: List<SettingSection>
 )
 
 enum class ToggleID {
@@ -47,38 +44,9 @@ enum class ToggleID {
 
 sealed class Event {
     data class Toggle(val id: ToggleID) : Event()
-    data class Route(val route: String) : Event()
+    data class Route(val route: Screen) : Event()
     data class Action(val onAction: () -> Unit) : Event()
 }
-
-val menuTemplates = listOf(
-    Menu(
-        route = "", title = "设置", sections = listOf(
-            SettingSection(
-                title = "通用", items = listOf(
-                    MenuItem.Route(
-                        icon = Icons.Default.Palette,
-                        route = "theme",
-                        title = "主题",
-                    )
-                )
-            ), SettingSection(
-                title = "连接", items = listOf(
-                    MenuItem.Route(
-                        icon = Icons.Default.Dns,
-                        route = "host",
-                        title = "服务器配置",
-                    ),
-                    MenuItem.Route(
-                        icon = Icons.Default.VpnKey,
-                        route = "auth",
-                        title = "鉴权设置",
-                    )
-                )
-            )
-        )
-    )
-)
 
 // 这个是数据库里的实体
 @Entity(tableName = "settings")

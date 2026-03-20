@@ -3,9 +3,11 @@ package org.openjwc.client.ui.news
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
+import androidx.compose.material3.LoadingIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SecondaryScrollableTabRow
 import androidx.compose.material3.SnackbarHost
@@ -53,12 +55,26 @@ fun NewsScreen(
         modifier = modifier
     ) {
 
-        if (tabs.isEmpty() && !(isLoading || isRefreshing)) {
-            EmptyLabelsPlaceholder(
-                onRefresh = { viewModel.loadLabels() },
-                errorMessage = labelError
-            )
-        } else if (tabs.isNotEmpty()) {
+        if (tabs.isEmpty()) {
+            if (!(isLoading || isRefreshing)) {
+                EmptyLabelsPlaceholder(
+                    onRefresh = { viewModel.loadLabels() },
+                    errorMessage = labelError
+                )
+            } else {
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .align(Alignment.Center),
+                    contentAlignment = Alignment.Center
+                )
+                {
+                    LoadingIndicator(
+                        modifier = Modifier.size(128.dp)
+                    )
+                }
+            }
+        } else {
             Column(
                 modifier = Modifier
                     .fillMaxSize()
@@ -137,8 +153,5 @@ fun NewsScreen(
                 }
             }
         }
-
     }
-
-
 }

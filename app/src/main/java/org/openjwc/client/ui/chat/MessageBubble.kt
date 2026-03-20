@@ -114,6 +114,7 @@ fun MessageBubble(
                                 color = contentColor,
                                 lineHeight = 24.sp
                             ),
+                            isTextSelectable = true,
                             onLinkClicked = { url -> uriCurrent.openUri(url) }
                         )
                     }

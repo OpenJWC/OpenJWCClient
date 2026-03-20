@@ -57,8 +57,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import org.openjwc.client.net.models.DetailedNotice
-import org.openjwc.client.net.models.DetailedNoticeContent
+import org.openjwc.client.net.models.UploadedNotice
+import org.openjwc.client.net.models.UploadedNoticeContent
 
 
 @Preview
@@ -76,7 +76,7 @@ fun UploadNewsPreview() {
 fun UploadNewsScreen(
     errorMessage: String?,
     onBack: () -> Unit,
-    onUpload: (DetailedNotice) -> Unit,
+    onUpload: (UploadedNotice) -> Unit,
 ) {
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
 
@@ -125,13 +125,13 @@ fun UploadNewsScreen(
                 onClick = {
                     if (canSubmit) {
                         isUploading = true // 锁定按钮
-                        val notice = DetailedNotice(
+                        val notice = UploadedNotice(
                             label = label,
                             title = title,
                             date = date,
                             detailUrl = detailUrl,
                             isPage = isPage,
-                            content = DetailedNoticeContent(
+                            content = UploadedNoticeContent(
                                 text = contentText,
                                 attachmentUrls = attachmentUrls.filter { it.isNotBlank() }
                             )

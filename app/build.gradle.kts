@@ -1,4 +1,3 @@
-import org.gradle.kotlin.dsl.invoke
 import java.util.Properties
 
 plugins {
@@ -96,6 +95,7 @@ dependencies {
     // 架构与功能
     implementation(libs.androidx.lifecycle.viewmodel.compose)
     implementation(libs.compose.markdown)
+    implementation(libs.coil.compose)
     implementation(libs.jpush.sdk)
     implementation(libs.jpush.jcore)
     implementation(libs.jpush.plugin.huawei)

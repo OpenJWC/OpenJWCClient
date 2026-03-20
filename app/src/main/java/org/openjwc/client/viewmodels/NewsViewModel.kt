@@ -9,11 +9,11 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
 import org.openjwc.client.data.repository.SettingsRepository
 import org.openjwc.client.data.settings.UserSettings
-import org.openjwc.client.net.models.DetailedNotice
+import org.openjwc.client.net.models.UploadedNotice
 import org.openjwc.client.net.models.FetchLabelsNetworkResult
 import org.openjwc.client.net.models.FetchNewsNetworkResult
 import org.openjwc.client.net.models.NetClient
-import org.openjwc.client.net.models.Notice
+import org.openjwc.client.net.models.FetchedNotice
 import org.openjwc.client.net.models.PostNoticeNetworkResult
 import org.openjwc.client.net.news.fetchLabels
 import org.openjwc.client.net.news.fetchNews
@@ -23,7 +23,7 @@ class NewsViewModel(
 ) : ViewModel() {
     private val tag = "NewsViewModel"
 
-    private val _newsCache = mutableStateMapOf<String, List<Notice>>()
+    private val _newsCache = mutableStateMapOf<String, List<FetchedNotice>>()
     private val _pageMap = mutableMapOf<String, Int>()
     private val _isEndMap = mutableStateMapOf<String, Boolean>()
     private val _errorMap = mutableStateMapOf<String, String?>()
@@ -42,7 +42,7 @@ class NewsViewModel(
     var isRefreshing = MutableStateFlow(false)
         private set
 
-    fun getNewsState(label: String): List<Notice> = _newsCache[label] ?: emptyList()
+    fun getNewsState(label: String): List<FetchedNotice> = _newsCache[label] ?: emptyList()
     fun getError(label: String): String? = _errorMap[label]
     fun isEnd(label: String): Boolean = _isEndMap[label] ?: false
 
@@ -111,7 +111,7 @@ class NewsViewModel(
 
                 when (result) {
                     is FetchNewsNetworkResult.Success -> {
-                        val newData = result.response.data.notices
+                        val newData = result.response.data.fetchedNotices
                         for (notice in newData) {
                             Log.d(tag, "notice: $notice")
                         }
@@ -145,7 +145,7 @@ class NewsViewModel(
         }
     }
 
-    suspend fun uploadNews(detailedNotice: DetailedNotice): Boolean {
+    suspend fun uploadNews(uploadedNotice: UploadedNotice): Boolean {
         uploadError.value = null
         return try {
             val settings = repository.getSettingsSnapshot() ?: UserSettings()
@@ -154,7 +154,7 @@ class NewsViewModel(
             val result = apiService.fetchNews(
                 settings.authKey,
                 settings.uuidString,
-                detailedNotice
+                uploadedNotice
             )
 
             when (result) {

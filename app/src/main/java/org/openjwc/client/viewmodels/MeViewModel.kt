@@ -17,13 +17,13 @@ class MeViewModel : ViewModel() {
                 items = listOf(
                     MenuItem.Route(
                         icon = Icons.Default.Settings,
-                        route = "",
+                        route = Screen.Settings,
                         title = "设置",
                     ),
                     MenuItem.Route(
                         icon = Icons.Default.Info,
                         title = "关于",
-                        route = "about"
+                        route = Screen.About
                     )
                 )
             ),

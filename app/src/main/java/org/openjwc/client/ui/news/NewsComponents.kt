@@ -53,21 +53,21 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import org.openjwc.client.net.models.Notice
+import org.openjwc.client.net.models.FetchedNotice
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun NewsList(
     label: String,
     windowSizeClass: WindowSizeClass,
-    newsItems: List<Notice>,
+    newsItems: List<FetchedNotice>,
     isLoading: Boolean,
     isEnd: Boolean,
     error: String?,
 
     onRefresh: () -> Unit,
     onLoadMore: () -> Unit,
-    onItemClick: (Notice) -> Unit,
+    onItemClick: (FetchedNotice) -> Unit,
     onInitialLoad: () -> Unit = {}
 ) {
     val listState = rememberLazyGridState()
@@ -127,7 +127,7 @@ fun NewsList(
             ) {
                 items(items = newsItems, key = { it.id }) { item ->
                     InfoCard(
-                        notice = item,
+                        fetchedNotice = item,
                         onClick = onItemClick,
                         isFresh = false
                     )
@@ -214,12 +214,12 @@ fun BackToTopButton(visible: Boolean, onClick: () -> Unit, modifier: Modifier) {
 
 @Composable
 fun InfoCard(
-    notice: Notice,
-    onClick: (Notice) -> Unit,
+    fetchedNotice: FetchedNotice,
+    onClick: (FetchedNotice) -> Unit,
     isFresh: Boolean
 ) {
     Card(
-        onClick = { onClick(notice) },
+        onClick = { onClick(fetchedNotice) },
         modifier = Modifier
             .fillMaxWidth()
             .height(130.dp),
@@ -239,7 +239,7 @@ fun InfoCard(
             verticalArrangement = Arrangement.SpaceBetween
         ) {
             Text(
-                text = notice.title,
+                text = fetchedNotice.title,
                 style = MaterialTheme.typography.titleMedium,
                 color = if (isFresh) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface,
                 fontWeight = if (isFresh) FontWeight.Bold else FontWeight.Normal,
@@ -247,9 +247,9 @@ fun InfoCard(
                 overflow = TextOverflow.Ellipsis,
             )
 
-            if (notice.date.isNotEmpty()) {
+            if (fetchedNotice.date.isNotEmpty()) {
                 Text(
-                    text = notice.date,
+                    text = fetchedNotice.date,
                     style = MaterialTheme.typography.labelMedium,
                     color = MaterialTheme.colorScheme.primary,
                     modifier = Modifier.align(Alignment.End),
@@ -324,13 +324,5 @@ fun EmptyLabelsPlaceholder(
         ) {
             Text("重新获取分类")
         }
-
-        // 提示用户也可以下拉刷新
-        Text(
-            text = "或从顶部下拉刷新",
-            style = MaterialTheme.typography.labelSmall,
-            color = MaterialTheme.colorScheme.outline,
-            modifier = Modifier.padding(top = 16.dp)
-        )
     }
 }

@@ -28,7 +28,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.navigation.NavController
 import kotlinx.coroutines.launch
-import org.openjwc.client.navigation.Routes.buildSettingsRoute
 import org.openjwc.client.ui.chat.ChatScreen
 import org.openjwc.client.ui.me.MeScreen
 import org.openjwc.client.ui.news.NewsScreen
@@ -99,7 +98,7 @@ private fun MainScaffoldContent(
                         when(currentTab) {
                             MainTab.News -> IconButton(
                                 onClick = {
-                                    navController.navigate(buildSettingsRoute("upload_news"))
+                                    navController.navigate(Screen.UploadNews)
                                 }
                             ) {
                                 Icon(Icons.Default.Edit, contentDescription = "Upload News")

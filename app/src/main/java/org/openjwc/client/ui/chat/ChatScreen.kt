@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.consumeWindowInsets
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.imePadding
@@ -130,29 +131,27 @@ fun ChatScreen(
 
     val drawerContent = @Composable {
         ModalDrawerSheet {
-            Box(
+            // 直接放置列表，将 padding 移入 ChatHistoryList 内部或作为 Modifier
+            ChatHistoryList(
+                sessions = historySessions,
+                currentSessionId = sessionId,
+                onSessionClick = { id ->
+                    viewModel.loadSession(id)
+                    scope.launch { drawerState.close() }
+                },
+                onNewChat = {
+                    viewModel.toNewChat()
+                    scope.launch { drawerState.close() }
+                },
+                onDeleteSession = { id -> viewModel.deleteSession(id) },
+                onUpdateSessionMetadata = {
+                    showEditMetadataDialog.value = true
+                },
+                // 确保它占据可用空间
                 modifier = Modifier
-                    .fillMaxSize()
+                    .fillMaxHeight()
                     .padding(top = contentPadding.calculateTopPadding())
-            ) {
-                ChatHistoryList(
-                    sessions = historySessions,
-                    currentSessionId = sessionId,
-                    onSessionClick = { id ->
-                        viewModel.loadSession(id)
-                        scope.launch { drawerState.close() }
-                    },
-                    onNewChat = {
-                        viewModel.toNewChat()
-                        scope.launch { drawerState.close() }
-                    },
-                    onDeleteSession = { id -> viewModel.deleteSession(id) },
-                    onUpdateSessionMetadata = {
-                        showEditMetadataDialog.value = true
-                    },
-                    modifier = Modifier
-                )
-            }
+            )
         }
     }
 
