@@ -3,7 +3,9 @@ package org.openjwc.client.ui.news.upload
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.shrinkVertically
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -29,6 +31,9 @@ import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.ErrorOutline
 import androidx.compose.material.icons.filled.Link
 import androidx.compose.material3.CircularWavyProgressIndicator
+import androidx.compose.material3.DatePicker
+import androidx.compose.material3.DatePickerDialog
+import androidx.compose.material3.DisplayMode
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.Icon
@@ -45,6 +50,7 @@ import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -63,6 +69,9 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import org.openjwc.client.net.models.UploadedNotice
 import org.openjwc.client.net.models.UploadedNoticeContent
+import java.time.Instant
+import java.time.ZoneId
+import java.time.format.DateTimeFormatter
 
 
 @Preview
@@ -95,6 +104,10 @@ fun UploadNewsScreen(
         save = { it.toList() },
         restore = { it.toMutableStateList() }
     )) { mutableStateListOf<String>() }
+    var showDatePicker by remember { mutableStateOf(false) }
+    val datePickerState = rememberDatePickerState(
+        initialDisplayMode = DisplayMode.Picker
+    )
 
     val dateRegex = remember { Regex("""^\d{4}-\d{2}-\d{2}$""") }
     val isDateValid = date.isEmpty() || date.matches(dateRegex)
@@ -105,6 +118,33 @@ fun UploadNewsScreen(
             detailUrl.isNotBlank() &&
             contentText.isNotBlank()
 
+    val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd")
+
+    if (showDatePicker) {
+        DatePickerDialog(
+            onDismissRequest = { showDatePicker = false },
+            confirmButton = {
+                TextButton(onClick = {
+                    datePickerState.selectedDateMillis?.let { millis ->
+                        val selectedDate = Instant.ofEpochMilli(millis)
+                            .atZone(ZoneId.systemDefault())
+                            .toLocalDate()
+                        date = selectedDate.format(formatter)
+                    }
+                    showDatePicker = false
+                }) {
+                    Text("确定")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showDatePicker = false }) {
+                    Text("取消")
+                }
+            }
+        ) {
+            DatePicker(state = datePickerState, showModeToggle = false)
+        }
+    }
     LaunchedEffect(errorMessage) {
         if (errorMessage != null) {
             isUploading = false
@@ -125,10 +165,9 @@ fun UploadNewsScreen(
         },
         floatingActionButton = {
             ExtendedFloatingActionButton(
-                // 只有通过验证才能点击
                 onClick = {
                     if (canSubmit) {
-                        isUploading = true // 锁定按钮
+                        isUploading = true
                         val notice = UploadedNotice(
                             label = label,
                             title = title,
@@ -209,7 +248,11 @@ fun UploadNewsScreen(
                 singleLine = true
             )
 
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                verticalAlignment = Alignment.Top,
+                modifier = Modifier.fillMaxWidth()
+            ) {
                 OutlinedTextField(
                     value = label,
                     onValueChange = { label = it },
@@ -218,28 +261,32 @@ fun UploadNewsScreen(
                     modifier = Modifier.weight(1f),
                     singleLine = true
                 )
-                OutlinedTextField(
-                    value = date,
-                    onValueChange = { date = it },
-                    label = { Text("日期") },
-                    placeholder = { Text("yyyy-MM-dd") },
-                    isError = !isDateValid || date.isBlank(),
-                    supportingText = {
-                        if (!isDateValid) Text(
-                            "格式错误，需为 yyyy-MM-dd (例如 2026-03-18)",
-                            color = MaterialTheme.colorScheme.error
-                        )
-                    },
-                    modifier = Modifier.weight(1f),
-                    singleLine = true,
-                    leadingIcon = {
-                        Icon(
-                            Icons.Default.DateRange,
-                            contentDescription = null,
-                            modifier = Modifier.size(18.dp)
-                        )
-                    }
-                )
+
+                Box(modifier = Modifier.weight(1f)) {
+                    OutlinedTextField(
+                        value = date,
+                        onValueChange = {},
+                        label = { Text("日期") },
+                        placeholder = { Text("yyyy-MM-dd") },
+                        readOnly = true,
+                        isError = !isDateValid || date.isBlank(),
+                        modifier = Modifier.fillMaxWidth(),
+                        leadingIcon = {
+                            Icon(
+                                Icons.Default.DateRange,
+                                contentDescription = null,
+                                modifier = Modifier.size(18.dp)
+                            )
+                        }
+                    )
+                    Box(
+                        modifier = Modifier
+                            .matchParentSize()
+                            .clickable{
+                                showDatePicker = true
+                            }
+                    )
+                }
             }
 
             OutlinedTextField(
@@ -286,7 +333,6 @@ fun UploadNewsScreen(
                 maxLines = 10
             )
 
-            // 附件部分保持不变...
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,

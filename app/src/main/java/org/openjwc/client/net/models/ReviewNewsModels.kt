@@ -12,7 +12,7 @@ data class ReviewedNotice(
     @SerialName("detail_url") val detailUrl: String,
     @SerialName("is_page") val isPage: Boolean,
     val status: String,
-    val review: String // 审核结果的原因
+    val review: String? // 审核结果的原因
 )
 @Serializable
 data class ReviewedNoticesData(

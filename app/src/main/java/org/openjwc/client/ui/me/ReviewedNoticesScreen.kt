@@ -222,7 +222,7 @@ fun ReviewNoticeItem(notice: ReviewedNotice) {
                         color = statusColor
                     )
                 }
-                if (notice.review.isNotBlank()) {
+                if (!notice.review.isNullOrBlank()) {
                     Text(
                         text = notice.review,
                         modifier = Modifier.padding(top = 4.dp),

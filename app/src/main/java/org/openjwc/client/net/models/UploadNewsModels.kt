@@ -33,5 +33,5 @@ sealed class PostNoticeNetworkResult {
 @Serializable
 data class PostNoticeSuccessResponse(
     @SerialName("msg") val message: String,
-    @SerialName("data") val data: List<String>?
+    @SerialName("data") val data: Map<String, String>
 )
