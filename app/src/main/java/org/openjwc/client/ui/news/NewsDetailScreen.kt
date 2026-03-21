@@ -1,5 +1,6 @@
 package org.openjwc.client.ui.news
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -83,7 +84,6 @@ fun NewsDetailScreen(
                 title = {
                     Text(
                         text = fetchedNotice.title,
-//                        maxLines = 1,
                         overflow = TextOverflow.Ellipsis
                     )
                 },
@@ -110,9 +110,8 @@ fun NewsDetailScreen(
                 .fillMaxSize()
                 .verticalScroll(rememberScrollState())
                 .padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp) // 稍微加大间距
+            verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            // --- 元数据区 ---
             Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
                 Text(
                     text = "发布日期: ${fetchedNotice.date}",
@@ -124,7 +123,8 @@ fun NewsDetailScreen(
                     style = MaterialTheme.typography.labelSmall,
                     color = MaterialTheme.colorScheme.primary,
                     maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
+                    overflow = TextOverflow.Ellipsis,
+                    modifier = Modifier.clickable {onToBrowser(fetchedNotice.detailUrl)}
                 )
             }
 

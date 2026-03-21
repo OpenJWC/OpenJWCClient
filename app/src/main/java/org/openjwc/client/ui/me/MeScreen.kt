@@ -2,23 +2,36 @@ package org.openjwc.client.ui.me
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
 import androidx.compose.material3.windowsizeclass.WindowSizeClass
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
 import org.openjwc.client.data.settings.Event
 import org.openjwc.client.ui.me.settings.MenuSectionCard
 import org.openjwc.client.viewmodels.MeViewModel
+
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.lazy.LazyListScope
+import androidx.compose.material3.windowsizeclass.WindowWidthSizeClass
+import org.openjwc.client.data.settings.SettingSection
 
 @Composable
 fun MeScreen(
@@ -28,42 +41,117 @@ fun MeScreen(
     navController: NavController,
 ) {
     val sections by viewModel.sections.collectAsStateWithLifecycle()
+    val isExpanded = windowSizeClass.widthSizeClass == WindowWidthSizeClass.Expanded
+
     Box(
         modifier = modifier,
         contentAlignment = Alignment.TopCenter
     ) {
-        LazyColumn(
-            modifier = Modifier.fillMaxSize(),
-            contentPadding = PaddingValues(16.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
-        ) {
-            items(
-                items = sections,
-                key = { section -> section.title ?: section.items.hashCode() }
-            ) { section ->
-                MenuSectionCard(
-                    section = section,
-                    onEvent = {
-                        when (it) {
-                            is Event.Route -> {
-                                navController.navigate(it.route)
-                            }
+        if (isExpanded) {
+            Row(
+                modifier = Modifier.fillMaxSize().padding(24.dp),
+                horizontalArrangement = Arrangement.spacedBy(32.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Box(modifier = Modifier.weight(1f)) {
+                    HitokotoView(
+                        text = "所谓觉悟，就是在漆黑的荒野中，开辟出一条理所应当前进的光明大道。",
+                        author = "乔鲁诺·乔巴纳"
+                    )
+                }
 
-                            is Event.Toggle -> {
-                                // TODO: MeScreen 里面暂时没有开关，先不急
-                            }
-
-                            is Event.Action -> {
-                                it.onAction()
-                            }
-                        }
-                    }
-                )
+                LazyColumn(
+                    modifier = Modifier.weight(1.2f),
+                    contentPadding = PaddingValues(vertical = 16.dp),
+                    verticalArrangement = Arrangement.spacedBy(16.dp)
+                ) {
+                    menuSections(sections, navController)
+                }
             }
+        } else {
+            LazyColumn(
+                modifier = Modifier.fillMaxSize(),
+                contentPadding = PaddingValues(16.dp),
+                verticalArrangement = Arrangement.spacedBy(16.dp)
+            ) {
+                item(key = "hitokoto_header") {
+                    HitokotoView(
+                        text = "所谓觉悟，就是在漆黑的荒野中，开辟出一条理所应当前进的光明大道。",
+                        author = "乔鲁诺·乔巴纳",
+                        modifier = Modifier
+                            .padding(vertical = 64.dp)
+                            .padding(horizontal = 16.dp)
+                    )
+                }
+                menuSections(sections, navController)
 
-            item(key = "footer_spacer") {
-                Spacer(Modifier.height(88.dp))
+                item(key = "footer_spacer") {
+                    Spacer(Modifier.height(88.dp))
+                }
             }
         }
     }
+}
+
+fun LazyListScope.menuSections(
+    sections: List<SettingSection>,
+    navController: NavController
+) {
+    items(
+        items = sections,
+        key = { section -> section.title ?: section.items.hashCode() }
+    ) { section ->
+        MenuSectionCard(
+            section = section,
+            onEvent = { event ->
+                when (event) {
+                    is Event.Route -> navController.navigate(event.route)
+                    is Event.Action -> event.onAction()
+                    else -> {}
+                }
+            }
+        )
+    }
+}
+
+@Composable
+fun HitokotoView(
+    modifier: Modifier = Modifier,
+    text: String,
+    author: String? = null,
+) {
+    Column(
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(vertical = 8.dp),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Text(
+            modifier = Modifier.fillMaxWidth(),
+            text = "“ $text ”",
+            fontWeight = FontWeight.Bold,
+            style = MaterialTheme.typography.headlineMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            textAlign = TextAlign.Start
+        )
+        Spacer(modifier = Modifier.padding(16.dp))
+        author?.let {
+            Text(
+                text = "—— $it",
+                style = MaterialTheme.typography.labelLarge,
+                color = MaterialTheme.colorScheme.outline,
+                textAlign = TextAlign.End,
+                modifier = Modifier.padding(top = 4.dp).fillMaxWidth()
+            )
+        }
+    }
+}
+
+@Preview
+@Composable
+fun TestHitokotoView(){
+    HitokotoView(
+        text = "逸一时，误一世！",
+        author = "田所浩二",
+    )
 }
