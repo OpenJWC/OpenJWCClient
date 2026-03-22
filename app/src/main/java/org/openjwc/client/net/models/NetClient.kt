@@ -30,8 +30,9 @@ object NetClient {
 
     private val serviceCache = mutableMapOf<String, NetService>()
 
-    fun getService(host: String, port: Int): NetService {
-        val baseUrl = "http://$host:$port/"
+    fun getService(host: String, port: Int, useHttp: Boolean): NetService {
+        val prefix = if (useHttp) "http" else "https"
+        val baseUrl = "$prefix://$host:$port/"
         // 如果缓存里有，直接返回；没有则创建并存入缓存
         return serviceCache.getOrPut(baseUrl) {
             Retrofit.Builder()

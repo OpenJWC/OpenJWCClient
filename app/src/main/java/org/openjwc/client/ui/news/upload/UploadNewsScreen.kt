@@ -110,13 +110,20 @@ fun UploadNewsScreen(
     )
 
     val dateRegex = remember { Regex("""^\d{4}-\d{2}-\d{2}$""") }
+    val urlRegex = remember {
+        Regex("""^(https?|ftp)://[^\s/$.?#].\S*$""", RegexOption.IGNORE_CASE)
+    }
+    val isUrlValid: (String) -> Boolean = remember {{it.isNotBlank() && it.matches(urlRegex)} }
     val isDateValid = date.isEmpty() || date.matches(dateRegex)
+    val areAttachmentsValid = attachmentUrls.all { it.isNotBlank() && isUrlValid(it) }
 
     val canSubmit = label.isNotBlank() &&
             title.isNotBlank() &&
             date.matches(dateRegex) &&
             detailUrl.isNotBlank() &&
-            contentText.isNotBlank()
+            contentText.isNotBlank() &&
+            isUrlValid(detailUrl) &&
+            areAttachmentsValid
 
     val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd")
 
@@ -293,9 +300,14 @@ fun UploadNewsScreen(
                 value = detailUrl,
                 onValueChange = { detailUrl = it },
                 label = { Text("详情链接 (URL)") },
-                isError = detailUrl.isBlank(),
+                isError = !isUrlValid(detailUrl),
                 modifier = Modifier.fillMaxWidth(),
-                singleLine = true
+                singleLine = true,
+                supportingText = {
+                    if (!isUrlValid(detailUrl)) {
+                        Text("请输入有效的 URL (需包含 http/https)")
+                    }
+                }
             )
 
             // isPage 开关
@@ -361,7 +373,8 @@ fun UploadNewsScreen(
                 AttachmentInputRow(
                     url = url,
                     onValueChange = { newValue -> attachmentUrls[index] = newValue },
-                    onDelete = { attachmentUrls.removeAt(index) }
+                    onDelete = { attachmentUrls.removeAt(index) },
+                    isError = !isUrlValid(url)
                 )
             }
 
@@ -383,7 +396,8 @@ fun UploadNewsScreen(
 fun AttachmentInputRow(
     url: String,
     onValueChange: (String) -> Unit,
-    onDelete: () -> Unit
+    onDelete: () -> Unit,
+    isError: Boolean
 ) {
     Row(
         modifier = Modifier.fillMaxWidth(),
@@ -403,7 +417,11 @@ fun AttachmentInputRow(
                     contentDescription = null,
                     modifier = Modifier.size(18.dp)
                 )
-            }
+            },
+            isError = isError,
+            supportingText = {
+                if (isError) Text("格式非法")
+            },
         )
         IconButton(
             onClick = onDelete,

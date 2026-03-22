@@ -103,6 +103,7 @@ class SettingsViewModel(
     fun updateAuthKey(key: String) = viewModelScope.launch { repository.updateAuthKey(key) }
     fun updateHost(host: String) = viewModelScope.launch { repository.updateHost(host) }
     fun updatePort(port: Int) = viewModelScope.launch { repository.updatePort(port) }
+    fun updateUseHttp(useHttp: Boolean) = viewModelScope.launch { repository.updateUseHttp(useHttp) }
     fun updateFreshDays(freshDays: Int) = viewModelScope.launch { repository.updateFreshDays(freshDays) }
     private var _deviceResult = MutableStateFlow<DevicesQueryNetworkResult>(
         DevicesQueryNetworkResult.Success(
@@ -136,7 +137,7 @@ class SettingsViewModel(
             try {
                 val currentSettings = repository.getSettingsSnapshot() ?: UserSettings()
                 Log.d(label, "devicesQuery: $currentSettings")
-                val apiService = NetClient.getService(currentSettings.host, currentSettings.port)
+                val apiService = NetClient.getService(currentSettings.host, currentSettings.port, currentSettings.useHttp)
                 val result = apiService.devicesQuery(
                     currentSettings.authKey,
                     currentSettings.uuidString
@@ -155,7 +156,7 @@ class SettingsViewModel(
             _isLoadingDeviceResult.value = true
             try {
                 val currentSettings = repository.getSettingsSnapshot() ?: UserSettings()
-                val apiService = NetClient.getService(currentSettings.host, currentSettings.port)
+                val apiService = NetClient.getService(currentSettings.host, currentSettings.port, currentSettings.useHttp)
 
                 Log.d(label, "执行解绑...")
                 val unbindResult =

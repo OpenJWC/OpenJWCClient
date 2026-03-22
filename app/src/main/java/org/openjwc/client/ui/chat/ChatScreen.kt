@@ -58,8 +58,10 @@ import kotlinx.coroutines.launch
 import org.openjwc.client.data.models.ChatMessage
 import org.openjwc.client.data.models.ChatMetadata
 import org.openjwc.client.data.models.ChatSession
+import org.openjwc.client.ui.main.MainTab
 import org.openjwc.client.viewmodels.ChatEvent
 import org.openjwc.client.viewmodels.ChatViewModel
+import org.openjwc.client.viewmodels.MainViewModel
 import org.openjwc.client.viewmodels.SendMessageState
 
 
@@ -109,15 +111,16 @@ fun ChatScreen(
     sessionId: Long? = null,
     windowSizeClass: WindowSizeClass,
     drawerState: DrawerState,
-    viewModel: ChatViewModel,
+    chatViewModel: ChatViewModel,
+    mainViewModel: MainViewModel,
     contentPadding: PaddingValues,
 ) {
-    val historySessions by viewModel.allSessions.collectAsStateWithLifecycle(emptyList())
+    val historySessions by chatViewModel.allSessions.collectAsStateWithLifecycle(emptyList())
     val scope = rememberCoroutineScope()
     val context = LocalContext.current
     val showEditMetadataDialog = remember { MutableStateFlow(false) }
     LaunchedEffect(Unit) {
-        viewModel.eventChannel.receiveAsFlow().collect { event ->
+        chatViewModel.eventChannel.receiveAsFlow().collect { event ->
             when (event) {
                 is ChatEvent.ShowToast -> {
                     Toast.makeText(context, event.message, Toast.LENGTH_SHORT).show()
@@ -138,14 +141,14 @@ fun ChatScreen(
                 sessions = historySessions,
                 currentSessionId = sessionId,
                 onSessionClick = { id ->
-                    viewModel.loadSession(id)
+                    chatViewModel.loadSession(id)
                     scope.launch { drawerState.close() }
                 },
                 onNewChat = {
-                    viewModel.toNewChat()
+                    chatViewModel.toNewChat()
                     scope.launch { drawerState.close() }
                 },
-                onDeleteSession = { id -> viewModel.deleteSession(id) },
+                onDeleteSession = { id -> chatViewModel.deleteSession(id) },
                 onUpdateSessionMetadata = {
                     showEditMetadataDialog.value = true
                 },
@@ -164,9 +167,10 @@ fun ChatScreen(
     ) {
         Box(Modifier.fillMaxSize()) {
             ChatMainContent(
-                viewModel = viewModel,
+                chatViewModel = chatViewModel,
                 windowSizeClass = windowSizeClass,
-                contentPadding = contentPadding
+                contentPadding = contentPadding,
+                mainViewModel = mainViewModel
             )
         }
     }
@@ -176,11 +180,11 @@ fun ChatScreen(
             onDismiss = { showEditMetadataDialog.value = false },
             onConfirm = { newTitle ->
                 showEditMetadataDialog.value = false
-                viewModel.currentSessionMetadata.value?.let {
-                    viewModel.updateMetadata(it.copy(title = newTitle))
+                chatViewModel.currentSessionMetadata.value?.let {
+                    chatViewModel.updateMetadata(it.copy(title = newTitle))
                 }
             },
-            initialTitle = viewModel.currentSessionMetadata.value?.title ?: ""
+            initialTitle = chatViewModel.currentSessionMetadata.value?.title ?: ""
         )
     }
 }
@@ -312,12 +316,13 @@ fun ChatHistoryItem(
 
 @Composable
 private fun ChatMainContent(
-    viewModel: ChatViewModel,
+    chatViewModel: ChatViewModel,
+    mainViewModel: MainViewModel,
     windowSizeClass: WindowSizeClass,
     contentPadding: PaddingValues
 ) {
-    val messages by viewModel.messages.collectAsStateWithLifecycle()
-    val sendMessageState by viewModel.sendMessageState.collectAsStateWithLifecycle()
+    val messages by chatViewModel.messages.collectAsStateWithLifecycle()
+    val sendMessageState by chatViewModel.sendMessageState.collectAsStateWithLifecycle()
     val listState = rememberLazyListState()
     val clipboardManager = LocalClipboard.current
     val context = LocalContext.current
@@ -344,26 +349,27 @@ private fun ChatMainContent(
             chatMessages = messages,
             sendMessageState = sendMessageState,
             onCopy = {
-                viewModel.copyMessage(it, clipboardManager, context)
+                chatViewModel.copyMessage(it, clipboardManager, context)
             },
             onShare = { /*TODO: viewModel.shareMessage(it)*/ },
-            onDelete = { viewModel.deleteMessage(it.messageId) }
+            onDelete = { chatViewModel.deleteMessage(it.messageId) }
         )
 
         ChatInputBar(
-            textValue = viewModel.inputText.collectAsState().value,
-            onSendMessage = { viewModel.sendMessage() },
-            onTextChange = { viewModel.updateInputText(it) },
+            textValue = chatViewModel.inputText.collectAsState().value,
+            onSendMessage = { chatViewModel.sendMessage() },
+            onTextChange = { chatViewModel.updateInputText(it) },
             onAddAttachment = {
-                Toast.makeText(context, "请转到资讯页，长按资讯卡片添加附件", Toast.LENGTH_SHORT).show()
+                mainViewModel.updateTab(MainTab.News)
+                Toast.makeText(context, "请长按资讯卡片添加附件", Toast.LENGTH_SHORT).show()
             },
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(vertical = 8.dp)
                 .imePadding(),
             isSending = sendMessageState is SendMessageState.Sending,
-            attachments = viewModel.attachments.collectAsStateWithLifecycle().value,
-            onDeleteAttachment = {viewModel.deleteAttachment(it)},
+            attachments = chatViewModel.attachments.collectAsStateWithLifecycle().value,
+            onDeleteAttachment = {chatViewModel.deleteAttachment(it)},
         )
     }
 }

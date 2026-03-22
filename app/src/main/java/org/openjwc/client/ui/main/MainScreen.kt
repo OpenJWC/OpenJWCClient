@@ -157,6 +157,7 @@ private fun MainTabContent(
                 windowSizeClass,
                 drawerState,
                 chatViewModel,
+                mainViewModel,
                 contentPadding
             )
 

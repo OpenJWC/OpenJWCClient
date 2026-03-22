@@ -58,5 +58,6 @@ data class UserSettings(
     val themeColor: ColorType = ColorType.Dynamic,
     val host: String = "101.132.106.186",
     val port: Int = 8000,
+    val useHttp: Boolean = false,
     val freshDays: Int = 21
 )
