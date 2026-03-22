@@ -4,6 +4,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardOptions
@@ -161,6 +162,9 @@ fun NewsDisplaySettingsScreen(
             )
 
             InfoCard(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(130.dp),
                 fetchedNotice = FetchedNotice(
                     id = "preview",
                     title = "这是一条最新最热资讯标题",
@@ -175,6 +179,9 @@ fun NewsDisplaySettingsScreen(
                 isFresh = isValid && freshDaysInt != 0
             )
             InfoCard(
+                Modifier
+                    .fillMaxWidth()
+                    .height(130.dp),
                 fetchedNotice = FetchedNotice(
                     id = "preview",
                     title = "这是一条最旧最冷资讯标题",

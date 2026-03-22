@@ -6,6 +6,7 @@ import androidx.room.TypeConverter
 import org.openjwc.client.ui.theme.ColorType
 import org.openjwc.client.ui.theme.DarkThemeStyle
 import androidx.core.graphics.toColorInt
+import kotlinx.serialization.json.Json
 import org.openjwc.client.data.models.Role
 import org.openjwc.client.ui.theme.SeedDefault
 
@@ -58,4 +59,17 @@ class Converters {
         }
     }
 
+    @TypeConverter
+    fun fromAttachmentTitles(value: String): List<String> {
+        return try {
+            Json.decodeFromString<List<String>>(value)
+        } catch (e: Exception) {
+            emptyList()
+        }
+    }
+
+    @TypeConverter
+    fun toAttachmentTitles(list: List<String>): String {
+        return Json.encodeToString(list)
+    }
 }

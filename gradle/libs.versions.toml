@@ -35,6 +35,7 @@ kspVersion = "2.3.0"
 jpush = "6.0.2"
 jcore = "5.3.1"
 jpush-huawei = "6.0.2"
+foundation = "1.10.5"
 
 [libraries]
 # Androidx 核心
@@ -84,6 +85,7 @@ androidx-room-compiler = { module = "androidx.room:room-compiler", version.ref =
 jpush-sdk = { group = "cn.jiguang.sdk", name = "jpush", version.ref = "jpush" }
 jpush-jcore = { group = "cn.jiguang.sdk", name = "jcore", version.ref = "jcore" }
 jpush-plugin-huawei = { group = "cn.jiguang.sdk.plugin", name = "huawei", version.ref = "jpush-huawei" }
+androidx-foundation = { group = "androidx.compose.foundation", name = "foundation", version.ref = "foundation" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

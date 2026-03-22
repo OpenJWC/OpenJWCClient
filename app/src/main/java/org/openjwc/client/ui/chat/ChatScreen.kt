@@ -45,6 +45,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalClipboard
 import androidx.compose.ui.platform.LocalContext
@@ -52,6 +53,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
 import org.openjwc.client.data.models.ChatMessage
 import org.openjwc.client.data.models.ChatMetadata
@@ -115,7 +117,7 @@ fun ChatScreen(
     val context = LocalContext.current
     val showEditMetadataDialog = remember { MutableStateFlow(false) }
     LaunchedEffect(Unit) {
-        viewModel.events.collect { event ->
+        viewModel.eventChannel.receiveAsFlow().collect { event ->
             when (event) {
                 is ChatEvent.ShowToast -> {
                     Toast.makeText(context, event.message, Toast.LENGTH_SHORT).show()
@@ -237,7 +239,7 @@ fun ChatHistoryItem(
         modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = 12.dp),
-        verticalAlignment = androidx.compose.ui.Alignment.CenterVertically
+        verticalAlignment = Alignment.CenterVertically
     ) {
 
         NavigationDrawerItem(
@@ -350,12 +352,16 @@ private fun ChatMainContent(
 
         ChatInputBar(
             onSendMessage = { viewModel.sendMessage(it) },
-            onAttachment = {},
+            onAddAttachment = {
+                Toast.makeText(context, "请转到资讯页，长按资讯卡片添加附件", Toast.LENGTH_SHORT).show()
+            },
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(vertical = 8.dp)
                 .imePadding(),
-            isSending = sendMessageState is SendMessageState.Sending
+            isSending = sendMessageState is SendMessageState.Sending,
+            attachments = viewModel.attachments.collectAsStateWithLifecycle().value,
+            onDeleteAttachment = {viewModel.deleteAttachment(it)}
         )
     }
 }

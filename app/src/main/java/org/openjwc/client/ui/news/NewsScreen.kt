@@ -7,6 +7,11 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.Add
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.Icon
 import androidx.compose.material3.LoadingIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SecondaryScrollableTabRow
@@ -21,35 +26,44 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
 import kotlinx.coroutines.launch
+import org.openjwc.client.net.models.FetchedNotice
+import org.openjwc.client.ui.main.MainTab
+import org.openjwc.client.viewmodels.ChatViewModel
+import org.openjwc.client.viewmodels.MainViewModel
 import org.openjwc.client.viewmodels.NewsViewModel
 
 @Composable
 fun NewsScreen(
     modifier: Modifier = Modifier,
     windowSizeClass: WindowSizeClass,
-    viewModel: NewsViewModel,
+    newsViewModel: NewsViewModel,
+    mainViewModel: MainViewModel,
+    chatViewModel: ChatViewModel,
     navController: NavController
 ) {
-    val tabs = viewModel.labels.collectAsStateWithLifecycle().value
+    val tabs = newsViewModel.labels.collectAsStateWithLifecycle().value
     val pagerState = rememberPagerState { tabs.size }
     val scope = rememberCoroutineScope()
     val listState = rememberLazyGridState()
     val snackbarHostState = remember { SnackbarHostState() }
-    val isLoading = viewModel.isLoading.collectAsStateWithLifecycle().value
-    val isRefreshing = viewModel.isRefreshing.collectAsStateWithLifecycle().value
-    val labelError = viewModel.labelError.collectAsStateWithLifecycle().value
-
+    val isLoading = newsViewModel.isLoading.collectAsStateWithLifecycle().value
+    val isRefreshing = newsViewModel.isRefreshing.collectAsStateWithLifecycle().value
+    val labelError = newsViewModel.labelError.collectAsStateWithLifecycle().value
+    var selectedNoticeForMenu by remember { mutableStateOf<FetchedNotice?>(null) }
+    var showMenu by remember { mutableStateOf(false) }
 
     LaunchedEffect(tabs) {
-        viewModel.loadLabels()
+        newsViewModel.loadLabels()
     }
     Box(
         modifier = modifier
@@ -58,7 +72,7 @@ fun NewsScreen(
         if (tabs.isEmpty()) {
             if (!(isLoading || isRefreshing)) {
                 EmptyLabelsPlaceholder(
-                    onRefresh = { viewModel.loadLabels() },
+                    onRefresh = { newsViewModel.loadLabels() },
                     errorMessage = labelError
                 )
             } else {
@@ -121,23 +135,27 @@ fun NewsScreen(
                     val currentLabel = tabs[pageIndex]
                     PullToRefreshBox(
                         isRefreshing = isRefreshing,
-                        onRefresh = { viewModel.loadCategory(currentLabel, isRefresh = true) },
+                        onRefresh = { newsViewModel.loadCategory(currentLabel, isRefresh = true) },
                         modifier = Modifier.fillMaxSize(),
                     ) {
                         NewsList(
                             label = currentLabel,
                             windowSizeClass = windowSizeClass,
-                            newsItems = viewModel.getNewsState(currentLabel),
+                            newsItems = newsViewModel.getNewsState(currentLabel),
                             isLoading = isLoading,
-                            isEnd = viewModel.isEnd(currentLabel),
-                            error = viewModel.getError(currentLabel),
-                            onRefresh = { viewModel.loadCategory(currentLabel, isRefresh = true) },
-                            onLoadMore = { viewModel.loadNextPage(currentLabel) },
+                            isEnd = newsViewModel.isEnd(currentLabel),
+                            error = newsViewModel.getError(currentLabel),
+                            onRefresh = { newsViewModel.loadCategory(currentLabel, isRefresh = true) },
+                            onLoadMore = { newsViewModel.loadNextPage(currentLabel) },
                             onItemClick = { notice ->
                                 navController.navigate(Screen.NewsDetail(notice))
                             },
-                            freshDays = viewModel.freshDays.collectAsStateWithLifecycle().value,
-                            onInitialLoad = { viewModel.loadCategory(currentLabel) }
+                            onItemLongClick = { notice ->
+                                selectedNoticeForMenu = notice
+                                showMenu = true
+                            },
+                            freshDays = newsViewModel.freshDays.collectAsStateWithLifecycle().value,
+                            onInitialLoad = { newsViewModel.loadCategory(currentLabel) }
                         )
                         val showBackToTop by remember { derivedStateOf { listState.firstVisibleItemIndex > 5 } }
                         BackToTopButton(
@@ -152,6 +170,28 @@ fun NewsScreen(
                         )
                     }
                 }
+            }
+        }
+        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+            DropdownMenu(
+                expanded = showMenu,
+                onDismissRequest = { showMenu = false },
+                // 如果想让菜单出现在特定位置，可以传入 offset
+            ) {
+                DropdownMenuItem(
+                    text = { Text("添加到附件") },
+                    leadingIcon = { Icon(Icons.Outlined.Add, contentDescription = "Add to attachments") },
+                    onClick = {
+                        selectedNoticeForMenu?.let { notice ->
+                            chatViewModel.addAttachment(notice)
+                            mainViewModel.updateTab(MainTab.Chat)
+                            scope.launch {
+                                snackbarHostState.showSnackbar("已添加到附件")
+                            }
+                        }
+                        showMenu = false
+                    }
+                )
             }
         }
     }

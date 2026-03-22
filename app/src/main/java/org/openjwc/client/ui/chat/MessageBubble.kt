@@ -52,12 +52,10 @@ fun MessageBubble(
     val uriCurrent = LocalUriHandler.current
     val isUser = message.role == Role.USER
 
-    val containerColor = if (isUser) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surfaceVariant
-    val contentColor = if (isUser) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurfaceVariant
-
-//    val screenWidth = LocalWindowInfo.current.containerSize
-//    val maxBubbleWidth = screenWidth.width * 0.7f
-
+    val containerColor =
+        if (isUser) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surfaceVariant
+    val contentColor =
+        if (isUser) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurfaceVariant
     val bubbleShape = RoundedCornerShape(
         topStart = 20.dp,
         topEnd = 20.dp,
@@ -71,11 +69,9 @@ fun MessageBubble(
             .padding(vertical = 4.dp),
         horizontalAlignment = if (isUser) Alignment.End else Alignment.Start
     ) {
-        // 使用 Row 容器来排列加载器和气泡
         Row(
             verticalAlignment = Alignment.CenterVertically
         ) {
-            // 1. 如果是用户发送中，在气泡左侧显示加载动画
             if (isUser && isLoading) {
                 LoadingIndicator(
                     modifier = Modifier
@@ -96,27 +92,57 @@ fun MessageBubble(
                     shape = bubbleShape,
                     tonalElevation = if (isUser) 0.dp else 2.dp,
                 ) {
-                    if (isUser) {
-                        Text(
-                            text = message.text,
-                            modifier = Modifier
-                                .padding(horizontal = 16.dp, vertical = 10.dp)
-                                .widthIn(max = maxWidth),
-                            style = MaterialTheme.typography.bodyLarge.copy(lineHeight = 24.sp)
-                        )
-                    } else {
-                        MarkdownText(
-                            markdown = message.text,
-                            modifier = Modifier
-                                .padding(horizontal = 16.dp, vertical = 10.dp)
-                                .widthIn(max = maxWidth),
-                            style = MaterialTheme.typography.bodyLarge.copy(
-                                color = contentColor,
-                                lineHeight = 24.sp
-                            ),
-                            isTextSelectable = true,
-                            onLinkClicked = { url -> uriCurrent.openUri(url) }
-                        )
+                    Column(
+                        modifier = Modifier
+                            .padding(horizontal = 16.dp, vertical = 10.dp)
+                            .widthIn(max = maxWidth)
+                    ) {
+                        // 1. 插入附件标题列表
+                        if (message.attachmentTitles.isNotEmpty()) {
+                            androidx.compose.foundation.layout.FlowRow(
+                                modifier = Modifier.padding(bottom = 8.dp),
+                                horizontalArrangement = androidx.compose.foundation.layout.Arrangement.spacedBy(
+                                    4.dp
+                                ),
+                                verticalArrangement = androidx.compose.foundation.layout.Arrangement.spacedBy(
+                                    4.dp
+                                )
+                            ) {
+                                message.attachmentTitles.forEach { title ->
+                                    Surface(
+                                        shape = RoundedCornerShape(8.dp),
+                                        color = contentColor.copy(alpha = 0.1f)
+                                    ) {
+                                        Text(
+                                            text = title,
+                                            modifier = Modifier.padding(
+                                                horizontal = 8.dp,
+                                                vertical = 2.dp
+                                            ),
+                                            style = MaterialTheme.typography.labelSmall,
+                                            color = contentColor,
+                                            maxLines = 1
+                                        )
+                                    }
+                                }
+                            }
+                        }
+                        if (isUser) {
+                            Text(
+                                text = message.text,
+                                style = MaterialTheme.typography.bodyLarge.copy(lineHeight = 24.sp)
+                            )
+                        } else {
+                            MarkdownText(
+                                markdown = message.text,
+                                style = MaterialTheme.typography.bodyLarge.copy(
+                                    color = contentColor,
+                                    lineHeight = 24.sp
+                                ),
+                                isTextSelectable = true,
+                                onLinkClicked = { url -> uriCurrent.openUri(url) }
+                            )
+                        }
                     }
                 }
 
@@ -133,7 +159,8 @@ fun MessageBubble(
                         text = { Text("转发") },
                         onClick = {
                             onShare(message)
-                            showMenu = false },
+                            showMenu = false
+                        },
                         leadingIcon = { Icon(Icons.Filled.Share, contentDescription = null) }
                     )
                     DropdownMenuItem(
@@ -179,7 +206,8 @@ fun TestMessageBubbleFromUser() {
         text = "Hello World",
         role = Role.USER,
         ownerSessionId = 0,
-        timestamp = System.currentTimeMillis()
+        timestamp = System.currentTimeMillis(),
+        attachmentTitles = listOf("附件1", "附件2")
     )
     MessageBubble(
         mockChatMessage,
@@ -193,10 +221,11 @@ fun TestMessageBubbleFromUser() {
 fun TestMessageBubbleFromAI() {
     val mockChatMessage = ChatMessage(
         messageId = 19198,
-        text =  "hello",
+        text = "hello",
         role = Role.ASSISTANT,
         ownerSessionId = 0,
-        timestamp = System.currentTimeMillis()
+        timestamp = System.currentTimeMillis(),
+        attachmentTitles = listOf("附件1", "附件2")
     )
     MessageBubble(mockChatMessage, true, maxWidth = 300.dp)
 }

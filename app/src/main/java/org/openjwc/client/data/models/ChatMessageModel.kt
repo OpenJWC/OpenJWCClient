@@ -29,6 +29,7 @@ data class ChatMessage(
     val ownerSessionId: Long,
     val text: String,
     val role: Role,
+    val attachmentTitles: List<String> = emptyList(),
     val timestamp: Long = System.currentTimeMillis()
 )
 

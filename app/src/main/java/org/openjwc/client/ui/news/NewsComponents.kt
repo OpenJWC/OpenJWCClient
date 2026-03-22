@@ -6,6 +6,7 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.animation.scaleIn
 import androidx.compose.animation.scaleOut
 import androidx.compose.foundation.background
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -72,6 +73,7 @@ fun NewsList(
     onRefresh: () -> Unit,
     onLoadMore: () -> Unit,
     onItemClick: (FetchedNotice) -> Unit,
+    onItemLongClick: (FetchedNotice) -> Unit,
     onInitialLoad: () -> Unit = {}
 ) {
     val listState = rememberLazyGridState()
@@ -134,8 +136,12 @@ fun NewsList(
                     }
 
                     InfoCard(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(130.dp),
                         fetchedNotice = item,
                         onClick = onItemClick,
+                        onLongClick = onItemLongClick,
                         isFresh = isFresh
                     )
                 }
@@ -225,24 +231,26 @@ fun BackToTopButton(visible: Boolean, onClick: () -> Unit, modifier: Modifier) {
 
 @Composable
 fun InfoCard(
+    modifier: Modifier = Modifier,
     fetchedNotice: FetchedNotice,
     onClick: (FetchedNotice) -> Unit,
+    onLongClick: (FetchedNotice) -> Unit = {},
     isFresh: Boolean
 ) {
     Card(
-        onClick = { onClick(fetchedNotice) },
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(130.dp),
+        modifier = modifier
+            .combinedClickable(
+                onClick = { onClick(fetchedNotice) },
+                onLongClick = { onLongClick(fetchedNotice) }
+            ),
         elevation = CardDefaults.cardElevation(
             defaultElevation = if (isFresh) 4.dp else 2.dp,
-            pressedElevation = 6.dp
         ),
         border = null,
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.surfaceVariant
         )
-    ) {
+    ){
         Column(
             modifier = Modifier
                 .padding(16.dp)
@@ -333,7 +341,6 @@ fun EmptyLabelsPlaceholder(
         }
         Spacer(modifier = Modifier.height(32.dp))
 
-        // 使用 FilledTonalButton，视觉上不会过于突兀，适合空状态
         FilledTonalButton(
             onClick = onRefresh,
             contentPadding = PaddingValues(horizontal = 24.dp, vertical = 12.dp)

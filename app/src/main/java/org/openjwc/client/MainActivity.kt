@@ -53,7 +53,6 @@ class MainActivity : ComponentActivity() {
         var isReady = false
 
         lifecycleScope.launch {
-            // 预热 ViewModel 中的数据
             mainViewModel.themeColor.first()
             mainViewModel.darkThemeStyle.first()
             isReady = true

@@ -13,11 +13,9 @@ import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOf
-import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import org.openjwc.client.data.models.ChatMessage
@@ -27,10 +25,11 @@ import org.openjwc.client.data.repository.ChatRepository
 import org.openjwc.client.data.repository.SettingsRepository
 import org.openjwc.client.data.settings.UserSettings
 import org.openjwc.client.net.chat.sendMessageStream
-import org.openjwc.client.net.models.NetClient
 import org.openjwc.client.net.models.ChatHistory
-import org.openjwc.client.net.models.ChatRequestBody
 import org.openjwc.client.net.models.ChatNetworkResult
+import org.openjwc.client.net.models.ChatRequestBody
+import org.openjwc.client.net.models.FetchedNotice
+import org.openjwc.client.net.models.NetClient
 
 sealed class SendMessageState {
     data object Idle : SendMessageState()
@@ -47,18 +46,34 @@ class ChatViewModel(
     private val chatRepository: ChatRepository
 ) : ViewModel() {
 
-    // 1. 状态定义
-    private val _currentSessionMetadata = MutableStateFlow<ChatMetadata?>(null)
-    val currentSessionMetadata = _currentSessionMetadata.asStateFlow()
+    var currentSessionMetadata = MutableStateFlow<ChatMetadata?>(null)
+        private set
 
-    private val _sendMessageState = MutableStateFlow<SendMessageState>(SendMessageState.Idle)
-    val sendMessageState = _sendMessageState.asStateFlow()
+    var sendMessageState = MutableStateFlow<SendMessageState>(SendMessageState.Idle)
+        private set
 
-    private val _eventChannel = Channel<ChatEvent>(Channel.BUFFERED)
-    val events = _eventChannel.receiveAsFlow()
+    var eventChannel = Channel<ChatEvent>(Channel.BUFFERED)
+        private set
 
+    var attachments = MutableStateFlow<List<FetchedNotice>>(emptyList())
+        private set
+
+
+    fun addAttachment(attachment: FetchedNotice) {
+        if(attachment in attachments.value) return
+        Log.d("ChatViewModel", "addAttachment: $attachment")
+        attachments.value = attachments.value + attachment
+    }
+
+    fun deleteAttachment(attachment: FetchedNotice) {
+        attachments.value = attachments.value - attachment
+    }
+
+    fun clearAttachments() {
+        attachments.value = emptyList()
+    }
     @OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)
-    val messages: StateFlow<List<ChatMessage>> = _currentSessionMetadata
+    val messages: StateFlow<List<ChatMessage>> = currentSessionMetadata
         .flatMapLatest { metadata ->
             if (metadata == null) flowOf(emptyList())
             else chatRepository.getMessagesBySessionId(metadata.sessionId)
@@ -68,33 +83,34 @@ class ChatViewModel(
     val allSessions = chatRepository.getChatSessions()
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
-    // 3. 业务逻辑
     fun loadSession(sessionId: Long) {
         viewModelScope.launch {
             val metadata = chatRepository.getChatMetadataById(sessionId)
-            _currentSessionMetadata.value = metadata.first()
+            currentSessionMetadata.value = metadata.first()
         }
     }
 
     fun toNewChat() {
-        _currentSessionMetadata.value = null
+        currentSessionMetadata.value = null
     }
-    fun sendMessage(messageContent: String) {
-        if (sendMessageState.value is SendMessageState.Sending || messageContent.isBlank()) return
+    fun sendMessage(messageText: String) {
+        if (sendMessageState.value is SendMessageState.Sending || messageText.isBlank()) return
 
-        _sendMessageState.value = SendMessageState.Sending
-
+        sendMessageState.value = SendMessageState.Sending
+        val attachmentIds = attachments.value.map { it.id }
+        val attachmentTitles = attachments.value.map { it.title}
         viewModelScope.launch {
             var aiMsgId: Long? = null
+            clearAttachments()
             try {
-                var sessionId = _currentSessionMetadata.value?.sessionId
+                var sessionId = currentSessionMetadata.value?.sessionId
                 if (sessionId == null) {
-                    sessionId = chatRepository.createChatSession(messageContent.take(20))
+                    sessionId = chatRepository.createChatSession(messageText.take(20))
                     // 立即更新 metadata 以便让 messages 流切换到新会话
-                    _currentSessionMetadata.value = ChatMetadata(sessionId = sessionId, title = messageContent.take(20))
+                    currentSessionMetadata.value = ChatMetadata(sessionId = sessionId, title = messageText.take(20))
                 }
 
-                chatRepository.insertMessage(ChatMessage(ownerSessionId = sessionId, text = messageContent, role = Role.USER))
+                chatRepository.insertMessage(ChatMessage(ownerSessionId = sessionId, text = messageText, role = Role.USER, attachmentTitles = attachmentTitles))
 
                 val historyList = messages.value
                     .filter { it.text.isNotBlank() }
@@ -106,7 +122,7 @@ class ChatViewModel(
                 aiMsgId = chatRepository.insertMessage(ChatMessage(ownerSessionId = sessionId, text = "", role = Role.ASSISTANT))
 
                 apiService.sendMessageStream(currentSettings.authKey, settingsRepository.getOrGenerateDeviceId(),
-                    ChatRequestBody("test", messageContent, true, historyList)
+                    ChatRequestBody(attachmentIds, messageText, true, historyList)
                 ).collect { result ->
                     when (result) {
                         is ChatNetworkResult.Success -> {
@@ -123,21 +139,21 @@ class ChatViewModel(
                 handleFailure(e.localizedMessage ?: "Unknown error", aiMsgId)
             } finally {
                 Log.d("ChatViewModel", "Setting state to Idle")
-                _sendMessageState.value = SendMessageState.Idle
+                sendMessageState.value = SendMessageState.Idle
             }
         }
     }
 
     private suspend fun handleFailure(errorMsg: String, aiMsgId: Long? = null) {
         aiMsgId?.let { chatRepository.deleteMessageById(it) }
-        _eventChannel.send(ChatEvent.ShowToast(errorMsg))
+        eventChannel.send(ChatEvent.ShowToast(errorMsg))
     }
 
     fun deleteSession(sessionId: Long) {
         viewModelScope.launch {
             chatRepository.deleteSession(sessionId)
-            if (_currentSessionMetadata.value?.sessionId == sessionId) {
-                _currentSessionMetadata.value = null
+            if (currentSessionMetadata.value?.sessionId == sessionId) {
+                currentSessionMetadata.value = null
             }
         }
     }
@@ -161,7 +177,7 @@ class ChatViewModel(
     fun updateMetadata(metadata: ChatMetadata) {
         viewModelScope.launch {
             chatRepository.updateMetadata(metadata)
-            _currentSessionMetadata.value = metadata
+            currentSessionMetadata.value = metadata
         }
     }
 }

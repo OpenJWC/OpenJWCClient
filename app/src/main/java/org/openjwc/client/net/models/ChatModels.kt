@@ -4,12 +4,6 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonObject
-import okhttp3.ResponseBody
-import retrofit2.Response
-import retrofit2.http.Body
-import retrofit2.http.Header
-import retrofit2.http.POST
-import retrofit2.http.Streaming
 
 @Serializable
 data class ChatHistory(
@@ -19,17 +13,11 @@ data class ChatHistory(
 
 @Serializable
 data class ChatRequestBody(
-    @SerialName("notice_id") val noticeId: String,
+    @SerialName("notice_ids") val noticeId: List<String>,
     @SerialName("user_query") val userQuery: String,
     val stream: Boolean = false,
     val history: List<ChatHistory> = emptyList()
 )
-@Serializable
-data class ChatSuccessResponse(
-    val status: String,
-    val reply: String
-)
-
 @Serializable
 data class ChatErrorResponse(
     val detail: List<ValidationError>

@@ -37,8 +37,12 @@ android {
     }
 
     buildTypes {
-        release {
+        debug {
             isMinifyEnabled = false
+            proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
+        }
+        release {
+            isMinifyEnabled = true
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
@@ -70,6 +74,7 @@ kotlin {
 }
 
 dependencies {
+    implementation(libs.androidx.foundation)
     ksp(libs.androidx.room.compiler)
     // 基础库
     implementation(libs.androidx.core.ktx)
@@ -99,8 +104,7 @@ dependencies {
     implementation(libs.jpush.sdk)
     implementation(libs.jpush.jcore)
     implementation(libs.jpush.plugin.huawei)
-    implementation("com.huawei.hms:push:6.13.0.300")
-    implementation("cn.jiguang.sdk.plugin:huawei:5.6.0")
+    implementation("com.huawei.hms:push:6.13.0.301")
     
     // 网络层 (Retrofit + OkHttp) - 这里的点号访问会自动匹配 toml 中的中划线
     implementation(libs.retrofit.core)

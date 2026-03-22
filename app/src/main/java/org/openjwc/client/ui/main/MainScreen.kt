@@ -119,6 +119,7 @@ private fun MainScaffoldContent(
             }
         ) { contentPadding ->
             MainTabContent(
+                mainViewModel,
                 chatViewModel,
                 newsViewModel,
                 meViewModel,
@@ -134,6 +135,7 @@ private fun MainScaffoldContent(
 
 @Composable
 private fun MainTabContent(
+    mainViewModel: MainViewModel,
     chatViewModel: ChatViewModel,
     newsViewModel: NewsViewModel,
     meViewModel: MeViewModel,
@@ -158,7 +160,7 @@ private fun MainTabContent(
                 contentPadding
             )
 
-            MainTab.News -> NewsScreen(modifier = Modifier.padding(contentPadding), windowSizeClass, newsViewModel, navController)
+            MainTab.News -> NewsScreen(modifier = Modifier.padding(contentPadding), windowSizeClass, newsViewModel, mainViewModel, chatViewModel, navController)
             MainTab.Me -> MeScreen(modifier = Modifier.padding(contentPadding),windowSizeClass, meViewModel, navController)
         }
     }
