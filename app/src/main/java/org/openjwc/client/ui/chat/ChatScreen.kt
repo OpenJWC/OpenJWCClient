@@ -351,7 +351,9 @@ private fun ChatMainContent(
         )
 
         ChatInputBar(
-            onSendMessage = { viewModel.sendMessage(it) },
+            textValue = viewModel.inputText.collectAsState().value,
+            onSendMessage = { viewModel.sendMessage() },
+            onTextChange = { viewModel.updateInputText(it) },
             onAddAttachment = {
                 Toast.makeText(context, "请转到资讯页，长按资讯卡片添加附件", Toast.LENGTH_SHORT).show()
             },
@@ -361,7 +363,7 @@ private fun ChatMainContent(
                 .imePadding(),
             isSending = sendMessageState is SendMessageState.Sending,
             attachments = viewModel.attachments.collectAsStateWithLifecycle().value,
-            onDeleteAttachment = {viewModel.deleteAttachment(it)}
+            onDeleteAttachment = {viewModel.deleteAttachment(it)},
         )
     }
 }

@@ -58,7 +58,12 @@ class ChatViewModel(
     var attachments = MutableStateFlow<List<FetchedNotice>>(emptyList())
         private set
 
+    var inputText = MutableStateFlow("")
+        private set
 
+    fun updateInputText(newText: String) {
+        inputText.value = newText
+    }
     fun addAttachment(attachment: FetchedNotice) {
         if(attachment in attachments.value) return
         Log.d("ChatViewModel", "addAttachment: $attachment")
@@ -93,15 +98,17 @@ class ChatViewModel(
     fun toNewChat() {
         currentSessionMetadata.value = null
     }
-    fun sendMessage(messageText: String) {
-        if (sendMessageState.value is SendMessageState.Sending || messageText.isBlank()) return
+    fun sendMessage() {
+        if (sendMessageState.value is SendMessageState.Sending || inputText.value.isBlank()) return
 
         sendMessageState.value = SendMessageState.Sending
         val attachmentIds = attachments.value.map { it.id }
         val attachmentTitles = attachments.value.map { it.title}
+        val messageText = inputText.value
         viewModelScope.launch {
             var aiMsgId: Long? = null
             clearAttachments()
+            updateInputText("")
             try {
                 var sessionId = currentSessionMetadata.value?.sessionId
                 if (sessionId == null) {

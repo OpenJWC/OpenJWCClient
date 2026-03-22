@@ -26,10 +26,6 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
@@ -49,14 +45,15 @@ import org.openjwc.client.net.models.FetchedNotice
 @Composable
 fun ChatInputBar(
     modifier: Modifier = Modifier,
+    textValue: String,
+    onTextChange: (String) -> Unit,
     attachments: List<FetchedNotice>,
-    onSendMessage: (String) -> Unit,
+    onSendMessage: () -> Unit,
     onAddAttachment: () -> Unit,
     onDeleteAttachment: (FetchedNotice) -> Unit,
     isSending: Boolean = false,
 ) {
-    var text by rememberSaveable { mutableStateOf("") }
-    val isNotEmpty = text.isNotBlank()
+    val isNotEmpty = textValue.isNotBlank()
 
     Row(
         modifier = modifier
@@ -96,8 +93,8 @@ fun ChatInputBar(
                     }
 
                     BasicTextField(
-                        value = text,
-                        onValueChange = { text = it },
+                        value = textValue,
+                        onValueChange = onTextChange,
                         maxLines = 5,
                         modifier = Modifier
                             .weight(1f)
@@ -106,8 +103,7 @@ fun ChatInputBar(
                             .onKeyEvent { event ->
                                 if (event.type == KeyEventType.KeyDown && event.key == Key.Enter && event.isCtrlPressed) {
                                     if (isNotEmpty && !isSending) {
-                                        onSendMessage(text)
-                                        text = ""
+                                        onSendMessage()
                                     }
                                     true
                                 } else false
@@ -118,7 +114,7 @@ fun ChatInputBar(
                         cursorBrush = SolidColor(MaterialTheme.colorScheme.primary),
                         decorationBox = { innerTextField ->
                             Box(contentAlignment = Alignment.CenterStart) {
-                                if (text.isEmpty()) {
+                                if (textValue.isEmpty()) {
                                     Text(
                                         "问些什么",
                                         style = MaterialTheme.typography.bodyLarge,
@@ -147,8 +143,7 @@ fun ChatInputBar(
             Surface(
                 onClick = {
                     if (isNotEmpty) {
-                        onSendMessage(text)
-                        text = ""
+                        onSendMessage()
                     }
                 },
                 enabled = isNotEmpty,
@@ -210,7 +205,7 @@ fun TestMessageStyleInputBar() {
     ChatInputBar(
         onSendMessage = {},
         onAddAttachment = {},
-        attachments = listOf<FetchedNotice>(
+        attachments = listOf(
             FetchedNotice(
                 id = "1",
                 label = "test",
@@ -244,5 +239,7 @@ fun TestMessageStyleInputBar() {
         ),
         onDeleteAttachment = {},
         isSending = true,
+        textValue = "test",
+        onTextChange = {}
     )
 }

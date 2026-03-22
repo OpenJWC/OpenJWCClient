@@ -29,9 +29,12 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Label
 import androidx.compose.material.icons.filled.ArrowUpward
 import androidx.compose.material.icons.filled.ErrorOutline
+import androidx.compose.material.icons.outlined.Add
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularWavyProgressIndicator
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.FloatingActionButton
@@ -69,6 +72,11 @@ fun NewsList(
     isLoading: Boolean,
     isEnd: Boolean,
     error: String?,
+
+    showMenu: Boolean,
+    selectedNotice: FetchedNotice?,
+    onMenuDismiss: () -> Unit,
+    onAddToAttachment: (FetchedNotice) -> Unit,
 
     onRefresh: () -> Unit,
     onLoadMore: () -> Unit,
@@ -135,15 +143,31 @@ fun NewsList(
                         isDateFresh(item.date, freshDays)
                     }
 
-                    InfoCard(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(130.dp),
-                        fetchedNotice = item,
-                        onClick = onItemClick,
-                        onLongClick = onItemLongClick,
-                        isFresh = isFresh
-                    )
+                    Box {
+                        InfoCard(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(130.dp),
+                            fetchedNotice = item,
+                            onClick = onItemClick,
+                            onLongClick = onItemLongClick,
+                            isFresh = isFresh
+                        )
+
+                        DropdownMenu(
+                            expanded = showMenu && selectedNotice?.id == item.id,
+                            onDismissRequest = onMenuDismiss
+                        ) {
+                            DropdownMenuItem(
+                                text = { Text("添加到附件") },
+                                leadingIcon = { Icon(Icons.Outlined.Add, contentDescription = null) },
+                                onClick = {
+                                    onAddToAttachment(item)
+                                    onMenuDismiss()
+                                }
+                            )
+                        }
+                    }
                 }
 
                 item(span = { GridItemSpan(maxLineSpan) }) {

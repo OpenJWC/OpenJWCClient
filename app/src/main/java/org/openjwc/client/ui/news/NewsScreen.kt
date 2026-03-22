@@ -1,5 +1,6 @@
 package org.openjwc.client.ui.news
 
+import Screen
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -7,11 +8,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.Add
-import androidx.compose.material3.DropdownMenu
-import androidx.compose.material3.DropdownMenuItem
-import androidx.compose.material3.Icon
 import androidx.compose.material3.LoadingIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SecondaryScrollableTabRow
@@ -154,6 +150,16 @@ fun NewsScreen(
                                 selectedNoticeForMenu = notice
                                 showMenu = true
                             },
+                            showMenu = showMenu,
+                            selectedNotice = selectedNoticeForMenu,
+                            onMenuDismiss = { showMenu = false },
+                            onAddToAttachment = { notice ->
+                                chatViewModel.addAttachment(notice)
+                                mainViewModel.updateTab(MainTab.Chat)
+                                scope.launch {
+                                    snackbarHostState.showSnackbar("已添加到附件")
+                                }
+                            },
                             freshDays = newsViewModel.freshDays.collectAsStateWithLifecycle().value,
                             onInitialLoad = { newsViewModel.loadCategory(currentLabel) }
                         )
@@ -170,28 +176,6 @@ fun NewsScreen(
                         )
                     }
                 }
-            }
-        }
-        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-            DropdownMenu(
-                expanded = showMenu,
-                onDismissRequest = { showMenu = false },
-                // 如果想让菜单出现在特定位置，可以传入 offset
-            ) {
-                DropdownMenuItem(
-                    text = { Text("添加到附件") },
-                    leadingIcon = { Icon(Icons.Outlined.Add, contentDescription = "Add to attachments") },
-                    onClick = {
-                        selectedNoticeForMenu?.let { notice ->
-                            chatViewModel.addAttachment(notice)
-                            mainViewModel.updateTab(MainTab.Chat)
-                            scope.launch {
-                                snackbarHostState.showSnackbar("已添加到附件")
-                            }
-                        }
-                        showMenu = false
-                    }
-                )
             }
         }
     }
