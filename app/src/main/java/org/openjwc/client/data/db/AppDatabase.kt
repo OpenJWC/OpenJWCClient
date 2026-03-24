@@ -18,14 +18,13 @@ import org.openjwc.client.data.models.ChatMetadata
         ChatMessage::class,
     ],
     version = 2,
-    exportSchema = false
+    exportSchema = true
 )
 @TypeConverters(Converters::class)
 abstract class AppDatabase : RoomDatabase() {
     abstract fun settingsDao(): SettingsDao
     abstract fun chatDao(): ChatDao
 
-    // 确保只有一个数据库实例
     companion object {
         private var INSTANCE: AppDatabase? = null
 

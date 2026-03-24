@@ -6,8 +6,6 @@ plugins {
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.kotlin.serialization)
     alias(libs.plugins.ksp)
-
-    id("com.huawei.agconnect")
 }
 
 val localProperties = Properties()
@@ -15,8 +13,6 @@ val localPropertiesFile = rootProject.file("local.properties")
 if (localPropertiesFile.exists()) {
     localProperties.load(localPropertiesFile.inputStream())
 }
-val jpushAppKey = localProperties.getProperty("jpush.appkey") ?: ""
-
 android {
     namespace = "org.openjwc.client"
     compileSdk = 36
@@ -29,11 +25,6 @@ android {
         versionName = "0.1.1"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
-        manifestPlaceholders["JPUSH_PKGNAME"] = applicationId.toString()
-        manifestPlaceholders["JPUSH_APPKEY"] = jpushAppKey
-        manifestPlaceholders["JPUSH_CHANNEL"] = "developer-default"
-
-        buildConfigField("String", "JPUSH_APPKEY", "\"$jpushAppKey\"")
     }
 
     buildTypes {
@@ -101,10 +92,6 @@ dependencies {
     implementation(libs.androidx.lifecycle.viewmodel.compose)
     implementation(libs.compose.markdown)
     implementation(libs.coil.compose)
-    implementation(libs.jpush.sdk)
-    implementation(libs.jpush.jcore)
-    implementation(libs.jpush.plugin.huawei)
-    implementation("com.huawei.hms:push:6.13.0.301")
     
     // 网络层 (Retrofit + OkHttp) - 这里的点号访问会自动匹配 toml 中的中划线
     implementation(libs.retrofit.core)

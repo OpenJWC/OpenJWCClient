@@ -32,9 +32,6 @@ roomKtx = "2.8.4"
 roomVersion = "2.8.4"
 kspVersion = "2.3.0"
 
-jpush = "6.0.2"
-jcore = "5.3.1"
-jpush-huawei = "6.0.2"
 foundation = "1.10.5"
 
 [libraries]
@@ -82,9 +79,6 @@ androidx-animation = { group = "androidx.compose.animation", name = "animation",
 androidx-room-common-jvm = { group = "androidx.room", name = "room-common-jvm", version.ref = "roomCommonJvm" }
 androidx-room-ktx = { group = "androidx.room", name = "room-ktx", version.ref = "roomKtx" }
 androidx-room-compiler = { module = "androidx.room:room-compiler", version.ref = "roomVersion" }
-jpush-sdk = { group = "cn.jiguang.sdk", name = "jpush", version.ref = "jpush" }
-jpush-jcore = { group = "cn.jiguang.sdk", name = "jcore", version.ref = "jcore" }
-jpush-plugin-huawei = { group = "cn.jiguang.sdk.plugin", name = "huawei", version.ref = "jpush-huawei" }
 androidx-foundation = { group = "androidx.compose.foundation", name = "foundation", version.ref = "foundation" }
 
 [plugins]

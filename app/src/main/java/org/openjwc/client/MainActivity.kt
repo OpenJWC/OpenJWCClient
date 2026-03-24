@@ -2,7 +2,6 @@ package org.openjwc.client
 
 import android.os.Build
 import android.os.Bundle
-import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -13,8 +12,6 @@ import androidx.compose.material3.windowsizeclass.calculateWindowSizeClass
 import androidx.compose.runtime.collectAsState
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.lifecycle.lifecycleScope
-import cn.jpush.android.api.JPushInterface
-import cn.jpush.android.api.JPushInterface.requestRequiredPermission
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import org.openjwc.client.data.db.AppDatabase
@@ -60,9 +57,6 @@ class MainActivity : ComponentActivity() {
         }
 
         splashScreen.setKeepOnScreenCondition { !isReady }
-        requestRequiredPermission(this)
-        val registrationId = JPushInterface.getRegistrationID(applicationContext)
-        Log.d("MainActivity", "registrationId: $registrationId")
         enableEdgeToEdge()
         setContent {
             val windowSizeClass = calculateWindowSizeClass(this)
