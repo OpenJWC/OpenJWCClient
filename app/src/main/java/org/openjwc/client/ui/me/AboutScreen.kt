@@ -1,5 +1,6 @@
 package org.openjwc.client.ui.me
 
+import Screen
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -13,6 +14,8 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.OpenInNew
+import androidx.compose.material.icons.outlined.Description
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -23,7 +26,6 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -37,6 +39,10 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import org.openjwc.client.R
+import org.openjwc.client.data.settings.Event
+import org.openjwc.client.data.settings.MenuItem
+import org.openjwc.client.data.settings.SettingSection
+import org.openjwc.client.ui.me.settings.MenuSectionCard
 
 
 @Preview
@@ -44,14 +50,16 @@ import org.openjwc.client.R
 fun TestAboutScreen() {
     AboutScreen(
         onBack = {},
-        onToGitHub = {}
+        onToGitHub = {},
+        onRoute = {}
     )
 }
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AboutScreen(
     onBack: () -> Unit,
-    onToGitHub: () -> Unit
+    onToGitHub: () -> Unit,
+    onRoute: (Screen) -> Unit
 ) {
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
 
@@ -131,9 +139,30 @@ fun AboutScreen(
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // 4. 其他信息
-            TextButton(onClick = onToGitHub) {
-                Text("在 GitHub 上查看本项目")
+//            TextButton(onClick = onToGitHub) {
+//                Text("在 GitHub 上查看本项目")
+//            }
+            MenuSectionCard(
+                section = SettingSection(
+                    title = null, items = listOf(
+                        MenuItem.Action(
+                            icon = Icons.AutoMirrored.Filled.OpenInNew,
+                            label = "GitHub",
+                            onClick = onToGitHub
+                        ),
+                        MenuItem.Route(
+                            icon = Icons.Outlined.Description,
+                            title = "隐私政策",
+                            route = Screen.Policy
+                        )
+                    )
+                )
+            ) {
+                when(it) {
+                    is Event.Action -> it.onAction()
+                    is Event.Route -> onRoute(it.route)
+                    else -> {}
+                }
             }
         }
     }

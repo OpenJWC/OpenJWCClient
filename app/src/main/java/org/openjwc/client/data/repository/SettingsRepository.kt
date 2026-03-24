@@ -16,9 +16,6 @@ class SettingsRepository(
     private val settingsMutex = Mutex()
     val userSettings: Flow<UserSettings?> = settingsDao.getSettings()
 
-    suspend fun updateSettings(settings: UserSettings) {
-        settingsDao.updateSettings(settings)
-    }
     suspend fun getSettingsSnapshot(): UserSettings? {
         return settingsDao.getSettingsSnapshot()
     }
@@ -43,6 +40,9 @@ class SettingsRepository(
             settingsDao.updateSettings(updated)
             Log.d("SettingsRepo", "Settings saved: $updated")
         }
+    }
+    suspend fun agreePolicy() = updateSettingsInternal {
+        it.copy(policyAgreed = true)
     }
 
     suspend fun updateThemeColor(color: ColorType) = updateSettingsInternal {

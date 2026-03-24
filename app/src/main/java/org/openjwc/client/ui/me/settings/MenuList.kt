@@ -35,6 +35,39 @@ import org.openjwc.client.data.settings.ToggleID
 fun MenuListItem(
     item: MenuItem, onEvent: (Event) -> Unit
 ) {
+    val textContent: @Composable (modifier: Modifier) -> Unit = {
+        Column(modifier = it) {
+            val title = when (item) {
+                is MenuItem.Route -> item.title
+                is MenuItem.Action -> item.label
+                is MenuItem.Toggle -> item.label
+            }
+            val subtitle = when (item) {
+                is MenuItem.Route -> item.subtitle
+                is MenuItem.Action -> item.subtitle
+                is MenuItem.Toggle -> item.subtitle
+            }
+
+            Text(
+                text = title,
+                style = MaterialTheme.typography.bodyLarge,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
+            )
+
+            if (!subtitle.isNullOrBlank()) {
+                Text(
+                    text = subtitle,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis,
+                    modifier = Modifier.padding(top = 2.dp)
+                )
+            }
+        }
+    }
+
     when (item) {
         is MenuItem.Route -> {
             Surface(
@@ -43,7 +76,7 @@ fun MenuListItem(
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(horizontal = 16.dp, vertical = 20.dp),
+                        .padding(horizontal = 16.dp, vertical = 16.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Icon(
@@ -53,11 +86,9 @@ fun MenuListItem(
                         modifier = Modifier.size(24.dp)
                     )
                     Spacer(Modifier.width(16.dp))
-                    Text(
-                        text = item.title,
-                        style = MaterialTheme.typography.bodyLarge,
-                        modifier = Modifier.weight(1f)
-                    )
+
+                    textContent(Modifier.weight(1f))
+
                     if (item.trailing != null) {
                         Text(
                             text = item.trailing,
@@ -66,10 +97,9 @@ fun MenuListItem(
                             modifier = Modifier.padding(horizontal = 8.dp)
                         )
                     }
-                    // Menu 通常固定显示向右箭头
                     Icon(
                         imageVector = Icons.Default.ChevronRight,
-                        contentDescription = "Go to ${item.title}",
+                        contentDescription = "Go",
                         tint = MaterialTheme.colorScheme.outlineVariant,
                         modifier = Modifier.size(20.dp)
                     )
@@ -84,7 +114,7 @@ fun MenuListItem(
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(horizontal = 16.dp, vertical = 20.dp),
+                        .padding(horizontal = 16.dp, vertical = 16.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Icon(
@@ -94,13 +124,9 @@ fun MenuListItem(
                         modifier = Modifier.size(24.dp)
                     )
                     Spacer(Modifier.width(16.dp))
-                    Text(
-                        text = item.label,
-                        style = MaterialTheme.typography.bodyLarge,
-                        modifier = Modifier.weight(1f),
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis
-                    )
+
+                    textContent(Modifier.weight(1f))
+
                     if (item.trailing != null) {
                         Text(
                             text = item.trailing,
@@ -136,11 +162,9 @@ fun MenuListItem(
                         modifier = Modifier.size(24.dp)
                     )
                     Spacer(Modifier.width(16.dp))
-                    Text(
-                        text = item.label,
-                        style = MaterialTheme.typography.bodyLarge,
-                        modifier = Modifier.weight(1f)
-                    )
+
+                    textContent(Modifier.weight(1f))
+
                     Switch(
                         checked = item.isChecked,
                         onCheckedChange = { onEvent(Event.Toggle(item.id)) }

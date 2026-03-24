@@ -11,6 +11,7 @@ sealed class MenuItem {
     data class Route(
         val icon: ImageVector,
         val title: String,
+        val subtitle: String? = null,
         val route: Screen,
         val trailing: String? = null,
     ) : MenuItem()
@@ -18,6 +19,7 @@ sealed class MenuItem {
     data class Action(
         val icon: ImageVector,
         val label: String,
+        val subtitle: String? = null,
         val trailing: String? = null,
         val onClick: () -> Unit
     ) : MenuItem()
@@ -27,6 +29,7 @@ sealed class MenuItem {
         val icon: ImageVector,
         val label: String,
         val isChecked: Boolean,
+        val subtitle: String? = null,
     ) : MenuItem()
 }
 
@@ -52,6 +55,7 @@ sealed class Event {
 @Entity(tableName = "settings")
 data class UserSettings(
     @PrimaryKey val id: Int = 0,
+    val policyAgreed: Boolean = false,
     val uuidString: String = "",
     val authKey: String = "",
     val themeStyle: DarkThemeStyle = DarkThemeStyle.Auto,

@@ -21,5 +21,8 @@ sealed interface Screen {
     @Serializable
     object NewsSettings : Screen
     @Serializable
+    object Policy : Screen
+
+    @Serializable
     data class NewsDetail(val fetchedNotice: FetchedNotice) : Screen
 }

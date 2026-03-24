@@ -17,6 +17,13 @@ import org.openjwc.client.ui.main.MainTab
 import org.openjwc.client.ui.theme.ColorType
 import org.openjwc.client.ui.theme.DarkThemeStyle
 
+data class MainUiState(
+    val themeColor: ColorType = UserSettings().themeColor,
+    val darkThemeStyle: DarkThemeStyle = UserSettings().themeStyle,
+    val agreedPolicy: Boolean? = null,
+    val isReady: Boolean = false
+)
+
 class MainViewModel(
     private val repository: SettingsRepository
 ) : ViewModel() {
@@ -29,44 +36,26 @@ class MainViewModel(
     private val label = "MainViewModel"
     private val _currentTab = MutableStateFlow<MainTab>(MainTab.Chat)
     val currentTab = _currentTab.asStateFlow()
-
     fun updateTab(tab: MainTab) {
         _currentTab.value = tab
         Log.d(label, "Update tab to $tab")
 
     }
 
-    val settings: StateFlow<UserSettings> = repository.userSettings
-        .map { it ?: UserSettings() }
-        .stateIn(
-            scope = viewModelScope,
-            started = SharingStarted.WhileSubscribed(5000),
-            initialValue = UserSettings()
-        )
-
-    init {
-        viewModelScope.launch {
-            settings.collect { newSettings ->
-                Log.d(label, "数据库已同步新状态: $newSettings")
-            }
+    val uiState: StateFlow<MainUiState> = repository.userSettings
+        .map { settingsOrNull ->
+            val settings = settingsOrNull ?: UserSettings()
+            MainUiState(
+                themeColor = settings.themeColor,
+                darkThemeStyle = settings.themeStyle,
+                agreedPolicy = settings.policyAgreed,
+                isReady = true
+            )
         }
-    }
-
-    // 假设你从 repository 获取 flow
-    val themeColor: StateFlow<ColorType> = repository.userSettings
-        .map { (it ?: UserSettings()).themeColor }
         .stateIn(
             scope = viewModelScope,
-            started = SharingStarted.WhileSubscribed(5000),
-            initialValue = UserSettings().themeColor
-        )
-
-    val darkThemeStyle: StateFlow<DarkThemeStyle> = repository.userSettings
-        .map { (it ?: UserSettings()).themeStyle }
-        .stateIn(
-            scope = viewModelScope,
-            started = SharingStarted.WhileSubscribed(5000),
-            initialValue = UserSettings().themeStyle
+            started = SharingStarted.Eagerly,
+            initialValue = MainUiState()
         )
 
 
@@ -81,6 +70,13 @@ class MainViewModel(
         Log.d(label, "Update dark theme style to $style")
         viewModelScope.launch {
             repository.updateThemeStyle(style)
+        }
+    }
+
+    fun agreePolicy() {
+        Log.d(label, "Agree policy")
+        viewModelScope.launch {
+            repository.agreePolicy()
         }
     }
 }

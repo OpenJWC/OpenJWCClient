@@ -19,6 +19,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalUriHandler
+import androidx.compose.ui.res.stringResource
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -26,6 +27,7 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.toRoute
 import kotlinx.coroutines.launch
 import kotlinx.serialization.json.Json
+import org.openjwc.client.R
 import org.openjwc.client.net.models.FetchedNotice
 import org.openjwc.client.ui.main.MainScreen
 import org.openjwc.client.ui.me.AboutScreen
@@ -37,6 +39,7 @@ import org.openjwc.client.ui.me.settings.general.ThemeScreen
 import org.openjwc.client.ui.me.settings.news.NewsDisplaySettingsScreen
 import org.openjwc.client.ui.news.NewsDetailScreen
 import org.openjwc.client.ui.news.upload.UploadNewsScreen
+import org.openjwc.client.ui.policy.PolicyScreen
 import org.openjwc.client.ui.theme.seedColors
 import org.openjwc.client.viewmodels.ChatViewModel
 import org.openjwc.client.viewmodels.MainViewModel
@@ -109,6 +112,13 @@ fun NavGraph(
                         fadeOut(animationSpec = tween(300))
             }
         ) {
+            composable<Screen.Policy> {
+                PolicyScreen(
+                    policyText = stringResource(id = R.string.policy_text),
+                    onBack = { navController.popBackStack() },
+                    onToBrowser = { uri -> uriHandler.openUri(uri) },
+                )
+            }
             composable<Screen.Main> {
                 MainScreen(
                     windowSizeClass = windowSizeClass,
@@ -173,7 +183,10 @@ fun NavGraph(
             composable<Screen.About> {
                 AboutScreen(
                     onBack = { navController.popBackStack() },
-                    onToGitHub = { uriHandler.openUri("https://github.com/OpenJWC") }
+                    onToGitHub = { uriHandler.openUri("https://github.com/OpenJWC") },
+                    onRoute = {
+                        navController.navigate(it)
+                    }
                 )
             }
 
@@ -219,8 +232,8 @@ fun NavGraph(
             }
 
             composable<Screen.Theme> {
-                val currentColor by mainViewModel.themeColor.collectAsState()
-                val currentStyle by mainViewModel.darkThemeStyle.collectAsState()
+                val currentColor = mainViewModel.uiState.collectAsState().value.themeColor
+                val currentStyle = mainViewModel.uiState.collectAsState().value.darkThemeStyle
 
                 ThemeScreen(
                     onBack = { if (navController.previousBackStackEntry != null) navController.popBackStack() },
