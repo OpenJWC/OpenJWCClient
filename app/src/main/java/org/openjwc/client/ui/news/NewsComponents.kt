@@ -5,6 +5,7 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.scaleIn
 import androidx.compose.animation.scaleOut
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
@@ -268,13 +269,16 @@ fun InfoCard(
                 onLongClick = { onLongClick(fetchedNotice) }
             ),
         elevation = CardDefaults.cardElevation(
-            defaultElevation = if (isFresh) 4.dp else 2.dp,
+            defaultElevation = if (isFresh) 6.dp else 1.dp,
         ),
-        border = null,
+        border = if (isFresh) BorderStroke(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.5f)) else null,
         colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceVariant
+            containerColor = if (isFresh)
+                MaterialTheme.colorScheme.primaryContainer
+            else
+                MaterialTheme.colorScheme.surfaceVariant
         )
-    ){
+    ) {
         Column(
             modifier = Modifier
                 .padding(16.dp)
@@ -284,8 +288,8 @@ fun InfoCard(
             Text(
                 text = fetchedNotice.title,
                 style = MaterialTheme.typography.titleMedium,
-                color = if (isFresh) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface,
-                fontWeight = if (isFresh) FontWeight.Bold else FontWeight.Normal,
+                color = if (isFresh) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurfaceVariant,
+                fontWeight = if (isFresh) FontWeight.ExtraBold else FontWeight.Normal, // 显著加粗
                 maxLines = 3,
                 overflow = TextOverflow.Ellipsis,
             )
@@ -294,7 +298,7 @@ fun InfoCard(
                 Text(
                     text = fetchedNotice.date,
                     style = MaterialTheme.typography.labelMedium,
-                    color = MaterialTheme.colorScheme.primary,
+                    color = if (isFresh) MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.8f) else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.8f),
                     modifier = Modifier.align(Alignment.End),
                     maxLines = 1
                 )
@@ -317,7 +321,6 @@ fun EmptyLabelsPlaceholder(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
-        // 视觉焦点：一个带柔和背景的图标区
         Box(
             modifier = Modifier
                 .size(100.dp)

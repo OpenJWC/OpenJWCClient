@@ -12,7 +12,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ContentCopy
 import androidx.compose.material.icons.filled.Delete
-import androidx.compose.material.icons.filled.Share
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
@@ -37,7 +36,7 @@ import dev.jeziellago.compose.markdowntext.MarkdownText
 import org.openjwc.client.data.models.ChatMessage
 import org.openjwc.client.data.models.Role
 
-@OptIn(ExperimentalMaterial3ExpressiveApi::class) // 启用 Expressive API
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun MessageBubble(
     message: ChatMessage,
@@ -155,14 +154,14 @@ fun MessageBubble(
                         },
                         leadingIcon = { Icon(Icons.Default.ContentCopy, contentDescription = null) }
                     )
-                    DropdownMenuItem(
+/*                    DropdownMenuItem(
                         text = { Text("转发") },
                         onClick = {
                             onShare(message)
                             showMenu = false
                         },
                         leadingIcon = { Icon(Icons.Filled.Share, contentDescription = null) }
-                    )
+                    )*/
                     DropdownMenuItem(
                         text = {
                             Text(

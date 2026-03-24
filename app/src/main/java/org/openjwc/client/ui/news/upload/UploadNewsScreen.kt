@@ -65,6 +65,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.nestedscroll.nestedScroll
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import org.openjwc.client.net.models.UploadedNotice
@@ -83,6 +84,11 @@ fun UploadNewsPreview() {
         onUpload = {}
     )
 }
+
+const val MAX_TITLE = 200
+const val MAX_LABEL = 20
+const val MAX_URL = 1000
+const val MAX_CONTENT = 10000
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -114,16 +120,15 @@ fun UploadNewsScreen(
         Regex("""^(https?|ftp)://[^\s/$.?#].\S*$""", RegexOption.IGNORE_CASE)
     }
     val isUrlValid: (String) -> Boolean = remember {{it.isNotBlank() && it.matches(urlRegex)} }
-    val isDateValid = date.isEmpty() || date.matches(dateRegex)
-    val areAttachmentsValid = attachmentUrls.all { it.isNotBlank() && isUrlValid(it) }
+    val isTitleValid = title.isNotBlank() && title.length <= MAX_TITLE
+    val isLabelValid = label.isNotBlank() && label.length <= MAX_LABEL
+    val isDateValid = date.matches(dateRegex)
+    val isDetailUrlValid = isUrlValid(detailUrl) && detailUrl.length <= MAX_URL
+    val isContentValid = contentText.isNotBlank() && contentText.length <= MAX_CONTENT
+    val areAttachmentsValid = attachmentUrls.all { it.isNotBlank() && isUrlValid(it) && it.length <= MAX_URL }
 
-    val canSubmit = label.isNotBlank() &&
-            title.isNotBlank() &&
-            date.matches(dateRegex) &&
-            detailUrl.isNotBlank() &&
-            contentText.isNotBlank() &&
-            isUrlValid(detailUrl) &&
-            areAttachmentsValid
+    val canSubmit = isTitleValid && isLabelValid && isDateValid &&
+            isDetailUrlValid && isContentValid && areAttachmentsValid
 
     val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd")
 
@@ -250,7 +255,15 @@ fun UploadNewsScreen(
                 value = title,
                 onValueChange = { title = it },
                 label = { Text("标题") },
-                isError = title.isBlank(),
+                isError = !isTitleValid,
+                supportingText = {
+                    Text(
+                        text = "${title.length} / $MAX_TITLE",
+                        modifier = Modifier.fillMaxWidth(),
+                        textAlign = TextAlign.End,
+                        color = if (title.length > MAX_TITLE) MaterialTheme.colorScheme.error else Color.Unspecified
+                    )
+                },
                 modifier = Modifier.fillMaxWidth(),
                 singleLine = true
             )
@@ -264,9 +277,17 @@ fun UploadNewsScreen(
                     value = label,
                     onValueChange = { label = it },
                     label = { Text("标签") },
-                    isError = label.isBlank(),
+                    isError = !isLabelValid,
                     modifier = Modifier.weight(1f),
-                    singleLine = true
+                    singleLine = true,
+                    supportingText = {
+                        Text(
+                            text = "${label.length} / $MAX_LABEL",
+                            modifier = Modifier.fillMaxWidth(),
+                            textAlign = TextAlign.End,
+                            color = if (label.length > MAX_LABEL) MaterialTheme.colorScheme.error else Color.Unspecified
+                        )
+                    }
                 )
 
                 Box(modifier = Modifier.weight(1f)) {
@@ -300,12 +321,20 @@ fun UploadNewsScreen(
                 value = detailUrl,
                 onValueChange = { detailUrl = it },
                 label = { Text("详情链接 (URL)") },
-                isError = !isUrlValid(detailUrl),
+                isError = !isDetailUrlValid,
                 modifier = Modifier.fillMaxWidth(),
                 singleLine = true,
                 supportingText = {
-                    if (!isUrlValid(detailUrl)) {
-                        Text("请输入有效的 URL (需包含 http/https)")
+                    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                        if (!isUrlValid(detailUrl) && detailUrl.isNotBlank()) {
+                            Text("URL 格式非法")
+                        } else {
+                            Spacer(Modifier.width(1.dp))
+                        }
+                        Text(
+                            text = "${detailUrl.length} / $MAX_URL",
+                            color = if (detailUrl.length > MAX_URL) MaterialTheme.colorScheme.error else Color.Unspecified
+                        )
                     }
                 }
             )
@@ -338,11 +367,17 @@ fun UploadNewsScreen(
                 value = contentText,
                 onValueChange = { contentText = it },
                 label = { Text("Markdown 文本") },
-                isError = contentText.isBlank(),
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(200.dp),
-                maxLines = 10
+                isError = !isContentValid,
+                modifier = Modifier.fillMaxWidth().height(200.dp),
+                supportingText = {
+                    val color = if (contentText.length > MAX_CONTENT) MaterialTheme.colorScheme.error else Color.Unspecified
+                    Text(
+                        text = "${contentText.length} / $MAX_CONTENT",
+                        color = color,
+                        modifier = Modifier.fillMaxWidth(),
+                        textAlign = TextAlign.End
+                    )
+                }
             )
 
             Row(
@@ -374,7 +409,7 @@ fun UploadNewsScreen(
                     url = url,
                     onValueChange = { newValue -> attachmentUrls[index] = newValue },
                     onDelete = { attachmentUrls.removeAt(index) },
-                    isError = !isUrlValid(url)
+                    isError = !isUrlValid(url) || url.length > MAX_URL
                 )
             }
 
@@ -420,7 +455,8 @@ fun AttachmentInputRow(
             },
             isError = isError,
             supportingText = {
-                if (isError) Text("格式非法")
+                if (url.length > 1000) Text("超过1000字符")
+                else if (isError && url.isNotBlank()) Text("格式非法")
             },
         )
         IconButton(
