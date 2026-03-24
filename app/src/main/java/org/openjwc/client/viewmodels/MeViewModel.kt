@@ -1,17 +1,31 @@
 package org.openjwc.client.viewmodels
 
+import Screen
+import android.util.Log
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Settings
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.launch
+import org.openjwc.client.data.repository.SettingsRepository
 import org.openjwc.client.data.settings.MenuItem
 import org.openjwc.client.data.settings.SettingSection
+import org.openjwc.client.data.settings.UserSettings
+import org.openjwc.client.net.hitokoto.fetchHitokoto
+import org.openjwc.client.net.models.GetHitokotoResult
+import org.openjwc.client.net.models.Hitokoto
+import org.openjwc.client.net.models.NetClient
 
-class MeViewModel : ViewModel() {
+class MeViewModel(
+    private val repository: SettingsRepository
+) : ViewModel() {
+    private val tag = "MeViewModel"
     private val _sections = MutableStateFlow(
         listOf(
             SettingSection(
@@ -47,4 +61,53 @@ class MeViewModel : ViewModel() {
         )
     )
     val sections = _sections.asStateFlow()
+
+    val defaultHitokoto =
+        Hitokoto(
+            text = "所谓觉悟，就是在漆黑的荒野中，开辟出一条理所应当前进的光明大道。",
+            author = "乔鲁诺·乔巴纳"
+        )
+
+    var hitokoto = MutableStateFlow(
+        defaultHitokoto
+    )
+
+    fun refreshHitokoto() {
+        if (hitokoto.value == defaultHitokoto) {
+            viewModelScope.launch {
+                try {
+                    val settings = repository.getSettingsSnapshot() ?: UserSettings()
+                    val apiService =
+                        NetClient.getService(settings.host, settings.port, settings.useHttp)
+
+                    val result = apiService.fetchHitokoto(
+                        settings.authKey,
+                        settings.uuidString,
+                    )
+                    when (result) {
+                        is GetHitokotoResult.Success -> {
+                            hitokoto.value = result.response.data
+                        }
+
+                        else -> {}
+                    }
+                } catch (e: Exception) {
+                    Log.e(tag, "fetchReviewedNotices Error", e)
+                }
+            }
+        }
+    }
+}
+
+
+class MeViewModelFactory(
+    private val settingsRepository: SettingsRepository
+) : ViewModelProvider.Factory {
+    override fun <T : ViewModel> create(modelClass: Class<T>): T {
+        if (modelClass.isAssignableFrom(MeViewModel::class.java)) {
+            @Suppress("UNCHECKED_CAST")
+            return MeViewModel(settingsRepository) as T
+        }
+        throw IllegalArgumentException("Unknown ViewModel class")
+    }
 }

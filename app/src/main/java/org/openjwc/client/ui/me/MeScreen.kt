@@ -31,6 +31,7 @@ import org.openjwc.client.viewmodels.MeViewModel
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.material3.windowsizeclass.WindowWidthSizeClass
+import androidx.compose.runtime.LaunchedEffect
 import org.openjwc.client.data.settings.SettingSection
 
 @Composable
@@ -42,7 +43,10 @@ fun MeScreen(
 ) {
     val sections by viewModel.sections.collectAsStateWithLifecycle()
     val isExpanded = windowSizeClass.widthSizeClass == WindowWidthSizeClass.Expanded
-
+    val hitokoto = viewModel.hitokoto.collectAsStateWithLifecycle().value
+    LaunchedEffect(Unit) {
+        viewModel.refreshHitokoto()
+    }
     Box(
         modifier = modifier,
         contentAlignment = Alignment.TopCenter
@@ -55,8 +59,8 @@ fun MeScreen(
             ) {
                 Box(modifier = Modifier.weight(1f)) {
                     HitokotoView(
-                        text = "所谓觉悟，就是在漆黑的荒野中，开辟出一条理所应当前进的光明大道。",
-                        author = "乔鲁诺·乔巴纳"
+                        text = hitokoto.text,
+                        author = hitokoto.author
                     )
                 }
 
@@ -76,8 +80,8 @@ fun MeScreen(
             ) {
                 item(key = "hitokoto_header") {
                     HitokotoView(
-                        text = "所谓觉悟，就是在漆黑的荒野中，开辟出一条理所应当前进的光明大道。",
-                        author = "乔鲁诺·乔巴纳",
+                        text = hitokoto.text,
+                        author = hitokoto.author,
                         modifier = Modifier
                             .padding(vertical = 64.dp)
                             .padding(horizontal = 16.dp)

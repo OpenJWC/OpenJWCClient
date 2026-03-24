@@ -28,6 +28,7 @@ import org.openjwc.client.viewmodels.ChatViewModelFactory
 import org.openjwc.client.viewmodels.MainViewModel
 import org.openjwc.client.viewmodels.MainViewModelFactory
 import org.openjwc.client.viewmodels.MeViewModel
+import org.openjwc.client.viewmodels.MeViewModelFactory
 import org.openjwc.client.viewmodels.NewsViewModel
 import org.openjwc.client.viewmodels.NewsViewModelFactory
 import org.openjwc.client.viewmodels.SettingsViewModel
@@ -44,7 +45,7 @@ class MainActivity : ComponentActivity() {
     private val settingsViewModel: SettingsViewModel by viewModels { SettingsViewModelFactory(settingsRepository) }
     private val chatViewModel: ChatViewModel by viewModels { ChatViewModelFactory(settingsRepository, chatRepository) }
     private val newsViewModel: NewsViewModel by viewModels { NewsViewModelFactory(settingsRepository) }
-    private val meViewModel: MeViewModel by viewModels()
+    private val meViewModel: MeViewModel by viewModels { MeViewModelFactory(settingsRepository) }
     @RequiresApi(Build.VERSION_CODES.TIRAMISU)
     @OptIn(ExperimentalMaterial3WindowSizeClassApi::class)
     override fun onCreate(savedInstanceState: Bundle?) {

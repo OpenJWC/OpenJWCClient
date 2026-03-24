@@ -94,4 +94,10 @@ interface NetService {
         @Header("Authorization") auth: String,
         @Header("X-Device-ID") deviceId: String,
     ): Response<ResponseBody>
+
+    @GET("api/v1/client/motto")
+    suspend fun getHitokoto (
+        @Header("Authorization") auth: String,
+        @Header("X-Device-ID") deviceId: String,
+    ): Response<ResponseBody>
 }
