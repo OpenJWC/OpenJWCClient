@@ -1,73 +1,76 @@
 package org.openjwc.client.data.repository
 
-import android.util.Log
+import android.content.Context
+import android.net.Uri
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.sync.Mutex
-import kotlinx.coroutines.sync.withLock
-import org.openjwc.client.data.dao.SettingsDao
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.withContext
+import org.openjwc.client.data.settings.SettingsDataSource
 import org.openjwc.client.data.settings.UserSettings
 import org.openjwc.client.ui.theme.ColorType
 import org.openjwc.client.ui.theme.DarkThemeStyle
+import java.io.File
+import java.io.FileOutputStream
 import java.util.UUID
 
 class SettingsRepository(
-    private val settingsDao: SettingsDao,
+    private val dataSource: SettingsDataSource,
+    private val context: Context
 ) {
-    private val settingsMutex = Mutex()
-    val userSettings: Flow<UserSettings?> = settingsDao.getSettings()
+    val userSettings: Flow<UserSettings> = dataSource.userSettings
+    val keys = SettingsDataSource.Keys
 
-    suspend fun getSettingsSnapshot(): UserSettings? {
-        return settingsDao.getSettingsSnapshot()
+    suspend fun getSettingsSnapshot(): UserSettings {
+        return userSettings.first()
     }
 
-    // 懒加载
     suspend fun getOrGenerateDeviceId(): String {
-        val current = settingsDao.getSettingsSnapshot() ?: UserSettings()
-
+        val current = getSettingsSnapshot()
         if (current.uuidString.isBlank()) {
             val newId = UUID.randomUUID().toString()
-            settingsDao.updateSettings(current.copy(uuidString = newId))
+            updateUUID(newId)
             return newId
         }
         return current.uuidString
     }
+    suspend fun agreePolicy() = dataSource.save(keys.POLICY_AGREED, true)
 
-    private suspend fun updateSettingsInternal(transform: (UserSettings) -> UserSettings) {
-        settingsMutex.withLock {
-            val current = settingsDao.getSettingsSnapshot() ?: UserSettings(id = 0)
-            val updated = transform(current)
+    suspend fun updateThemeColor(color: ColorType) = dataSource.saveColorType(color)
 
-            settingsDao.updateSettings(updated)
-            Log.d("SettingsRepo", "Settings saved: $updated")
+    suspend fun updateThemeStyle(style: DarkThemeStyle) =
+        dataSource.save(keys.THEME_STYLE, style.name)
+
+    suspend fun updateHost(host: String) = dataSource.save(keys.HOST, host)
+
+    suspend fun updatePort(port: Int) = dataSource.save(keys.PORT, port)
+
+    suspend fun updateUseHttp(useHttp: Boolean) = dataSource.save(keys.USE_HTTP, useHttp)
+
+    suspend fun updateAuthKey(key: String) = dataSource.save(keys.AUTH_KEY, key)
+
+    suspend fun updateFreshDays(days: Int) = dataSource.save(keys.FRESH_DAYS, days)
+
+    private suspend fun updateBackgroundPath(path: String) = dataSource.save(keys.BACKGROUND_PATH, path)
+    private suspend fun updateUUID(uuid: String) = dataSource.save(keys.UUID_STRING, uuid)
+
+    suspend fun updateBackground(uri: Uri): Boolean = withContext(Dispatchers.IO) {
+        try {
+            val bgDir = File(context.filesDir, "backgrounds").apply {
+                if (!exists()) mkdirs()
+            }
+            val targetFile = File(bgDir, "custom_bg.jpg")
+
+            context.contentResolver.openInputStream(uri)?.use { input ->
+                FileOutputStream(targetFile).use { output ->
+                    input.copyTo(output)
+                }
+            }
+            updateBackgroundPath(targetFile.absolutePath)
+            true
+        } catch (e: Exception) {
+            e.printStackTrace()
+            false
         }
-    }
-    suspend fun agreePolicy() = updateSettingsInternal {
-        it.copy(policyAgreed = true)
-    }
-
-    suspend fun updateThemeColor(color: ColorType) = updateSettingsInternal {
-        it.copy(themeColor = color)
-    }
-
-    suspend fun updateThemeStyle(style: DarkThemeStyle) = updateSettingsInternal {
-        it.copy(themeStyle = style)
-    }
-
-    suspend fun updateHost(host: String) = updateSettingsInternal {
-        it.copy(host = host)
-    }
-    suspend fun updatePort(port: Int)  = updateSettingsInternal {
-        it.copy(port = port)
-    }
-    suspend fun updateUseHttp(useHttp: Boolean) = updateSettingsInternal {
-        it.copy(useHttp = useHttp)
-    }
-
-    suspend fun updateAuthKey(key: String) = updateSettingsInternal {
-        it.copy(authKey = key)
-    }
-
-    suspend fun updateFreshDays(days: Int) = updateSettingsInternal {
-        it.copy(freshDays = days)
     }
 }

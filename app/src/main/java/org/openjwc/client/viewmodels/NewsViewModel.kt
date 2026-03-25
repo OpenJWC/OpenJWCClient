@@ -37,7 +37,7 @@ class NewsViewModel(
     private val _errorMap = mutableStateMapOf<String, String?>()
 
     val freshDays: StateFlow<Int?> = repository.userSettings
-        .map { it?.freshDays ?: UserSettings().freshDays }
+        .map { it.freshDays }
         .distinctUntilChanged()
         .stateIn(
             scope = viewModelScope,
@@ -71,7 +71,7 @@ class NewsViewModel(
         viewModelScope.launch {
             isRefreshing.value = true
             try {
-                val settings = repository.getSettingsSnapshot() ?: UserSettings()
+                val settings = repository.getSettingsSnapshot()
                 val apiService = NetClient.getService(settings.host, settings.port, settings.useHttp)
 
                 val result = apiService.fetchLabels(
@@ -119,7 +119,7 @@ class NewsViewModel(
 
         viewModelScope.launch {
             try {
-                val settings = repository.getSettingsSnapshot() ?: UserSettings()
+                val settings = repository.getSettingsSnapshot()
                 val apiService = NetClient.getService(settings.host, settings.port, settings.useHttp)
 
                 val result = apiService.fetchNews(
@@ -169,7 +169,7 @@ class NewsViewModel(
     suspend fun uploadNews(uploadedNotice: UploadedNotice): Boolean {
         uploadError.value = null
         return try {
-            val settings = repository.getSettingsSnapshot() ?: UserSettings()
+            val settings = repository.getSettingsSnapshot()
             val apiService = NetClient.getService(settings.host, settings.port, useHttp = settings.useHttp)
 
             val result = apiService.fetchNews(
@@ -208,7 +208,7 @@ class NewsViewModel(
     fun fetchReviewedNotices() {
         viewModelScope.launch {
             try {
-                val settings = repository.getSettingsSnapshot() ?: UserSettings()
+                val settings = repository.getSettingsSnapshot()
                 val apiService = NetClient.getService(settings.host, settings.port, settings.useHttp)
 
                 val result = apiService.fetchReviewedNews(

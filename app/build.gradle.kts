@@ -67,20 +67,18 @@ kotlin {
 dependencies {
     implementation(libs.androidx.foundation)
     ksp(libs.androidx.room.compiler)
-    // 基础库
+
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.activity.compose)
     implementation(platform(libs.androidx.compose.bom))
     implementation(libs.androidx.core.splashscreen)
 
-    // Compose 核心 UI (可以使用 bundle 进一步简化，这里先按你要求的列表展示)
     implementation(libs.androidx.ui)
     implementation(libs.androidx.ui.graphics)
     implementation(libs.androidx.ui.tooling.preview)
     implementation(libs.androidx.foundation.layout)
 
-    // Material 3 & 响应式布局
     implementation(libs.androidx.material3)
     implementation(libs.androidx.material.icons.extended)
     implementation(libs.androidx.material3.window.size)
@@ -88,12 +86,10 @@ dependencies {
     implementation(libs.materialKolor)
     implementation(libs.androidx.navigation.compose)
 
-    // 架构与功能
     implementation(libs.androidx.lifecycle.viewmodel.compose)
     implementation(libs.compose.markdown)
     implementation(libs.coil.compose)
-    
-    // 网络层 (Retrofit + OkHttp) - 这里的点号访问会自动匹配 toml 中的中划线
+
     implementation(libs.retrofit.core)
     implementation(libs.retrofit.converter.serialization)
     implementation(libs.kotlinx.serialization.json)
@@ -103,6 +99,7 @@ dependencies {
     implementation(libs.androidx.animation)
     implementation(libs.androidx.room.common.jvm)
     implementation(libs.androidx.room.ktx)
+    implementation(libs.androidx.datastore)
 
     // 测试相关
     testImplementation(libs.junit)

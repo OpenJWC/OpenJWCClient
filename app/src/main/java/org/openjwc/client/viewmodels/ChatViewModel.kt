@@ -123,7 +123,7 @@ class ChatViewModel(
                     .filter { it.text.isNotBlank() }
                     .map { ChatHistory(role = if (it.role == Role.USER) "user" else "assistant", content = it.text) }
 
-                val currentSettings = settingsRepository.getSettingsSnapshot() ?: UserSettings()
+                val currentSettings = settingsRepository.getSettingsSnapshot()
                 val apiService = NetClient.getService(currentSettings.host, currentSettings.port, currentSettings.useHttp)
 
                 aiMsgId = chatRepository.insertMessage(ChatMessage(ownerSessionId = sessionId, text = "", role = Role.ASSISTANT))

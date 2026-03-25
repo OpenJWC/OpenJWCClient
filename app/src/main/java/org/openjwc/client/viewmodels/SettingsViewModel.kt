@@ -1,5 +1,6 @@
 package org.openjwc.client.viewmodels
 
+import android.net.Uri
 import android.util.Log
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CalendarMonth
@@ -30,6 +31,7 @@ import org.openjwc.client.net.auth.devicesQuery
 import org.openjwc.client.net.models.DeviceUnbindNetworkResult
 import org.openjwc.client.net.models.DevicesQueryNetworkResult
 import org.openjwc.client.net.models.NetClient
+
 private const val label = "SettingsViewModel"
 
 data class UiState(
@@ -88,7 +90,6 @@ class SettingsViewModel(
     // 这里的 uiState 交给 SettingsScreen 去监听，拿个 LaunchedEffect 去弹框吧
 
     val settings: StateFlow<UserSettings> = repository.userSettings
-        .map { it ?: UserSettings() }
         .stateIn(
             scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(5000),
@@ -103,8 +104,14 @@ class SettingsViewModel(
     fun updateAuthKey(key: String) = viewModelScope.launch { repository.updateAuthKey(key) }
     fun updateHost(host: String) = viewModelScope.launch { repository.updateHost(host) }
     fun updatePort(port: Int) = viewModelScope.launch { repository.updatePort(port) }
-    fun updateUseHttp(useHttp: Boolean) = viewModelScope.launch { repository.updateUseHttp(useHttp) }
-    fun updateFreshDays(freshDays: Int) = viewModelScope.launch { repository.updateFreshDays(freshDays) }
+    fun updateUseHttp(useHttp: Boolean) =
+        viewModelScope.launch { repository.updateUseHttp(useHttp) }
+
+    fun updateFreshDays(freshDays: Int) =
+        viewModelScope.launch { repository.updateFreshDays(freshDays) }
+
+    fun updateBackground(uri: Uri) = viewModelScope.launch { repository.updateBackground(uri) }
+
     private var _deviceResult = MutableStateFlow<DevicesQueryNetworkResult>(
         DevicesQueryNetworkResult.Success(
             response = org.openjwc.client.net.models.DevicesQuerySuccessResponse(
@@ -130,14 +137,18 @@ class SettingsViewModel(
 
     val deviceUnbindNetworkResult = _deviceUnbindNetworkResult.asStateFlow()
 
-    fun devicesQuery(){
+    fun devicesQuery() {
         viewModelScope.launch {
             _isLoadingDeviceResult.value = true
             Log.d(label, "devicesQuery: start")
             try {
-                val currentSettings = repository.getSettingsSnapshot() ?: UserSettings()
+                val currentSettings = repository.getSettingsSnapshot()
                 Log.d(label, "devicesQuery: $currentSettings")
-                val apiService = NetClient.getService(currentSettings.host, currentSettings.port, currentSettings.useHttp)
+                val apiService = NetClient.getService(
+                    currentSettings.host,
+                    currentSettings.port,
+                    currentSettings.useHttp
+                )
                 val result = apiService.devicesQuery(
                     currentSettings.authKey,
                     currentSettings.uuidString
@@ -151,19 +162,24 @@ class SettingsViewModel(
             }
         }
     }
+
     fun unbindAndRefresh(deviceId: String) {
         viewModelScope.launch {
             _isLoadingDeviceResult.value = true
             try {
-                val currentSettings = repository.getSettingsSnapshot() ?: UserSettings()
-                val apiService = NetClient.getService(currentSettings.host, currentSettings.port, currentSettings.useHttp)
+                val currentSettings = repository.getSettingsSnapshot()
+                val apiService = NetClient.getService(
+                    currentSettings.host,
+                    currentSettings.port,
+                    currentSettings.useHttp
+                )
 
                 Log.d(label, "执行解绑...")
                 val unbindResult =
-                apiService.deviceUnbind(
-                    currentSettings.authKey,
-                    deviceId,
-                )
+                    apiService.deviceUnbind(
+                        currentSettings.authKey,
+                        deviceId,
+                    )
                 Log.d(label, "Unbind result: $unbindResult")
                 _deviceUnbindNetworkResult.value = unbindResult
 

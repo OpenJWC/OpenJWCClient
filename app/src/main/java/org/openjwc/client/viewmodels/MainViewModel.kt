@@ -43,8 +43,7 @@ class MainViewModel(
     }
 
     val uiState: StateFlow<MainUiState> = repository.userSettings
-        .map { settingsOrNull ->
-            val settings = settingsOrNull ?: UserSettings()
+        .map { settings ->
             MainUiState(
                 themeColor = settings.themeColor,
                 darkThemeStyle = settings.themeStyle,

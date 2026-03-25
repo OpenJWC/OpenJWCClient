@@ -2,8 +2,6 @@ package org.openjwc.client.data.settings
 
 import Screen
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.room.Entity
-import androidx.room.PrimaryKey
 import org.openjwc.client.ui.theme.ColorType
 import org.openjwc.client.ui.theme.DarkThemeStyle
 
@@ -51,10 +49,7 @@ sealed class Event {
     data class Action(val onAction: () -> Unit) : Event()
 }
 
-// 这个是数据库里的实体
-@Entity(tableName = "settings")
 data class UserSettings(
-    @PrimaryKey val id: Int = 0,
     val policyAgreed: Boolean = false,
     val uuidString: String = "",
     val authKey: String = "",
@@ -63,5 +58,6 @@ data class UserSettings(
     val host: String = "101.132.106.186",
     val port: Int = 8000,
     val useHttp: Boolean = false,
-    val freshDays: Int = 21
+    val freshDays: Int = 21,
+    val backgroundPath: String? = null
 )

@@ -20,6 +20,7 @@ import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import org.openjwc.client.data.db.AppDatabase
 import org.openjwc.client.data.repository.ChatRepository
 import org.openjwc.client.data.repository.SettingsRepository
+import org.openjwc.client.data.settings.SettingsDataSource
 import org.openjwc.client.navigation.NavGraph
 import org.openjwc.client.ui.policy.PolicyDialog
 import org.openjwc.client.ui.theme.OpenJWCClientTheme
@@ -38,7 +39,7 @@ import org.openjwc.client.viewmodels.SettingsViewModelFactory
 class MainActivity : ComponentActivity() {
 
     private val database by lazy { AppDatabase.getDatabase(applicationContext) }
-    private val settingsRepository by lazy { SettingsRepository(database.settingsDao()) }
+    private val settingsRepository by lazy { SettingsRepository(SettingsDataSource(applicationContext), applicationContext) }
     private val chatRepository by lazy { ChatRepository(database.chatDao()) }
 
     private val mainViewModel: MainViewModel by viewModels { MainViewModelFactory(settingsRepository) }
