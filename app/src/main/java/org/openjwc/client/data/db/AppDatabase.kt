@@ -25,7 +25,7 @@ abstract class AppDatabase : RoomDatabase() {
         private var INSTANCE: AppDatabase? = null
         val MIGRATION_2_3 = object : androidx.room.migration.Migration(2, 3) {
             override fun migrate(db: androidx.sqlite.db.SupportSQLiteDatabase) {
-                db.execSQL("DROP TABLE IF EXISTS settings")
+                db.execSQL("DROP TABLE IF EXISTS settings") // version 3 的设置已经放在了 dataStore 里
             }
         }
 
