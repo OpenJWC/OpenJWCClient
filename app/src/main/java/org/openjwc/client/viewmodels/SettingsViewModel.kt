@@ -111,6 +111,9 @@ class SettingsViewModel(
         viewModelScope.launch { repository.updateFreshDays(freshDays) }
 
     fun updateBackground(uri: Uri) = viewModelScope.launch { repository.updateBackground(uri) }
+    fun deleteBackground() = viewModelScope.launch { repository.deleteBackground() }
+    fun updateBackgroundAlpha(alpha: Float) = viewModelScope.launch { repository.updateBackgroundAlpha(alpha) }
+
 
     private var _deviceResult = MutableStateFlow<DevicesQueryNetworkResult>(
         DevicesQueryNetworkResult.Success(

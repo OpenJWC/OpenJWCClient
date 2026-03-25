@@ -21,6 +21,8 @@ data class MainUiState(
     val themeColor: ColorType = UserSettings().themeColor,
     val darkThemeStyle: DarkThemeStyle = UserSettings().themeStyle,
     val agreedPolicy: Boolean? = null,
+    val backgroundPath: String? = null,
+    val backgroundAlpha: Float = 1f,
     val isReady: Boolean = false
 )
 
@@ -48,6 +50,8 @@ class MainViewModel(
                 themeColor = settings.themeColor,
                 darkThemeStyle = settings.themeStyle,
                 agreedPolicy = settings.policyAgreed,
+                backgroundPath = settings.backgroundPath,
+                backgroundAlpha = settings.backgroundAlpha,
                 isReady = true
             )
         }

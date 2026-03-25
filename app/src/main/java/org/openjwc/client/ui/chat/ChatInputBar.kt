@@ -64,7 +64,7 @@ fun ChatInputBar(
         Surface(
             modifier = Modifier.weight(1f),
             shape = RoundedCornerShape(24.dp),
-            color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.6f)
+            color = MaterialTheme.colorScheme.surfaceVariant
         ) {
             Column {
                 if (attachments.isNotEmpty()) {
@@ -172,7 +172,7 @@ fun AttachmentChip(
     onDelete: () -> Unit
 ) {
     Surface(
-        color = MaterialTheme.colorScheme.secondaryContainer,
+        color = MaterialTheme.colorScheme.primaryContainer,
         shape = RoundedCornerShape(12.dp)
     ) {
         Row(

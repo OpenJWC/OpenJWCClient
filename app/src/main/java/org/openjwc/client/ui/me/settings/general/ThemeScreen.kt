@@ -1,5 +1,9 @@
 package org.openjwc.client.ui.me.settings.general
 
+import android.net.Uri
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.PickVisualMediaRequest
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -15,10 +19,16 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.BrightnessHigh
+import androidx.compose.material.icons.filled.BrightnessLow
 import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.DeleteSweep
+import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.Image
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.HorizontalDivider
@@ -28,22 +38,30 @@ import androidx.compose.material3.LargeTopAppBar
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Slider
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.nestedscroll.nestedScroll
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import coil.compose.AsyncImage
 import org.openjwc.client.ui.theme.ColorType
 import org.openjwc.client.ui.theme.DarkThemeStyle
 import org.openjwc.client.ui.theme.seedColors
+import java.io.File
 
-@Preview(widthDp = 300, heightDp = 500)
+@Preview
 @Composable
 fun TestThemeScreen() {
     ThemeScreen(
@@ -51,6 +69,12 @@ fun TestThemeScreen() {
         },
         onBack = {},
         colorPresets = seedColors,
+        onSelectBackground = {},
+        onClearBackground = {},
+        currentBackgroundPath = "",
+        darkThemeStyle = DarkThemeStyle.Auto,
+        selectedColorType = ColorType.Dynamic,
+        onAlphaChange = {}
     )
 }
 
@@ -59,12 +83,22 @@ fun TestThemeScreen() {
 fun ThemeScreen(
     onBack: () -> Unit,
     onSelect: (ColorType, DarkThemeStyle) -> Unit,
+    onSelectBackground: (Uri) -> Unit,
+    onClearBackground: () -> Unit,
+    currentBackgroundPath: String?,
+    backgroundAlpha: Float = 1f,
+    onAlphaChange: (Float) -> Unit,
     colorPresets: List<Color>,
     selectedColorType: ColorType = ColorType.Dynamic,
     darkThemeStyle: DarkThemeStyle = DarkThemeStyle.Auto
 ) {
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
-
+    val pickMedia = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.PickVisualMedia()
+    ) { uri ->
+        uri?.let { onSelectBackground(it) }
+    }
+    var sliderValue by remember(backgroundAlpha) { mutableFloatStateOf(backgroundAlpha) }
     Scaffold(
         containerColor = MaterialTheme.colorScheme.background,
         modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
@@ -146,6 +180,95 @@ fun ThemeScreen(
                         )
                     }
                 }
+            }
+
+            HorizontalDivider(modifier = Modifier.padding(vertical = 16.dp, horizontal = 24.dp))
+
+            Text(
+                text = "界面装饰",
+                style = MaterialTheme.typography.titleMedium,
+                modifier = Modifier.padding(horizontal = 24.dp, vertical = 12.dp)
+            )
+
+            ListItem(
+                headlineContent = { Text("自定义背景图") },
+                supportingContent = {
+                    Text(if (currentBackgroundPath != null) "已设置自定义背景" else "未设置背景图")
+                },
+                leadingContent = {
+                    Box(
+                        modifier = Modifier
+                            .size(48.dp)
+                            .clip(RoundedCornerShape(8.dp))
+                            .background(MaterialTheme.colorScheme.surfaceVariant),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        if (currentBackgroundPath != null) {
+                            AsyncImage(
+                                model = File(currentBackgroundPath),
+                                contentDescription = null,
+                                contentScale = ContentScale.Crop,
+                                modifier = Modifier.fillMaxSize()
+                            )
+                        } else {
+                            Icon(Icons.Default.Image, contentDescription = null)
+                        }
+                    }
+                },
+                trailingContent = {
+                    Row {
+                        if (currentBackgroundPath != null) {
+                            IconButton(onClick = onClearBackground) {
+                                Icon(Icons.Default.DeleteSweep, contentDescription = "清除背景", tint = MaterialTheme.colorScheme.error)
+                            }
+                        }
+                        IconButton(onClick = {
+                            pickMedia.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly))
+                        }) {
+                            Icon(Icons.Default.Edit, contentDescription = "更换背景")
+                        }
+                    }
+                },
+                modifier = Modifier
+                    .padding(horizontal = 8.dp)
+                    .clickable {
+                        pickMedia.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly))
+                    }
+            )
+
+            if (currentBackgroundPath != null) {
+                ListItem(
+                    headlineContent = { Text("背景不透明度") },
+                    supportingContent = {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(12.dp)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.BrightnessLow,
+                                contentDescription = null,
+                                modifier = Modifier.size(18.dp)
+                            )
+                            Slider(
+                                value = sliderValue,
+                                onValueChange = {
+                                    sliderValue = it
+                                },
+                                onValueChangeFinished = {
+                                    onAlphaChange(sliderValue)
+                                },
+                                valueRange = 0f..1f,
+                                modifier = Modifier.weight(1f)
+                            )
+                            Icon(
+                                imageVector = Icons.Default.BrightnessHigh,
+                                contentDescription = null,
+                                modifier = Modifier.size(18.dp)
+                            )
+                        }
+                    },
+                    modifier = Modifier.padding(horizontal = 8.dp)
+                )
             }
         }
     }

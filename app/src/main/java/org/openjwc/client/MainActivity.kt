@@ -93,7 +93,9 @@ class MainActivity : ComponentActivity() {
                             settingsViewModel,
                             chatViewModel,
                             newsViewModel,
-                            meViewModel
+                            meViewModel,
+                            state.backgroundPath,
+                            state.backgroundAlpha
                         )
                     }
                 }

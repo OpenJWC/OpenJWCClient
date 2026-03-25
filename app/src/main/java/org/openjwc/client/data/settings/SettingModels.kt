@@ -59,5 +59,6 @@ data class UserSettings(
     val port: Int = 8000,
     val useHttp: Boolean = false,
     val freshDays: Int = 21,
-    val backgroundPath: String? = null
+    val backgroundPath: String? = null,
+    val backgroundAlpha: Float = 0.3f
 )

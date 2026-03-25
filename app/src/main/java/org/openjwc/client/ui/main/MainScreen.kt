@@ -1,6 +1,7 @@
 package org.openjwc.client.ui.main
 
 import Screen
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -26,8 +27,13 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.navigation.NavController
+import coil.compose.AsyncImage
+import coil.request.ImageRequest
 import kotlinx.coroutines.launch
 import org.openjwc.client.ui.chat.ChatScreen
 import org.openjwc.client.ui.me.MeScreen
@@ -36,6 +42,7 @@ import org.openjwc.client.viewmodels.ChatViewModel
 import org.openjwc.client.viewmodels.MainViewModel
 import org.openjwc.client.viewmodels.MeViewModel
 import org.openjwc.client.viewmodels.NewsViewModel
+import java.io.File
 
 @Composable
 fun MainScreen(
@@ -44,16 +51,36 @@ fun MainScreen(
     mainViewModel: MainViewModel,
     chatViewModel: ChatViewModel,
     newsViewModel: NewsViewModel,
-    meViewModel: MeViewModel
+    meViewModel: MeViewModel,
+    backgroundPath: String? = null,
+    backgroundAlpha: Float = 1f
 ) {
-    MainScaffoldContent(
-        windowSizeClass,
-        navController,
-        mainViewModel,
-        chatViewModel,
-        newsViewModel,
-        meViewModel
-    )
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(MaterialTheme.colorScheme.background)
+    ) {
+        backgroundPath?.let { path ->
+            AsyncImage(
+                model = ImageRequest.Builder(LocalContext.current)
+                    .data(File(path))
+                    .crossfade(true)
+                    .build(),
+                contentDescription = null,
+                modifier = Modifier.fillMaxSize(),
+                contentScale = ContentScale.Crop,
+                alpha = backgroundAlpha
+            )
+        }
+        MainScaffoldContent(
+            windowSizeClass,
+            navController,
+            mainViewModel,
+            chatViewModel,
+            newsViewModel,
+            meViewModel
+        )
+    }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -64,7 +91,7 @@ private fun MainScaffoldContent(
     mainViewModel: MainViewModel,
     chatViewModel: ChatViewModel,
     newsViewModel: NewsViewModel,
-    meViewModel: MeViewModel
+    meViewModel: MeViewModel,
 ) {
     val currentTab by mainViewModel.currentTab.collectAsState()
     val chatTitle = chatViewModel.currentSessionMetadata.collectAsState().value?.title ?: "无标题"
@@ -77,7 +104,7 @@ private fun MainScaffoldContent(
         }
 
         Scaffold(
-            containerColor = MaterialTheme.colorScheme.background,
+            containerColor = Color.Transparent,
             modifier = Modifier.weight(1f),
             topBar = {
                 TopAppBar(
@@ -99,7 +126,6 @@ private fun MainScaffoldContent(
                         }
                     },
                     actions = {
-                        /*RequestNotificationPermissionButton()*/
                         when(currentTab) {
                             MainTab.News -> IconButton(
                                 onClick = {

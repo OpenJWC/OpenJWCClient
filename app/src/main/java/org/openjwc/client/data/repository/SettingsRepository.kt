@@ -51,22 +51,45 @@ class SettingsRepository(
 
     suspend fun updateFreshDays(days: Int) = dataSource.save(keys.FRESH_DAYS, days)
 
-    private suspend fun updateBackgroundPath(path: String) = dataSource.save(keys.BACKGROUND_PATH, path)
+    private suspend fun updateBackgroundPath(path: String?) = dataSource.saveBackgroundPath(path)
     private suspend fun updateUUID(uuid: String) = dataSource.save(keys.UUID_STRING, uuid)
+
+    suspend fun updateBackgroundAlpha(alpha: Float) = dataSource.save(keys.BACKGROUND_ALPHA, alpha)
 
     suspend fun updateBackground(uri: Uri): Boolean = withContext(Dispatchers.IO) {
         try {
             val bgDir = File(context.filesDir, "backgrounds").apply {
                 if (!exists()) mkdirs()
             }
-            val targetFile = File(bgDir, "custom_bg.jpg")
 
+            bgDir.listFiles()?.forEach { it.delete() }
+
+            val newFileName = "bg_${System.currentTimeMillis()}.jpg"
+            val targetFile = File(bgDir, newFileName)
             context.contentResolver.openInputStream(uri)?.use { input ->
                 FileOutputStream(targetFile).use { output ->
                     input.copyTo(output)
                 }
             }
             updateBackgroundPath(targetFile.absolutePath)
+            true
+        } catch (e: Exception) {
+            e.printStackTrace()
+            false
+        }
+    }
+
+    suspend fun deleteBackground(): Boolean = withContext(Dispatchers.IO) {
+        try {
+            val currentPath = getSettingsSnapshot().backgroundPath
+
+            if (!currentPath.isNullOrBlank()) {
+                val file = File(currentPath)
+                if (file.exists()) {
+                    file.delete()
+                }
+            }
+            updateBackgroundPath(null)
             true
         } catch (e: Exception) {
             e.printStackTrace()

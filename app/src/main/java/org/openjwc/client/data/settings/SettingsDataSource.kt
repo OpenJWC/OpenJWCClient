@@ -5,6 +5,7 @@ import androidx.datastore.preferences.core.MutablePreferences
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
+import androidx.datastore.preferences.core.floatPreferencesKey
 import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
@@ -29,6 +30,7 @@ class SettingsDataSource(private val context: Context) {
         val FRESH_DAYS = intPreferencesKey("fresh_days")
         val UUID_STRING = stringPreferencesKey("uuid_string")
         val BACKGROUND_PATH = stringPreferencesKey("background_path")
+        val BACKGROUND_ALPHA = floatPreferencesKey("background_alpha")
     }
 
     val userSettings: Flow<UserSettings> = context.dataStore.data.map { prefs ->
@@ -47,7 +49,8 @@ class SettingsDataSource(private val context: Context) {
             authKey = prefs[Keys.AUTH_KEY] ?: default.authKey,
             freshDays = prefs[Keys.FRESH_DAYS] ?: default.freshDays,
             uuidString = prefs[Keys.UUID_STRING] ?: default.uuidString,
-            backgroundPath = prefs[Keys.BACKGROUND_PATH] ?: default.backgroundPath
+            backgroundPath = prefs[Keys.BACKGROUND_PATH]?.takeIf { it.isNotBlank() } ?: default.backgroundPath,
+            backgroundAlpha = prefs[Keys.BACKGROUND_ALPHA] ?: default.backgroundAlpha
         )
     }
 
@@ -64,4 +67,11 @@ class SettingsDataSource(private val context: Context) {
     suspend fun saveColorType(color: ColorType) {
         context.dataStore.edit { it[Keys.THEME_COLOR] = color.toStorageString() }
     }
+
+    suspend fun saveBackgroundPath(path: String?) {
+        context.dataStore.edit { prefs ->
+            prefs[Keys.BACKGROUND_PATH] = path ?: ""
+        }
+    }
+
 }

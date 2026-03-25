@@ -73,7 +73,9 @@ fun NavGraph(
     settingsViewModel: SettingsViewModel,
     chatViewModel: ChatViewModel,
     newsViewModel: NewsViewModel,
-    meViewModel: MeViewModel
+    meViewModel: MeViewModel,
+    backgroundPath: String? = null,
+    backgroundAlpha: Float = 1f
 ) {
     val navController = rememberNavController()
     val uriHandler = LocalUriHandler.current
@@ -126,7 +128,9 @@ fun NavGraph(
                     mainViewModel = mainViewModel,
                     chatViewModel = chatViewModel,
                     newsViewModel = newsViewModel,
-                    meViewModel = meViewModel
+                    meViewModel = meViewModel,
+                    backgroundPath = backgroundPath,
+                    backgroundAlpha = backgroundAlpha
                 )
             }
 
@@ -234,6 +238,8 @@ fun NavGraph(
             composable<Screen.Theme> {
                 val currentColor = mainViewModel.uiState.collectAsState().value.themeColor
                 val currentStyle = mainViewModel.uiState.collectAsState().value.darkThemeStyle
+                val backgroundPath = settingsViewModel.settings.collectAsState().value.backgroundPath
+                val brightness = settingsViewModel.settings.collectAsState().value.backgroundAlpha
 
                 ThemeScreen(
                     onBack = { if (navController.previousBackStackEntry != null) navController.popBackStack() },
@@ -243,7 +249,18 @@ fun NavGraph(
                     },
                     colorPresets = seedColors,
                     selectedColorType = currentColor,
-                    darkThemeStyle = currentStyle
+                    darkThemeStyle = currentStyle,
+                    currentBackgroundPath = backgroundPath,
+                    onSelectBackground = {
+                        settingsViewModel.updateBackground(it)
+                    },
+                    onClearBackground = {
+                        settingsViewModel.deleteBackground()
+                    },
+                    backgroundAlpha = brightness,
+                    onAlphaChange = {
+                        settingsViewModel.updateBackgroundAlpha(it)
+                    }
                 )
             }
 
