@@ -15,15 +15,13 @@ import kotlinx.coroutines.launch
 import org.openjwc.client.data.repository.SettingsRepository
 import org.openjwc.client.data.settings.UserSettings
 import org.openjwc.client.net.models.UploadedNotice
-import org.openjwc.client.net.models.FetchLabelsNetworkResult
-import org.openjwc.client.net.models.FetchNewsNetworkResult
 import org.openjwc.client.net.models.NetClient
 import org.openjwc.client.net.models.FetchedNotice
-import org.openjwc.client.net.models.GetReviewedNoticeNetworkResult
-import org.openjwc.client.net.models.PostNoticeNetworkResult
+import org.openjwc.client.net.models.NetworkResult
 import org.openjwc.client.net.models.ReviewedNoticesData
 import org.openjwc.client.net.news.fetchLabels
 import org.openjwc.client.net.news.fetchNews
+import org.openjwc.client.net.news.uploadNews
 import org.openjwc.client.net.news.fetchReviewedNews
 
 class NewsViewModel(
@@ -80,16 +78,16 @@ class NewsViewModel(
                 )
 
                 when (result) {
-                    is FetchLabelsNetworkResult.Success -> {
+                    is NetworkResult.Success -> {
                         labels.value = result.response.data.labels
                         labelError.value = null
                     }
 
-                    is FetchLabelsNetworkResult.Failure -> {
+                    is NetworkResult.Failure -> {
                         labelError.value = "加载错误(${result.code}): ${result.msg}"
                     }
 
-                    is FetchLabelsNetworkResult.Error -> {
+                    is NetworkResult.Error -> {
                         labelError.value = result.msg
                     }
                 }
@@ -131,7 +129,7 @@ class NewsViewModel(
                 )
 
                 when (result) {
-                    is FetchNewsNetworkResult.Success -> {
+                    is NetworkResult.Success -> {
                         val newData = result.response.data.fetchedNotices
                         for (notice in newData) {
                             Log.d(tag, "notice: $notice")
@@ -148,11 +146,11 @@ class NewsViewModel(
                         }
                     }
 
-                    is FetchNewsNetworkResult.Failure -> {
+                    is NetworkResult.Failure -> {
                         _errorMap[label] = "加载错误(${result.code}): ${result.msg}"
                     }
 
-                    is FetchNewsNetworkResult.Error -> {
+                    is NetworkResult.Error -> {
                         _errorMap[label] = result.msg
                     }
                 }
@@ -172,24 +170,24 @@ class NewsViewModel(
             val settings = repository.getSettingsSnapshot()
             val apiService = NetClient.getService(settings.host, settings.port, useHttp = settings.useHttp)
 
-            val result = apiService.fetchNews(
+            val result = apiService.uploadNews(
                 settings.authKey,
                 settings.uuidString,
                 uploadedNotice
             )
 
             when (result) {
-                is PostNoticeNetworkResult.Success -> {
+                is NetworkResult.Success -> {
                     uploadError.value = null
                     true
                 }
 
-                is PostNoticeNetworkResult.Failure -> {
+                is NetworkResult.Failure -> {
                     uploadError.value = "加载错误(${result.code}): ${result.msg}"
                     false
                 }
 
-                is PostNoticeNetworkResult.Error -> {
+                is NetworkResult.Error -> {
                     uploadError.value = result.msg
                     false
                 }
@@ -216,16 +214,16 @@ class NewsViewModel(
                     settings.uuidString,
                 )
                 when (result) {
-                    is GetReviewedNoticeNetworkResult.Success -> {
+                    is NetworkResult.Success -> {
                         reviewedNoticesData.value = result.response.data
                         reviewedNoticesError.value = null
                     }
 
-                    is GetReviewedNoticeNetworkResult.Failure -> {
+                    is NetworkResult.Failure -> {
                         reviewedNoticesError.value = "加载错误(${result.code}): ${result.msg}"
                     }
 
-                    is GetReviewedNoticeNetworkResult.Error -> {
+                    is NetworkResult.Error -> {
                         reviewedNoticesError.value = result.msg
                     }
                 }
@@ -244,7 +242,6 @@ class NewsViewModelFactory(
     override fun <T : ViewModel> create(modelClass: Class<T>): T {
         if (modelClass.isAssignableFrom(NewsViewModel::class.java)) {
             @Suppress("UNCHECKED_CAST")
-            // 💡 传入两个 Repository
             return NewsViewModel(settingsRepository) as T
         }
         throw IllegalArgumentException("Unknown ViewModel class")

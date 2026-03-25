@@ -37,8 +37,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import org.openjwc.client.net.models.DeviceUnbindNetworkResult
-import org.openjwc.client.net.models.DevicesQueryNetworkResult
+import org.openjwc.client.net.models.DevicesQueryResponseData
+import org.openjwc.client.net.models.NetworkResult
+import org.openjwc.client.net.models.SuccessResponse
 
 
 @Preview
@@ -52,20 +53,16 @@ fun TestAuthScreen() {
         onUnbindDevice = {},
         thisDeviceId = "1",
         isLoadingDeviceIds = false,
-        devicesResult = DevicesQueryNetworkResult.Success(
-            response = org.openjwc.client.net.models.DevicesQuerySuccessResponse(
+        devicesResult = NetworkResult.Success(
+            response = SuccessResponse(
                 message = "success",
-                data = org.openjwc.client.net.models.DevicesQueryResponseData(
+                data = DevicesQueryResponseData(
                     limitedDeviceCount = 3,
-                    deviceIDs = listOf("1", "2", "3")
+                    deviceIDs = emptyList()
                 )
             )
         ),
-        unbindResult = DeviceUnbindNetworkResult.Success(
-            response = org.openjwc.client.net.models.DeviceUnbindSuccessResponse(
-                detail = ""
-            )
-        )
+        unbindResult = NetworkResult.Success("")
     )
 }
 
@@ -79,8 +76,8 @@ fun AuthScreen(
     isLoadingDeviceIds: Boolean,
     onUnbindDevice: (String) -> Unit,
     thisDeviceId: String,
-    devicesResult: DevicesQueryNetworkResult,
-    unbindResult: DeviceUnbindNetworkResult,
+    devicesResult: NetworkResult<SuccessResponse<DevicesQueryResponseData>>,
+    unbindResult: NetworkResult<String>,
 ) {
 
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
@@ -177,7 +174,7 @@ fun AuthScreen(
             } else {
                 // --- 设备列表部分 ---
                 when (devicesResult) {
-                    is DevicesQueryNetworkResult.Success -> {
+                    is NetworkResult.Success -> {
                         val deviceIds = devicesResult.response.data.deviceIDs
                         val limitedCount = devicesResult.response.data.limitedDeviceCount
                         Row(
@@ -207,15 +204,15 @@ fun AuthScreen(
                         )
                         Spacer(modifier = Modifier.height(8.dp))
                         when(unbindResult) {
-                            is DeviceUnbindNetworkResult.Success -> { }
-                            is DeviceUnbindNetworkResult.Failure -> {
+                            is NetworkResult.Success -> { }
+                            is NetworkResult.Failure -> {
                                 Text(
                                     text = "解绑失败(${unbindResult.code}): ${unbindResult.msg}",
                                     style = MaterialTheme.typography.bodyMedium,
                                     color = MaterialTheme.colorScheme.error
                                 )
                             }
-                            is DeviceUnbindNetworkResult.Error -> {
+                            is NetworkResult.Error -> {
                                 Text(
                                     text = "解绑失败: ${unbindResult.msg}",
                                     style = MaterialTheme.typography.bodyMedium,
@@ -241,14 +238,14 @@ fun AuthScreen(
                         }
                     }
 
-                    is DevicesQueryNetworkResult.Error -> {
+                    is NetworkResult.Error -> {
                         ErrorMessageView(
                             message = "查询设备失败: ${devicesResult.msg}",
                             onRetry = onRefreshDevices
                         )
                     }
 
-                    is DevicesQueryNetworkResult.Failure -> {
+                    is NetworkResult.Failure -> {
                         ErrorMessageView(
                             message = "查询设备失败(${devicesResult.code}): ${devicesResult.msg}",
                             onRetry = onRefreshDevices

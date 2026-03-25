@@ -1,5 +1,8 @@
 package org.openjwc.client.net.models
 
+import android.util.Log
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.Json
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.ResponseBody
@@ -100,4 +103,32 @@ interface NetService {
         @Header("Authorization") auth: String,
         @Header("X-Device-ID") deviceId: String,
     ): Response<ResponseBody>
+}
+
+suspend inline fun <reified T> fetch(
+    label: String = "NetworkFetch",
+    crossinline request: suspend () -> Response<ResponseBody>
+): NetworkResult<T> = withContext(Dispatchers.IO) {
+    runCatching {
+        val response = request()
+
+        if (response.isSuccessful) {
+            val rawBody = response.body()?.string()
+            Log.d(label, "Success: $rawBody")
+
+            if (rawBody.isNullOrEmpty()) {
+                NetworkResult.Failure(response.code(), "Empty response body")
+            } else {
+                val successResponse = Json.decodeFromString<T>(rawBody)
+                NetworkResult.Success(successResponse)
+            }
+        } else {
+            val errorMsg = response.errorBody()?.string() ?: response.message()
+            Log.e(label, "Failure: ${response.code()} $errorMsg")
+            NetworkResult.Failure(response.code(), errorMsg)
+        }
+    }.getOrElse { e ->
+        Log.e(label, "Exception: ${e.message}", e)
+        NetworkResult.Error("Error: ${e.localizedMessage}")
+    }
 }

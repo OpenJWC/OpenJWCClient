@@ -1,5 +1,6 @@
 package org.openjwc.client.viewmodels
 
+import Screen
 import android.net.Uri
 import android.util.Log
 import androidx.compose.material.icons.Icons
@@ -28,9 +29,10 @@ import org.openjwc.client.data.settings.ToggleID
 import org.openjwc.client.data.settings.UserSettings
 import org.openjwc.client.net.auth.deviceUnbind
 import org.openjwc.client.net.auth.devicesQuery
-import org.openjwc.client.net.models.DeviceUnbindNetworkResult
-import org.openjwc.client.net.models.DevicesQueryNetworkResult
+import org.openjwc.client.net.models.DevicesQueryResponseData
 import org.openjwc.client.net.models.NetClient
+import org.openjwc.client.net.models.NetworkResult
+import org.openjwc.client.net.models.SuccessResponse
 
 private const val label = "SettingsViewModel"
 
@@ -115,11 +117,11 @@ class SettingsViewModel(
     fun updateBackgroundAlpha(alpha: Float) = viewModelScope.launch { repository.updateBackgroundAlpha(alpha) }
 
 
-    private var _deviceResult = MutableStateFlow<DevicesQueryNetworkResult>(
-        DevicesQueryNetworkResult.Success(
-            response = org.openjwc.client.net.models.DevicesQuerySuccessResponse(
+    private var _deviceResult = MutableStateFlow<NetworkResult<SuccessResponse<DevicesQueryResponseData>>>(
+        NetworkResult.Success(
+            response = SuccessResponse<DevicesQueryResponseData>(
                 message = "success",
-                data = org.openjwc.client.net.models.DevicesQueryResponseData(
+                data = DevicesQueryResponseData(
                     limitedDeviceCount = 3,
                     deviceIDs = emptyList()
                 )
@@ -130,12 +132,8 @@ class SettingsViewModel(
     val isLoadingDeviceResult = _isLoadingDeviceResult.asStateFlow()
     val deviceResult = _deviceResult.asStateFlow()
 
-    private var _deviceUnbindNetworkResult = MutableStateFlow<DeviceUnbindNetworkResult>(
-        DeviceUnbindNetworkResult.Success(
-            response = org.openjwc.client.net.models.DeviceUnbindSuccessResponse(
-                detail = ""
-            )
-        )
+    private var _deviceUnbindNetworkResult = MutableStateFlow<NetworkResult<String>>(
+        NetworkResult.Success("")
     )
 
     val deviceUnbindNetworkResult = _deviceUnbindNetworkResult.asStateFlow()
@@ -186,7 +184,7 @@ class SettingsViewModel(
                 Log.d(label, "Unbind result: $unbindResult")
                 _deviceUnbindNetworkResult.value = unbindResult
 
-                if (unbindResult is DeviceUnbindNetworkResult.Success) {
+                if (unbindResult is NetworkResult.Success<*>) {
                     Log.d(label, "解绑成功，开始刷新列表...")
                     val result = apiService.devicesQuery(
                         currentSettings.authKey,
@@ -203,10 +201,8 @@ class SettingsViewModel(
     }
 
     fun clearUnbindResult() {
-        _deviceUnbindNetworkResult.value = DeviceUnbindNetworkResult.Success(
-            response = org.openjwc.client.net.models.DeviceUnbindSuccessResponse(
-                detail = ""
-            )
+        _deviceUnbindNetworkResult.value = NetworkResult.Success(
+            response = ""
         )
     }
 

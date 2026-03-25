@@ -18,20 +18,3 @@ data class UploadedNoticeContent(
     val text: String,
     @SerialName("attachment_urls") val attachmentUrls: List<String>
 )
-
-sealed class PostNoticeNetworkResult {
-    data class Success(val response: PostNoticeSuccessResponse) : PostNoticeNetworkResult()
-    data class Failure(
-        val code: Int,
-        val msg: String
-    ) : PostNoticeNetworkResult()
-    data class Error(
-        val msg: String
-    ) : PostNoticeNetworkResult()
-}
-
-@Serializable
-data class PostNoticeSuccessResponse(
-    @SerialName("msg") val message: String,
-    @SerialName("data") val data: Map<String, String>
-)

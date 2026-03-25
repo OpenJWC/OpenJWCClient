@@ -17,9 +17,9 @@ import org.openjwc.client.data.repository.SettingsRepository
 import org.openjwc.client.data.settings.MenuItem
 import org.openjwc.client.data.settings.SettingSection
 import org.openjwc.client.net.hitokoto.fetchHitokoto
-import org.openjwc.client.net.models.GetHitokotoResult
 import org.openjwc.client.net.models.Hitokoto
 import org.openjwc.client.net.models.NetClient
+import org.openjwc.client.net.models.NetworkResult
 
 class MeViewModel(
     private val repository: SettingsRepository
@@ -84,7 +84,7 @@ class MeViewModel(
                         settings.uuidString,
                     )
                     when (result) {
-                        is GetHitokotoResult.Success -> {
+                        is NetworkResult.Success -> {
                             hitokoto.value = result.response.data
                         }
 

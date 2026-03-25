@@ -19,18 +19,3 @@ data class ReviewedNoticesData(
     val total: Int,
     val notices: List<ReviewedNotice>?
 )
-@Serializable
-data class GetReviewedNoticeSuccessResponse(
-    @SerialName("msg") val message: String,
-    @SerialName("data") val data: ReviewedNoticesData
-)
-sealed class GetReviewedNoticeNetworkResult {
-    data class Success(val response: GetReviewedNoticeSuccessResponse) : GetReviewedNoticeNetworkResult()
-    data class Failure(
-        val code: Int,
-        val msg: String
-    ) : GetReviewedNoticeNetworkResult()
-    data class Error(
-        val msg: String
-    ) : GetReviewedNoticeNetworkResult()
-}
