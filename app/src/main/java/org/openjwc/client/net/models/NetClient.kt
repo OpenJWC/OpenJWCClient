@@ -103,6 +103,12 @@ interface NetService {
         @Header("Authorization") auth: String,
         @Header("X-Device-ID") deviceId: String,
     ): Response<ResponseBody>
+
+    @POST("api/v1/client/register")
+    suspend fun postRegister(
+        @Header("Authorization") auth: String,
+        @Header("X-Device-ID") deviceId: String,
+    ): Response<ResponseBody>
 }
 
 suspend inline fun <reified T> fetch(

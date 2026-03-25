@@ -27,9 +27,11 @@ import org.openjwc.client.data.settings.MenuItem
 import org.openjwc.client.data.settings.SettingSection
 import org.openjwc.client.data.settings.ToggleID
 import org.openjwc.client.data.settings.UserSettings
+import org.openjwc.client.net.auth.deviceRegister
 import org.openjwc.client.net.auth.deviceUnbind
 import org.openjwc.client.net.auth.devicesQuery
 import org.openjwc.client.net.models.DevicesQueryResponseData
+import org.openjwc.client.net.models.DevicesUnbindSuccessResponse
 import org.openjwc.client.net.models.NetClient
 import org.openjwc.client.net.models.NetworkResult
 import org.openjwc.client.net.models.SuccessResponse
@@ -132,11 +134,32 @@ class SettingsViewModel(
     val isLoadingDeviceResult = _isLoadingDeviceResult.asStateFlow()
     val deviceResult = _deviceResult.asStateFlow()
 
-    private var _deviceUnbindNetworkResult = MutableStateFlow<NetworkResult<String>>(
-        NetworkResult.Success("")
+    private var _deviceUnbindNetworkResult = MutableStateFlow<NetworkResult<DevicesUnbindSuccessResponse>>(
+        NetworkResult.Success(DevicesUnbindSuccessResponse(""))
     )
 
     val deviceUnbindNetworkResult = _deviceUnbindNetworkResult.asStateFlow()
+
+    fun deviceRegister() {
+        viewModelScope.launch {
+            Log.d(label, "deviceRegister: start")
+            try {
+                val currentSettings = repository.getSettingsSnapshot()
+                Log.d(label, "devicesQuery: $currentSettings")
+                val apiService = NetClient.getService(
+                    currentSettings.host,
+                    currentSettings.port,
+                    currentSettings.useHttp
+                )
+                apiService.deviceRegister(
+                    currentSettings.authKey,
+                    currentSettings.uuidString
+                )
+            } catch (e: Exception) {
+                handleFailure(e.localizedMessage ?: "Unknown error")
+            }
+        }
+    }
 
     fun devicesQuery() {
         viewModelScope.launch {
@@ -202,7 +225,7 @@ class SettingsViewModel(
 
     fun clearUnbindResult() {
         _deviceUnbindNetworkResult.value = NetworkResult.Success(
-            response = ""
+            response = DevicesUnbindSuccessResponse("")
         )
     }
 

@@ -38,6 +38,7 @@ import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import org.openjwc.client.net.models.DevicesQueryResponseData
+import org.openjwc.client.net.models.DevicesUnbindSuccessResponse
 import org.openjwc.client.net.models.NetworkResult
 import org.openjwc.client.net.models.SuccessResponse
 
@@ -62,7 +63,7 @@ fun TestAuthScreen() {
                 )
             )
         ),
-        unbindResult = NetworkResult.Success("")
+        unbindResult = NetworkResult.Success(DevicesUnbindSuccessResponse(""))
     )
 }
 
@@ -77,7 +78,7 @@ fun AuthScreen(
     onUnbindDevice: (String) -> Unit,
     thisDeviceId: String,
     devicesResult: NetworkResult<SuccessResponse<DevicesQueryResponseData>>,
-    unbindResult: NetworkResult<String>,
+    unbindResult: NetworkResult<DevicesUnbindSuccessResponse>,
 ) {
 
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
@@ -90,7 +91,7 @@ fun AuthScreen(
 
     val isAuthKeyValid = authKey.isNotBlank()
     val isChanged = initialAuthKey != authKey
-    val canSave = isAuthKeyValid && isChanged
+    val canSave = isAuthKeyValid/* && isChanged*/
 
     if (deviceToUnbind != null) {
         AlertDialog(

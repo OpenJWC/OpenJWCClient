@@ -7,3 +7,8 @@ data class DevicesQueryResponseData(
     @SerialName("total") val limitedDeviceCount: Int,
     @SerialName("bound_devices") val deviceIDs: List<String>
 )
+
+@Serializable
+data class DevicesUnbindSuccessResponse(
+    val detail: String
+)

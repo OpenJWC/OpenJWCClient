@@ -218,6 +218,7 @@ fun NavGraph(
                     initialAuthKey = currentSettings.authKey,
                     onConfirm = { key ->
                         settingsViewModel.updateAuthKey(key)
+                        settingsViewModel.deviceRegister()
                         navController.popBackStack()
                     },
                     onBack = { navController.popBackStack() },
