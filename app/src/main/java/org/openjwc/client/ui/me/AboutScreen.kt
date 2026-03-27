@@ -103,7 +103,7 @@ fun AboutScreen(
 
             // 2. 应用名称与版本
             Text(
-                text = "OpenJWC Client",
+                text = "OpenJWC",
                 style = MaterialTheme.typography.headlineMedium,
                 fontWeight = FontWeight.Bold
             )

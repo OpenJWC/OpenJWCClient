@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">OpenJWC Client</string>
+    <string name="app_name">OpenJWC</string>
     <string name="chat">聊天</string>
     <string name="news">资讯</string>
     <string name="me">我</string>
