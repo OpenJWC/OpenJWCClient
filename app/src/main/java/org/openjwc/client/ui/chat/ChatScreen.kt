@@ -1,6 +1,11 @@
 package org.openjwc.client.ui.chat
 
 import android.widget.Toast
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.scaleIn
+import androidx.compose.animation.scaleOut
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
@@ -18,8 +23,10 @@ import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.ArrowDownward
 import androidx.compose.material.icons.filled.ChatBubbleOutline
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
@@ -28,6 +35,7 @@ import androidx.compose.material3.DrawerState
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -40,6 +48,7 @@ import androidx.compose.material3.windowsizeclass.WindowWidthSizeClass
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -75,6 +84,22 @@ fun ChatList(
     onCopy: (ChatMessage) -> Unit = {},
     onShare: (ChatMessage) -> Unit = {}
 ) {
+    val scope = rememberCoroutineScope()
+    val showBackToBottom by remember {
+        derivedStateOf {
+
+            val layoutInfo = listState.layoutInfo
+            val totalItems = layoutInfo.totalItemsCount
+            val lastVisibleItem = layoutInfo.visibleItemsInfo.lastOrNull()
+
+            if (totalItems == 0) {
+                false
+            } else {
+                (lastVisibleItem?.index ?: 0) < totalItems - 1
+            }
+        }
+    }
+
     BoxWithConstraints(
         modifier = modifier.fillMaxSize()
     ) {
@@ -100,9 +125,38 @@ fun ChatList(
                 )
             }
         }
+        BackToBottomButton(
+            visible = showBackToBottom,
+            onClick = {
+                scope.launch {
+                    if (chatMessages.isNotEmpty()) {
+                        listState.animateScrollToItem(chatMessages.size - 1)
+                    }
+                }
+            },
+            modifier = Modifier.align(Alignment.BottomEnd)
+        )
     }
 }
 
+
+@Composable
+fun BackToBottomButton(visible: Boolean, onClick: () -> Unit, modifier: Modifier) {
+    AnimatedVisibility(
+        visible = visible,
+        enter = fadeIn() + scaleIn(),
+        exit = fadeOut() + scaleOut(),
+        modifier = modifier.padding(12.dp)
+    ) {
+        FloatingActionButton(
+            onClick = onClick,
+            containerColor = MaterialTheme.colorScheme.primary,
+            shape = CircleShape
+        ) {
+            Icon(Icons.Default.ArrowDownward, contentDescription = "Bottom")
+        }
+    }
+}
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -330,7 +384,7 @@ private fun ChatMainContent(
     val horizontalPadding = when (windowSizeClass.widthSizeClass) {
         WindowWidthSizeClass.Compact -> 12.dp
         WindowWidthSizeClass.Medium -> 32.dp
-        WindowWidthSizeClass.Expanded -> 64.dp // 既然左侧有列表了，右侧边距可以适当缩小
+        WindowWidthSizeClass.Expanded -> 64.dp
         else -> 16.dp
     }
 

@@ -17,6 +17,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.OpenInNew
+import androidx.compose.material.icons.automirrored.outlined.NoteAdd
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.HorizontalDivider
@@ -56,7 +57,8 @@ fun TestNewsDetailScreen() {
             attachmentUrls = listOf("https://www.bilibili.com"),
             ),
         onBack = {},
-        onToBrowser = {}
+        onToBrowser = {},
+        onAddToAttachments = {}
     )
 }
 
@@ -65,6 +67,7 @@ fun TestNewsDetailScreen() {
 fun NewsDetailScreen(
     fetchedNotice: FetchedNotice,
     onBack: () -> Unit,
+    onAddToAttachments: () -> Unit,
     onToBrowser: (String) -> Unit
 ) {
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
@@ -92,7 +95,12 @@ fun NewsDetailScreen(
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "返回")
                     }
                 },
-                scrollBehavior = scrollBehavior
+                scrollBehavior = scrollBehavior,
+                actions = {
+                    IconButton(onClick = onAddToAttachments) {
+                        Icon(Icons.AutoMirrored.Outlined.NoteAdd, contentDescription = "添加至附件")
+                    }
+                }
             )
         },
         floatingActionButton = {

@@ -10,6 +10,7 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.windowsizeclass.WindowSizeClass
@@ -17,7 +18,10 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.res.stringResource
 import androidx.navigation.NavType
@@ -30,6 +34,7 @@ import kotlinx.serialization.json.Json
 import org.openjwc.client.R
 import org.openjwc.client.net.models.FetchedNotice
 import org.openjwc.client.ui.main.MainScreen
+import org.openjwc.client.ui.main.MainTab
 import org.openjwc.client.ui.me.AboutScreen
 import org.openjwc.client.ui.me.ReviewedNoticesScreen
 import org.openjwc.client.ui.me.settings.SettingsScreen
@@ -79,8 +84,15 @@ fun NavGraph(
 ) {
     val navController = rememberNavController()
     val uriHandler = LocalUriHandler.current
+    val focusManager = LocalFocusManager.current
     Surface(
-        color = MaterialTheme.colorScheme.background
+        color = MaterialTheme.colorScheme.background,
+        modifier = Modifier
+            .pointerInput(Unit) {
+                detectTapGestures(onTap = {
+                    focusManager.clearFocus()
+                })
+            }
     ) {
         NavHost(
             navController = navController,
@@ -143,7 +155,12 @@ fun NavGraph(
                 NewsDetailScreen(
                     fetchedNotice = args.fetchedNotice,
                     onBack = { navController.popBackStack() },
-                    onToBrowser = { uri -> uriHandler.openUri(uri) }
+                    onToBrowser = { uri -> uriHandler.openUri(uri) },
+                    onAddToAttachments = {
+                        mainViewModel.updateTab(MainTab.Chat)
+                        navController.popBackStack()
+                        chatViewModel.addAttachment(args.fetchedNotice)
+                    }
                 )
             }
 

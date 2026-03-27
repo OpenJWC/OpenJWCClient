@@ -11,8 +11,6 @@ import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.material3.LoadingIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SecondaryScrollableTabRow
-import androidx.compose.material3.SnackbarHost
-import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Tab
 import androidx.compose.material3.TabRowDefaults
 import androidx.compose.material3.Text
@@ -50,8 +48,6 @@ fun NewsScreen(
     val tabs = newsViewModel.labels.collectAsStateWithLifecycle().value
     val pagerState = rememberPagerState { tabs.size }
     val scope = rememberCoroutineScope()
-    val listState = rememberLazyGridState()
-    val snackbarHostState = remember { SnackbarHostState() }
     val isLoading = newsViewModel.isLoading.collectAsStateWithLifecycle().value
     val isRefreshing = newsViewModel.isRefreshing.collectAsStateWithLifecycle().value
     val labelError = newsViewModel.labelError.collectAsStateWithLifecycle().value
@@ -134,9 +130,11 @@ fun NewsScreen(
                         onRefresh = { newsViewModel.loadCategory(currentLabel, isRefresh = true) },
                         modifier = Modifier.fillMaxSize(),
                     ) {
+                        val listState = rememberLazyGridState()
                         NewsList(
                             label = currentLabel,
                             windowSizeClass = windowSizeClass,
+                            listState = listState,
                             newsItems = newsViewModel.getNewsState(currentLabel),
                             isLoading = isLoading,
                             isEnd = newsViewModel.isEnd(currentLabel),
@@ -156,9 +154,6 @@ fun NewsScreen(
                             onAddToAttachment = { notice ->
                                 chatViewModel.addAttachment(notice)
                                 mainViewModel.updateTab(MainTab.Chat)
-                                scope.launch {
-                                    snackbarHostState.showSnackbar("已添加到附件")
-                                }
                             },
                             freshDays = newsViewModel.freshDays.collectAsStateWithLifecycle().value,
                             onInitialLoad = { newsViewModel.loadCategory(currentLabel) }
@@ -168,11 +163,6 @@ fun NewsScreen(
                             visible = showBackToTop,
                             onClick = { scope.launch { listState.animateScrollToItem(0) } },
                             modifier = Modifier.align(Alignment.BottomEnd)
-                        )
-
-                        SnackbarHost(
-                            hostState = snackbarHostState,
-                            modifier = Modifier.align(Alignment.BottomCenter)
                         )
                     }
                 }

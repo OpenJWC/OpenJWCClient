@@ -23,7 +23,6 @@ import org.openjwc.client.data.models.ChatMetadata
 import org.openjwc.client.data.models.Role
 import org.openjwc.client.data.repository.ChatRepository
 import org.openjwc.client.data.repository.SettingsRepository
-import org.openjwc.client.data.settings.UserSettings
 import org.openjwc.client.net.chat.sendMessageStream
 import org.openjwc.client.net.models.ChatHistory
 import org.openjwc.client.net.models.ChatNetworkResult
