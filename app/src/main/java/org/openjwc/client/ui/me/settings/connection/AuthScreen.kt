@@ -149,9 +149,11 @@ fun AuthScreen(
 
             OutlinedTextField(
                 value = authKey,
-                onValueChange = { authKey = it.trim() },
+                onValueChange = { input ->
+                    val filteredInput = input.filter { it.code <= 127 }
+                    authKey = filteredInput.trim()
+                },
                 label = { Text("API Key") },
-//                placeholder = { Text("例如: 10.0.0.1 或 seu.edu.cn") },
                 modifier = Modifier.fillMaxWidth(),
                 isError = !isAuthKeyValid,
                 singleLine = true,
@@ -204,8 +206,8 @@ fun AuthScreen(
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
                         Spacer(modifier = Modifier.height(8.dp))
-                        when(unbindResult) {
-                            is NetworkResult.Success -> { }
+                        when (unbindResult) {
+                            is NetworkResult.Success -> {}
                             is NetworkResult.Failure -> {
                                 Text(
                                     text = "解绑失败(${unbindResult.code}): ${unbindResult.msg}",
@@ -213,6 +215,7 @@ fun AuthScreen(
                                     color = MaterialTheme.colorScheme.error
                                 )
                             }
+
                             is NetworkResult.Error -> {
                                 Text(
                                     text = "解绑失败: ${unbindResult.msg}",
