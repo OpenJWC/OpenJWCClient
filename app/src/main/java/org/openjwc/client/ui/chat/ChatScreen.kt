@@ -12,12 +12,16 @@ import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.WindowInsetsSides
 import androidx.compose.foundation.layout.consumeWindowInsets
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.imePadding
+import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.systemBars
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.items
@@ -189,7 +193,7 @@ fun ChatScreen(
 //    val isExpanded = windowSizeClass.widthSizeClass == WindowWidthSizeClass.Expanded
 
     val drawerContent = @Composable {
-        ModalDrawerSheet {
+        ModalDrawerSheet(windowInsets = WindowInsets.systemBars.only(WindowInsetsSides.Top)) {
             // 直接放置列表，将 padding 移入 ChatHistoryList 内部或作为 Modifier
             ChatHistoryList(
                 sessions = historySessions,
