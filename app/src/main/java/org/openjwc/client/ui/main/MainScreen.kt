@@ -1,6 +1,12 @@
 package org.openjwc.client.ui.main
 
 import Screen
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.scaleIn
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
@@ -179,10 +185,19 @@ private fun MainTabContent(
 ) {
     val metadata by chatViewModel.currentSessionMetadata.collectAsState()
     val sessionId = metadata?.sessionId
-    Box(
-        Modifier.fillMaxSize()
-    ) {
-        when (currentTab) {
+    AnimatedContent(
+        targetState = currentTab,
+        label = "MainTabAnimation",
+        transitionSpec = {
+            // 这里定义动画效果：淡入淡出 + 轻微缩放
+            (fadeIn(animationSpec = tween(220, delayMillis = 90)) +
+                    scaleIn(initialScale = 0.92f, animationSpec = tween(220, delayMillis = 90)))
+                .togetherWith(fadeOut(animationSpec = tween(90)))
+        },
+        modifier = Modifier.fillMaxSize()
+    ) { targetTab ->
+        // 注意：这里的 targetTab 是动画系统提供的状态，确保切换时新旧内容共存
+        when (targetTab) {
             MainTab.Chat -> ChatScreen(
                 modifier = Modifier,
                 sessionId,
@@ -193,8 +208,21 @@ private fun MainTabContent(
                 contentPadding
             )
 
-            MainTab.News -> NewsScreen(modifier = Modifier.padding(contentPadding), windowSizeClass, newsViewModel, mainViewModel, chatViewModel, navController)
-            MainTab.Me -> MeScreen(modifier = Modifier.padding(contentPadding),windowSizeClass, meViewModel, navController)
+            MainTab.News -> NewsScreen(
+                modifier = Modifier.padding(contentPadding),
+                windowSizeClass,
+                newsViewModel,
+                mainViewModel,
+                chatViewModel,
+                navController
+            )
+
+            MainTab.Me -> MeScreen(
+                modifier = Modifier.padding(contentPadding),
+                windowSizeClass,
+                meViewModel,
+                navController
+            )
         }
     }
 }
