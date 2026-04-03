@@ -4,6 +4,10 @@ import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.Crossfade
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -23,22 +27,27 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.AutoMode
 import androidx.compose.material.icons.filled.BrightnessHigh
 import androidx.compose.material.icons.filled.BrightnessLow
 import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.DarkMode
 import androidx.compose.material.icons.filled.DeleteSweep
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Image
+import androidx.compose.material.icons.filled.LightMode
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.FilterChip
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LargeTopAppBar
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SegmentedButton
+import androidx.compose.material3.SegmentedButtonDefaults
+import androidx.compose.material3.SingleChoiceSegmentedButtonRow
 import androidx.compose.material3.Slider
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
@@ -119,185 +128,292 @@ fun ThemeScreen(
                 .padding(innerPadding)
                 .fillMaxSize()
                 .verticalScroll(rememberScrollState())
+                .padding(horizontal = 16.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            Text(
-                text = "显示模式",
-                style = MaterialTheme.typography.titleMedium,
-                modifier = Modifier.padding(horizontal = 24.dp, vertical = 12.dp)
-            )
+            ThemeStyleSelectorCard(darkThemeStyle, onSelect, selectedColorType)
 
-            ThemeStyleSelector(
-                selectedStyle = darkThemeStyle,
-                onStyleSelected = {
-                    onSelect(selectedColorType, it)
-                }
-            )
+//            HorizontalDivider(modifier = Modifier.padding(vertical = 16.dp, horizontal = 24.dp))
 
-            HorizontalDivider(modifier = Modifier.padding(vertical = 16.dp, horizontal = 24.dp))
+            Surface(
+                tonalElevation = 1.dp,
+                shape = MaterialTheme.shapes.extraLarge,
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Column(modifier = Modifier.padding(vertical = 8.dp)) {
+                    ListItem(
+                        headlineContent = {
+                            Text(
+                                "颜色主题",
+                                style = MaterialTheme.typography.labelLarge,
+                                color = MaterialTheme.colorScheme.primary
+                            )
+                        },
+                        supportingContent = { Text("基于 Material You 的色彩方案") }
+                    )
 
-            Text(
-                text = "颜色主题",
-                style = MaterialTheme.typography.titleMedium,
-                modifier = Modifier.padding(horizontal = 24.dp, vertical = 12.dp)
-            )
-
-            ListItem(
-                headlineContent = { Text("动态色彩 (Material You)") },
-                supportingContent = { Text("根据壁纸颜色自动提取主题色") },
-                trailingContent = {
-                    Switch(
-                        checked = selectedColorType is ColorType.Dynamic,
-                        onCheckedChange = { isChecked ->
-                            onSelect(if (isChecked) ColorType.Dynamic else ColorType.Custom(colorPresets.first()), darkThemeStyle)
+                    ListItem(
+                        headlineContent = { Text("动态色彩") },
+                        supportingContent = { Text("根据壁纸颜色自动提取 (仅支持 Android 12 及以上) ") },
+                        trailingContent = {
+                            Switch(
+                                checked = selectedColorType is ColorType.Dynamic,
+                                onCheckedChange = { isChecked ->
+                                    onSelect(
+                                        if (isChecked) ColorType.Dynamic else ColorType.Custom(
+                                            colorPresets.first()
+                                        ), darkThemeStyle
+                                    )
+                                }
+                            )
                         }
                     )
-                },
-                modifier = Modifier.padding(horizontal = 8.dp)
-            )
 
-            if (selectedColorType is ColorType.Custom) {
-                Text(
-                    text = "选择种子颜色",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier.padding(horizontal = 24.dp, vertical = 8.dp)
-                )
-
-
-                FlowRow(
-                    modifier = Modifier.padding(horizontal = 24.dp, vertical = 8.dp),
-                    horizontalArrangement = Arrangement.spacedBy(16.dp),
-                    verticalArrangement = Arrangement.spacedBy(16.dp),
-
+                    AnimatedVisibility(
+                        visible = selectedColorType is ColorType.Custom,
+                        enter = expandVertically(),
+                        exit = shrinkVertically()
                     ) {
-                    colorPresets.forEach { color ->
-                        ColorItem(
-                            color = color,
-                            isSelected = selectedColorType.color == color,
-                            onClick = {
-                                onSelect(ColorType.Custom(color), darkThemeStyle)
+                        Column {
+                            Text(
+                                text = "选择种子颜色",
+                                style = MaterialTheme.typography.labelMedium,
+                                color = MaterialTheme.colorScheme.primary,
+                                modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
+                            )
+                            FlowRow(
+                                modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp),
+                                horizontalArrangement = Arrangement.spacedBy(12.dp),
+                                verticalArrangement = Arrangement.spacedBy(12.dp)
+                            ) {
+                                colorPresets.forEach { color ->
+                                    ColorItem(
+                                        color = color,
+                                        isSelected = (selectedColorType as? ColorType.Custom)?.color == color,
+                                        onClick = {
+                                            onSelect(
+                                                ColorType.Custom(color),
+                                                darkThemeStyle
+                                            )
+                                        }
+                                    )
+                                }
                             }
-                        )
+                        }
                     }
                 }
             }
 
-            HorizontalDivider(modifier = Modifier.padding(vertical = 16.dp, horizontal = 24.dp))
-
-            Text(
-                text = "界面装饰",
-                style = MaterialTheme.typography.titleMedium,
-                modifier = Modifier.padding(horizontal = 24.dp, vertical = 12.dp)
-            )
-
-            ListItem(
-                headlineContent = { Text("自定义背景图") },
-                supportingContent = {
-                    Text(if (currentBackgroundPath != null) "已设置自定义背景" else "未设置背景图")
-                },
-                leadingContent = {
-                    Box(
-                        modifier = Modifier
-                            .size(48.dp)
-                            .clip(RoundedCornerShape(8.dp))
-                            .background(MaterialTheme.colorScheme.surfaceVariant),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        if (currentBackgroundPath != null) {
-                            AsyncImage(
-                                model = File(currentBackgroundPath),
-                                contentDescription = null,
-                                contentScale = ContentScale.Crop,
-                                modifier = Modifier.fillMaxSize()
-                            )
-                        } else {
-                            Icon(Icons.Default.Image, contentDescription = null)
-                        }
-                    }
-                },
-                trailingContent = {
-                    Row {
-                        if (currentBackgroundPath != null) {
-                            IconButton(onClick = onClearBackground) {
-                                Icon(Icons.Default.DeleteSweep, contentDescription = "清除背景", tint = MaterialTheme.colorScheme.error)
+            Surface(
+                tonalElevation = 1.dp,
+                shape = MaterialTheme.shapes.extraLarge,
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Column(modifier = Modifier.padding(vertical = 8.dp)) {
+                    Text(
+                        "界面装饰",
+                        style = MaterialTheme.typography.labelLarge,
+                        color = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp)
+                    )
+                    ListItem(
+                        headlineContent = { Text("自定义背景图") },
+                        supportingContent = {
+                            Text(if (currentBackgroundPath != null) "已设置自定义背景" else "未设置背景图")
+                        },
+                        leadingContent = {
+                            Box(
+                                modifier = Modifier
+                                    .size(48.dp)
+                                    .clip(RoundedCornerShape(8.dp))
+                                    .background(MaterialTheme.colorScheme.surfaceVariant),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                if (currentBackgroundPath != null) {
+                                    AsyncImage(
+                                        model = File(currentBackgroundPath),
+                                        contentDescription = null,
+                                        contentScale = ContentScale.Crop,
+                                        modifier = Modifier.fillMaxSize()
+                                    )
+                                } else {
+                                    Icon(Icons.Default.Image, contentDescription = null)
+                                }
                             }
-                        }
-                        IconButton(onClick = {
-                            pickMedia.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly))
-                        }) {
-                            Icon(Icons.Default.Edit, contentDescription = "更换背景")
-                        }
-                    }
-                },
-                modifier = Modifier
-                    .padding(horizontal = 8.dp)
-                    .clickable {
-                        pickMedia.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly))
-                    }
-            )
+                        },
+                        trailingContent = {
+                            Row {
+                                if (currentBackgroundPath != null) {
+                                    IconButton(onClick = onClearBackground) {
+                                        Icon(
+                                            Icons.Default.DeleteSweep,
+                                            contentDescription = "清除背景",
+                                            tint = MaterialTheme.colorScheme.error
+                                        )
+                                    }
+                                }
+                                IconButton(onClick = {
+                                    pickMedia.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly))
+                                }) {
+                                    Icon(Icons.Default.Edit, contentDescription = "更换背景")
+                                }
+                            }
+                        },
+                        modifier = Modifier
+                            .padding(horizontal = 8.dp)
+                            .clickable {
+                                pickMedia.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly))
+                            }
+                    )
 
-            if (currentBackgroundPath != null) {
-                ListItem(
-                    headlineContent = { Text("背景不透明度") },
-                    supportingContent = {
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(12.dp)
-                        ) {
-                            Icon(
-                                imageVector = Icons.Default.BrightnessLow,
-                                contentDescription = null,
-                                modifier = Modifier.size(18.dp)
-                            )
-                            Slider(
-                                value = sliderValue,
-                                onValueChange = {
-                                    sliderValue = it
-                                },
-                                onValueChangeFinished = {
-                                    onAlphaChange(sliderValue)
-                                },
-                                valueRange = 0f..1f,
-                                modifier = Modifier.weight(1f)
-                            )
-                            Icon(
-                                imageVector = Icons.Default.BrightnessHigh,
-                                contentDescription = null,
-                                modifier = Modifier.size(18.dp)
-                            )
-                        }
-                    },
-                    modifier = Modifier.padding(horizontal = 8.dp)
-                )
+                    if (currentBackgroundPath != null) {
+                        ListItem(
+                            headlineContent = { Text("背景不透明度") },
+                            supportingContent = {
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Default.BrightnessLow,
+                                        contentDescription = null,
+                                        modifier = Modifier.size(18.dp)
+                                    )
+                                    Slider(
+                                        value = sliderValue,
+                                        onValueChange = {
+                                            sliderValue = it
+                                        },
+                                        onValueChangeFinished = {
+                                            onAlphaChange(sliderValue)
+                                        },
+                                        valueRange = 0f..1f,
+                                        modifier = Modifier.weight(1f)
+                                    )
+                                    Icon(
+                                        imageVector = Icons.Default.BrightnessHigh,
+                                        contentDescription = null,
+                                        modifier = Modifier.size(18.dp)
+                                    )
+                                }
+                            },
+                            modifier = Modifier.padding(horizontal = 8.dp)
+                        )
+                    }
+                }
             }
         }
     }
 }
 
+/*
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ThemeStyleSelector(
     selectedStyle: DarkThemeStyle,
     onStyleSelected: (DarkThemeStyle) -> Unit
 ) {
     val options = listOf(
-        DarkThemeStyle.Light to "浅色",
-        DarkThemeStyle.Dark to "深色",
-        DarkThemeStyle.Auto to "跟随系统"
+        Triple(DarkThemeStyle.Light, "浅色", Icons.Outlined.LightMode),
+        Triple(DarkThemeStyle.Dark, "深色", Icons.Outlined.DarkMode),
+        Triple(DarkThemeStyle.Auto, "跟随系统", Icons.Outlined.Contrast)
     )
-
-    Row(
+    SingleChoiceSegmentedButtonRow(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 24.dp),
-        horizontalArrangement = Arrangement.spacedBy(8.dp)
+            .padding(horizontal = 16.dp, vertical = 8.dp)
     ) {
-        options.forEach { (style, label) ->
-            FilterChip(
-                selected = selectedStyle == style,
+        options.forEachIndexed { index, (style, label, icon) ->
+            SegmentedButton(
+                shape = SegmentedButtonDefaults.itemShape(
+                    index = index,
+                    count = options.size
+                ),
                 onClick = { onStyleSelected(style) },
-                label = { Text(label) },
-                modifier = Modifier.weight(1f)
+                selected = selectedStyle == style,
+                icon = {
+                    Icon(
+                        imageVector = icon,
+                        contentDescription = null,
+                        modifier = Modifier.size(SegmentedButtonDefaults.IconSize)
+                    )
+                },
+                label = {
+                    Text(
+                        text = label,
+                        style = MaterialTheme.typography.labelLarge
+                    )
+                }
             )
+        }
+    }
+}
+*/
+
+@Composable
+fun ThemeStyleSelector(
+    selectedStyle: DarkThemeStyle,
+    onStyleSelected: (DarkThemeStyle) -> Unit
+) {
+    // 容器使用 Surface Color，提升层级感
+    Surface(
+        tonalElevation = 2.dp,
+        shape = RoundedCornerShape(24.dp), // MD3 标志性的大圆角
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(16.dp)
+    ) {
+        Column(
+            modifier = Modifier.padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            Text(
+                text = "外观模式",
+                style = MaterialTheme.typography.titleMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.padding(start = 8.dp)
+            )
+
+            SingleChoiceSegmentedButtonRow(
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                val options = listOf(
+                    DarkThemeStyle.Light to "浅色" to Icons.Default.LightMode,
+                    DarkThemeStyle.Dark to "深色" to Icons.Default.DarkMode,
+                    DarkThemeStyle.Auto to "系统" to Icons.Default.AutoMode
+                )
+
+                options.forEachIndexed { index, (pair, icon) ->
+                    val (style, label) = pair
+                    val selected = selectedStyle == style
+
+                    SegmentedButton(
+                        shape = SegmentedButtonDefaults.itemShape(
+                            index = index,
+                            count = options.size
+                        ),
+                        onClick = { onStyleSelected(style) },
+                        selected = selected,
+                        label = { Text(label) },
+                        icon = {
+                            // 使用动画切换图标
+                            Crossfade(targetState = selected) { isSelected ->
+                                Icon(
+                                    imageVector = if (isSelected) Icons.Default.Check else icon,
+                                    contentDescription = null,
+                                    modifier = Modifier.size(18.dp)
+                                )
+                            }
+                        },
+                        // 自定义颜色以符合 MD3e 的高对比度需求
+                        colors = SegmentedButtonDefaults.colors(
+                            activeContainerColor = MaterialTheme.colorScheme.primaryContainer,
+                            activeContentColor = MaterialTheme.colorScheme.onPrimaryContainer,
+                            inactiveContainerColor = MaterialTheme.colorScheme.surface
+                        )
+                    )
+                }
+            }
         }
     }
 }
@@ -313,15 +429,15 @@ private fun ColorItem(
         modifier = Modifier
             .size(64.dp)
             .padding(4.dp)
-            .aspectRatio(1f) // 保持正方形，方便对齐
+            .aspectRatio(1f)
             .then(
                 if (isSelected) Modifier.border(
-                    3.dp, // 增加粗度使其在页面中更明显
+                    3.dp,
                     MaterialTheme.colorScheme.primary,
                     CircleShape
                 ) else Modifier
             )
-            .padding(4.dp) // 边框与内容间的间距
+            .padding(4.dp)
             .clip(CircleShape)
             .clickable { onClick() }
     ) {
@@ -339,6 +455,56 @@ private fun ColorItem(
                     tint = if (isDarkColor(color)) Color.White else Color.Black,
                     modifier = Modifier.size(24.dp)
                 )
+            }
+        }
+    }
+}
+
+@Composable
+fun ThemeStyleSelectorCard(
+    selectedStyle: DarkThemeStyle,
+    onSelect: (ColorType, DarkThemeStyle) -> Unit,
+    selectedColorType: ColorType
+) {
+    Surface(
+        tonalElevation = 2.dp,
+        shape = MaterialTheme.shapes.extraLarge,
+        modifier = Modifier.fillMaxWidth()
+    ) {
+        Column(modifier = Modifier.padding(16.dp)) {
+            Text(
+                text = "显示模式",
+                style = MaterialTheme.typography.labelLarge,
+                color = MaterialTheme.colorScheme.primary,
+                modifier = Modifier.padding(start = 4.dp, bottom = 12.dp)
+            )
+            SingleChoiceSegmentedButtonRow(modifier = Modifier.fillMaxWidth()) {
+                val options = listOf(
+                    Triple(DarkThemeStyle.Light, "浅色", Icons.Default.LightMode),
+                    Triple(DarkThemeStyle.Dark, "深色", Icons.Default.DarkMode),
+                    Triple(DarkThemeStyle.Auto, "系统", Icons.Default.AutoMode)
+                )
+                options.forEachIndexed { index, (style, label, icon) ->
+                    val isSelected = selectedStyle == style
+                    SegmentedButton(
+                        selected = isSelected,
+                        onClick = { onSelect(selectedColorType, style) },
+                        shape = SegmentedButtonDefaults.itemShape(
+                            index = index,
+                            count = options.size
+                        ),
+                        icon = {
+                            Crossfade(targetState = isSelected) { target ->
+                                Icon(
+                                    imageVector = if (target) Icons.Default.Check else icon,
+                                    contentDescription = null,
+                                    modifier = Modifier.size(18.dp)
+                                )
+                            }
+                        },
+                        label = { Text(label) }
+                    )
+                }
             }
         }
     }

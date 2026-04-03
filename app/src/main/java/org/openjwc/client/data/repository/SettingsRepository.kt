@@ -8,6 +8,7 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.withContext
 import org.openjwc.client.data.settings.SettingsDataSource
 import org.openjwc.client.data.settings.UserSettings
+import org.openjwc.client.net.models.Proxy
 import org.openjwc.client.ui.theme.ColorType
 import org.openjwc.client.ui.theme.DarkThemeStyle
 import java.io.File
@@ -96,4 +97,6 @@ class SettingsRepository(
             false
         }
     }
+
+    suspend fun updateProxy(proxy: Proxy) = dataSource.saveProxy(proxy)
 }

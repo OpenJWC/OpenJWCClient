@@ -34,6 +34,7 @@ import org.openjwc.client.net.models.DevicesQueryResponseData
 import org.openjwc.client.net.models.DevicesUnbindSuccessResponse
 import org.openjwc.client.net.models.NetClient
 import org.openjwc.client.net.models.NetworkResult
+import org.openjwc.client.net.models.Proxy
 import org.openjwc.client.net.models.SuccessResponse
 
 private const val label = "SettingsViewModel"
@@ -68,7 +69,7 @@ class SettingsViewModel(
                         MenuItem.Route(
                             icon = Icons.Default.Dns,
                             route = Screen.Host,
-                            title = "服务器配置",
+                            title = "网络设置",
                         ),
                         MenuItem.Route(
                             icon = Icons.Default.VpnKey,
@@ -118,10 +119,11 @@ class SettingsViewModel(
     fun deleteBackground() = viewModelScope.launch { repository.deleteBackground() }
     fun updateBackgroundAlpha(alpha: Float) = viewModelScope.launch { repository.updateBackgroundAlpha(alpha) }
 
+    fun updateProxy(proxy: Proxy) = viewModelScope.launch { repository.updateProxy(proxy) }
 
     private var _deviceResult = MutableStateFlow<NetworkResult<SuccessResponse<DevicesQueryResponseData>>>(
         NetworkResult.Success(
-            response = SuccessResponse<DevicesQueryResponseData>(
+            response = SuccessResponse(
                 message = "success",
                 data = DevicesQueryResponseData(
                     limitedDeviceCount = 3,
@@ -149,7 +151,8 @@ class SettingsViewModel(
                 val apiService = NetClient.getService(
                     currentSettings.host,
                     currentSettings.port,
-                    currentSettings.useHttp
+                    currentSettings.useHttp,
+                    currentSettings.proxy
                 )
                 apiService.deviceRegister(
                     currentSettings.authKey,
@@ -171,7 +174,8 @@ class SettingsViewModel(
                 val apiService = NetClient.getService(
                     currentSettings.host,
                     currentSettings.port,
-                    currentSettings.useHttp
+                    currentSettings.useHttp,
+                    currentSettings.proxy
                 )
                 val result = apiService.devicesQuery(
                     currentSettings.authKey,
@@ -195,7 +199,8 @@ class SettingsViewModel(
                 val apiService = NetClient.getService(
                     currentSettings.host,
                     currentSettings.port,
-                    currentSettings.useHttp
+                    currentSettings.useHttp,
+                    currentSettings.proxy
                 )
 
                 Log.d(label, "执行解绑...")

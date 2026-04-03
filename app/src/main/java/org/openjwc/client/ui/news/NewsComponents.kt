@@ -289,7 +289,7 @@ fun InfoCard(
                 text = fetchedNotice.title,
                 style = MaterialTheme.typography.titleMedium,
                 color = if (isFresh) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurfaceVariant,
-                fontWeight = if (isFresh) FontWeight.ExtraBold else FontWeight.Normal, // 显著加粗
+                fontWeight = if (isFresh) FontWeight.ExtraBold else FontWeight.Normal,
                 maxLines = 3,
                 overflow = TextOverflow.Ellipsis,
             )

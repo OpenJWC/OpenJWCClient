@@ -11,6 +11,7 @@ import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
+import org.openjwc.client.net.models.Proxy
 import org.openjwc.client.ui.theme.ColorType
 import org.openjwc.client.ui.theme.DarkThemeStyle
 import org.openjwc.client.ui.theme.toColorType
@@ -31,6 +32,9 @@ class SettingsDataSource(private val context: Context) {
         val UUID_STRING = stringPreferencesKey("uuid_string")
         val BACKGROUND_PATH = stringPreferencesKey("background_path")
         val BACKGROUND_ALPHA = floatPreferencesKey("background_alpha")
+        val PROXY_TYPE = stringPreferencesKey("proxy_type")
+        val PROXY_ADDRESS = stringPreferencesKey("proxy_address")
+        val PROXY_PORT = intPreferencesKey("proxy_port")
     }
 
     val userSettings: Flow<UserSettings> = context.dataStore.data.map { prefs ->
@@ -50,7 +54,18 @@ class SettingsDataSource(private val context: Context) {
             freshDays = prefs[Keys.FRESH_DAYS] ?: default.freshDays,
             uuidString = prefs[Keys.UUID_STRING] ?: default.uuidString,
             backgroundPath = prefs[Keys.BACKGROUND_PATH]?.takeIf { it.isNotBlank() } ?: default.backgroundPath,
-            backgroundAlpha = prefs[Keys.BACKGROUND_ALPHA] ?: default.backgroundAlpha
+            backgroundAlpha = prefs[Keys.BACKGROUND_ALPHA] ?: default.backgroundAlpha,
+            proxy = when(prefs[Keys.PROXY_TYPE]) {
+                "http" -> Proxy.HttpProxy(
+                    host = prefs[Keys.PROXY_ADDRESS] ?: "localhost",
+                    port = prefs[Keys.PROXY_PORT] ?: 8080
+                )
+                "socks" -> Proxy.SocksProxy(
+                    host = prefs[Keys.PROXY_ADDRESS] ?: "localhost",
+                    port = prefs[Keys.PROXY_PORT] ?: 8080
+                )
+                else -> Proxy.NoProxy()
+            },
         )
     }
 
@@ -73,5 +88,24 @@ class SettingsDataSource(private val context: Context) {
             prefs[Keys.BACKGROUND_PATH] = path ?: ""
         }
     }
-
+    
+    suspend fun saveProxy(proxy: Proxy) {
+        context.dataStore.edit { prefs ->
+            when(proxy) {
+                is Proxy.NoProxy -> {
+                    prefs[Keys.PROXY_TYPE] = ""
+                }
+                is Proxy.HttpProxy -> {
+                    prefs[Keys.PROXY_TYPE] = "http"
+                    prefs[Keys.PROXY_ADDRESS] = proxy.host
+                    prefs[Keys.PROXY_PORT] = proxy.port
+                }
+                is Proxy.SocksProxy -> {
+                    prefs[Keys.PROXY_TYPE] = "socks"
+                    prefs[Keys.PROXY_ADDRESS] = proxy.host
+                    prefs[Keys.PROXY_PORT] = proxy.port
+                }
+            }
+        }
+    }
 }

@@ -5,6 +5,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.Json
 import okhttp3.MediaType.Companion.toMediaType
+import okhttp3.OkHttpClient
 import okhttp3.ResponseBody
 import retrofit2.Response
 import retrofit2.Retrofit
@@ -16,28 +17,42 @@ import retrofit2.http.POST
 import retrofit2.http.Query
 import retrofit2.http.Streaming
 
+sealed class Proxy {
+    class NoProxy : Proxy()
+    data class HttpProxy(val host: String, val port: Int) : Proxy()
+    data class SocksProxy(val host: String, val port: Int) : Proxy()
+}
+
 object NetClient {
     private val loggingInterceptor = okhttp3.logging.HttpLoggingInterceptor().apply {
         level = okhttp3.logging.HttpLoggingInterceptor.Level.HEADERS
     }
+    private val serviceCache = mutableMapOf<Pair<String, Proxy>, NetService>()
+    private val clientCache = mutableMapOf<Proxy, OkHttpClient>()
 
-    val okHttpClient = okhttp3.OkHttpClient.Builder()
-        .addInterceptor(loggingInterceptor)
-        .connectTimeout(15, java.util.concurrent.TimeUnit.SECONDS)
-        .readTimeout(60, java.util.concurrent.TimeUnit.SECONDS) // 流式读取需要较长的 ReadTimeout
-        .build()
     private val json = Json {
         ignoreUnknownKeys = true
         coerceInputValues = true
     }
 
-    private val serviceCache = mutableMapOf<String, NetService>()
-
-    fun getService(host: String, port: Int, useHttp: Boolean): NetService {
+    fun getService(host: String, port: Int, useHttp: Boolean, proxy: Proxy): NetService {
         val prefix = if (useHttp) "http" else "https"
         val baseUrl = "$prefix://$host:$port/"
-        // 如果缓存里有，直接返回；没有则创建并存入缓存
-        return serviceCache.getOrPut(baseUrl) {
+        val proxyArgument = when (proxy) {
+            is Proxy.NoProxy -> java.net.Proxy.NO_PROXY
+            is Proxy.HttpProxy -> java.net.Proxy(java.net.Proxy.Type.HTTP, java.net.InetSocketAddress(proxy.host, proxy.port))
+            is Proxy.SocksProxy -> java.net.Proxy(java.net.Proxy.Type.SOCKS, java.net.InetSocketAddress(proxy.host, proxy.port))
+        }
+        val okHttpClient = clientCache.getOrPut(proxy) {
+            OkHttpClient.Builder()
+                .addInterceptor(loggingInterceptor)
+                .proxy(proxyArgument)
+                .connectTimeout(15, java.util.concurrent.TimeUnit.SECONDS)
+                .readTimeout(60, java.util.concurrent.TimeUnit.SECONDS)
+                .build()
+        }
+
+        return serviceCache.getOrPut(Pair(baseUrl, proxy)) {
             Retrofit.Builder()
                 .baseUrl(baseUrl)
                 .client(okHttpClient)
@@ -63,7 +78,7 @@ interface NetService {
         @Header("X-Device-ID") deviceId: String,
     ): Response<ResponseBody>
 
-//    @Headers("Content-Type: application/json")
+    //    @Headers("Content-Type: application/json")
     @GET("api/v1/client/device")
     suspend fun getDevicesQuery(
         @Header("Authorization") auth: String,
@@ -99,7 +114,7 @@ interface NetService {
     ): Response<ResponseBody>
 
     @GET("api/v1/client/motto")
-    suspend fun getHitokoto (
+    suspend fun getHitokoto(
         @Header("Authorization") auth: String,
         @Header("X-Device-ID") deviceId: String,
     ): Response<ResponseBody>

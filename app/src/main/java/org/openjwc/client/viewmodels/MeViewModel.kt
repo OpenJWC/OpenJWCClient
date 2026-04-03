@@ -77,7 +77,12 @@ class MeViewModel(
                 try {
                     val settings = repository.getSettingsSnapshot()
                     val apiService =
-                        NetClient.getService(settings.host, settings.port, settings.useHttp)
+                        NetClient.getService(
+                            settings.host,
+                            settings.port,
+                            settings.useHttp,
+                            settings.proxy
+                        )
 
                     val result = apiService.fetchHitokoto(
                         settings.authKey,

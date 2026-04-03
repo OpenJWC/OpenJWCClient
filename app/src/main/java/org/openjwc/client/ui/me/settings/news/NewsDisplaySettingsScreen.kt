@@ -12,8 +12,6 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Clear
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -21,6 +19,7 @@ import androidx.compose.material3.LargeTopAppBar
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBarDefaults
@@ -100,10 +99,10 @@ fun NewsDisplaySettingsScreen(
             verticalArrangement = Arrangement.spacedBy(24.dp)
         ) {
             // 设置项卡片
-            Card(
-                colors = CardDefaults.cardColors(
-                    containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f)
-                )
+            Surface(
+                tonalElevation = 2.dp,
+                shape = MaterialTheme.shapes.extraLarge,
+                modifier = Modifier.fillMaxWidth()
             ) {
                 Column(
                     modifier = Modifier.padding(16.dp),
@@ -111,8 +110,8 @@ fun NewsDisplaySettingsScreen(
                 ) {
                     Text(
                         text = "高亮新鲜资讯",
-                        style = MaterialTheme.typography.titleMedium,
-                        color = MaterialTheme.colorScheme.onSurface
+                        style = MaterialTheme.typography.labelLarge,
+                        color = MaterialTheme.colorScheme.primary
                     )
 
                     Text(
@@ -124,7 +123,6 @@ fun NewsDisplaySettingsScreen(
                     OutlinedTextField(
                         value = freshDaysString,
                         onValueChange = {
-                            // 过滤掉非数字输入，只允许数字
                             if (it.all { char -> char.isDigit() }) {
                                 freshDaysString = it
                             }

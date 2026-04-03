@@ -2,6 +2,7 @@ package org.openjwc.client.data.settings
 
 import Screen
 import androidx.compose.ui.graphics.vector.ImageVector
+import org.openjwc.client.net.models.Proxy
 import org.openjwc.client.ui.theme.ColorType
 import org.openjwc.client.ui.theme.DarkThemeStyle
 
@@ -60,5 +61,6 @@ data class UserSettings(
     val useHttp: Boolean = false,
     val freshDays: Int = 21,
     val backgroundPath: String? = null,
-    val backgroundAlpha: Float = 0.3f
+    val backgroundAlpha: Float = 0.3f,
+    val proxy: Proxy = Proxy.NoProxy()
 )

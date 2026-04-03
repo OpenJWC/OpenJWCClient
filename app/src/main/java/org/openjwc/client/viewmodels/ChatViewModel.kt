@@ -63,8 +63,9 @@ class ChatViewModel(
     fun updateInputText(newText: String) {
         inputText.value = newText
     }
+
     fun addAttachment(attachment: FetchedNotice) {
-        if(attachment in attachments.value) return
+        if (attachment in attachments.value) return
         Log.d("ChatViewModel", "addAttachment: $attachment")
         attachments.value = attachments.value + attachment
     }
@@ -76,6 +77,7 @@ class ChatViewModel(
     fun clearAttachments() {
         attachments.value = emptyList()
     }
+
     @OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)
     val messages: StateFlow<List<ChatMessage>> = currentSessionMetadata
         .flatMapLatest { metadata ->
@@ -97,12 +99,13 @@ class ChatViewModel(
     fun toNewChat() {
         currentSessionMetadata.value = null
     }
+
     fun sendMessage() {
         if (sendMessageState.value is SendMessageState.Sending || inputText.value.isBlank()) return
 
         sendMessageState.value = SendMessageState.Sending
         val attachmentIds = attachments.value.map { it.id }
-        val attachmentTitles = attachments.value.map { it.title}
+        val attachmentTitles = attachments.value.map { it.title }
         val messageText = inputText.value
         viewModelScope.launch {
             var aiMsgId: Long? = null
@@ -113,27 +116,53 @@ class ChatViewModel(
                 if (sessionId == null) {
                     sessionId = chatRepository.createChatSession(messageText.take(20))
                     // 立即更新 metadata 以便让 messages 流切换到新会话
-                    currentSessionMetadata.value = ChatMetadata(sessionId = sessionId, title = messageText.take(20))
+                    currentSessionMetadata.value =
+                        ChatMetadata(sessionId = sessionId, title = messageText.take(20))
                 }
 
-                chatRepository.insertMessage(ChatMessage(ownerSessionId = sessionId, text = messageText, role = Role.USER, attachmentTitles = attachmentTitles))
+                chatRepository.insertMessage(
+                    ChatMessage(
+                        ownerSessionId = sessionId,
+                        text = messageText,
+                        role = Role.USER,
+                        attachmentTitles = attachmentTitles
+                    )
+                )
 
                 val historyList = messages.value
                     .filter { it.text.isNotBlank() }
-                    .map { ChatHistory(role = if (it.role == Role.USER) "user" else "assistant", content = it.text) }
+                    .map {
+                        ChatHistory(
+                            role = if (it.role == Role.USER) "user" else "assistant",
+                            content = it.text
+                        )
+                    }
 
                 val currentSettings = settingsRepository.getSettingsSnapshot()
-                val apiService = NetClient.getService(currentSettings.host, currentSettings.port, currentSettings.useHttp)
+                val apiService = NetClient.getService(
+                    currentSettings.host,
+                    currentSettings.port,
+                    currentSettings.useHttp,
+                    currentSettings.proxy
+                )
 
-                aiMsgId = chatRepository.insertMessage(ChatMessage(ownerSessionId = sessionId, text = "", role = Role.ASSISTANT))
+                aiMsgId = chatRepository.insertMessage(
+                    ChatMessage(
+                        ownerSessionId = sessionId,
+                        text = "",
+                        role = Role.ASSISTANT
+                    )
+                )
 
-                apiService.sendMessageStream(currentSettings.authKey, settingsRepository.getOrGenerateDeviceId(),
+                apiService.sendMessageStream(
+                    currentSettings.authKey, settingsRepository.getOrGenerateDeviceId(),
                     ChatRequestBody(attachmentIds, messageText, true, historyList)
                 ).collect { result ->
                     when (result) {
                         is ChatNetworkResult.Success -> {
                             chatRepository.updateMessageText(aiMsgId, result.content)
                         }
+
                         is ChatNetworkResult.Failure -> throw Exception("请求失败(${result.code}): ${result.msg}")
                         is ChatNetworkResult.Error -> throw Exception(result.msg)
                         is ChatNetworkResult.ValidationError -> throw Exception("验证失败: ${result.errors.detail}")
@@ -171,9 +200,17 @@ class ChatViewModel(
     ) {
         viewModelScope.launch {
             Toast.makeText(context, "复制成功", Toast.LENGTH_SHORT).show()
-            clipboardManager.setClipEntry(ClipEntry(ClipData.newPlainText(message.text, message.text)))
+            clipboardManager.setClipEntry(
+                ClipEntry(
+                    ClipData.newPlainText(
+                        message.text,
+                        message.text
+                    )
+                )
+            )
         }
     }
+
     fun deleteMessage(messageId: Long) {
         viewModelScope.launch {
             chatRepository.deleteMessageById(messageId)

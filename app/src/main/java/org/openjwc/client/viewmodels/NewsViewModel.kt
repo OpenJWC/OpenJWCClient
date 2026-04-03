@@ -70,7 +70,7 @@ class NewsViewModel(
             isRefreshing.value = true
             try {
                 val settings = repository.getSettingsSnapshot()
-                val apiService = NetClient.getService(settings.host, settings.port, settings.useHttp)
+                val apiService = NetClient.getService(settings.host, settings.port, settings.useHttp, settings.proxy)
 
                 val result = apiService.fetchLabels(
                     settings.authKey,
@@ -118,7 +118,7 @@ class NewsViewModel(
         viewModelScope.launch {
             try {
                 val settings = repository.getSettingsSnapshot()
-                val apiService = NetClient.getService(settings.host, settings.port, settings.useHttp)
+                val apiService = NetClient.getService(settings.host, settings.port, settings.useHttp, settings.proxy)
 
                 val result = apiService.fetchNews(
                     settings.authKey,
@@ -168,7 +168,7 @@ class NewsViewModel(
         uploadError.value = null
         return try {
             val settings = repository.getSettingsSnapshot()
-            val apiService = NetClient.getService(settings.host, settings.port, useHttp = settings.useHttp)
+            val apiService = NetClient.getService(settings.host, settings.port, settings.useHttp, settings.proxy)
 
             val result = apiService.uploadNews(
                 settings.authKey,
@@ -207,7 +207,7 @@ class NewsViewModel(
         viewModelScope.launch {
             try {
                 val settings = repository.getSettingsSnapshot()
-                val apiService = NetClient.getService(settings.host, settings.port, settings.useHttp)
+                val apiService = NetClient.getService(settings.host, settings.port, settings.useHttp, settings.proxy)
 
                 val result = apiService.fetchReviewedNews(
                     settings.authKey,

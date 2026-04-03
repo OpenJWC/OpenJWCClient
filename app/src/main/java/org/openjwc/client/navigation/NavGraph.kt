@@ -215,16 +215,18 @@ fun NavGraph(
             composable<Screen.Host> {
                 val currentSettings by settingsViewModel.settings.collectAsState()
                 HostScreen(
-                    onConfirm = { host, port, useHttp ->
+                    onConfirm = { host, port, useHttp, proxy ->
                         settingsViewModel.updateHost(host)
                         settingsViewModel.updatePort(port)
                         settingsViewModel.updateUseHttp(useHttp)
+                        settingsViewModel.updateProxy(proxy)
                         navController.popBackStack()
                     },
                     onBack = { if (navController.previousBackStackEntry != null) navController.popBackStack() },
                     initialHost = currentSettings.host,
                     initialPort = currentSettings.port,
-                    initialUseHttp = currentSettings.useHttp
+                    initialUseHttp = currentSettings.useHttp,
+                    initialProxy = currentSettings.proxy
                 )
             }
 
