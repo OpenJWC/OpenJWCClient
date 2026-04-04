@@ -1,3 +1,5 @@
+package org.openjwc.client.navigation
+
 import kotlinx.serialization.Serializable
 import org.openjwc.client.net.models.FetchedNotice
 
@@ -22,6 +24,8 @@ sealed interface Screen {
     object NewsSettings : Screen
     @Serializable
     object Policy : Screen
+    @Serializable
+    object License: Screen
 
     @Serializable
     data class NewsDetail(val fetchedNotice: FetchedNotice) : Screen

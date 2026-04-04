@@ -23,10 +23,10 @@ import dev.jeziellago.compose.markdowntext.MarkdownText
 
 @Composable
 @OptIn(ExperimentalMaterial3Api::class)
-fun PolicyScreen(
+fun LicenseScreen(
     onBack: () -> Unit,
     onToBrowser: (String) -> Unit,
-    policyText: String,
+    licenseText: String,
 ) {
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
     val scrollState = rememberScrollState()
@@ -35,7 +35,7 @@ fun PolicyScreen(
         containerColor = MaterialTheme.colorScheme.background,
         topBar = {
             LargeTopAppBar(
-                title = { Text("用户协议与隐私政策") },
+                title = { Text("开源许可证") },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "返回")
@@ -54,9 +54,11 @@ fun PolicyScreen(
                 .padding(horizontal = 20.dp, vertical = 16.dp)
         ) {
             MarkdownText(
-                markdown = policyText,
+                markdown = "```\n"
+                        + licenseText
+                        + "```\n",
                 isTextSelectable = true,
-                onLinkClicked = {url -> onToBrowser(url)}
+                onLinkClicked = { url -> onToBrowser(url) }
             )
         }
     }

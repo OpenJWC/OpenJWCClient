@@ -20,7 +20,6 @@ fun PolicyDialog(
     onDismiss: () -> Unit,
     onAgree: () -> Unit,
 ) {
-    // 获取屏幕高度，限制 Dialog 的最大高度，防止按钮被挤出屏幕
     val screenHeight = LocalWindowInfo.current.containerDpSize.height
     val scrollState = rememberScrollState()
 

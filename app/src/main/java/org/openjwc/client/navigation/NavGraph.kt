@@ -1,6 +1,5 @@
 package org.openjwc.client.navigation
 
-import Screen
 import android.net.Uri
 import android.os.Bundle
 import android.widget.Toast
@@ -44,6 +43,7 @@ import org.openjwc.client.ui.me.settings.general.ThemeScreen
 import org.openjwc.client.ui.me.settings.news.NewsDisplaySettingsScreen
 import org.openjwc.client.ui.news.NewsDetailScreen
 import org.openjwc.client.ui.news.upload.UploadNewsScreen
+import org.openjwc.client.ui.policy.LicenseScreen
 import org.openjwc.client.ui.policy.PolicyScreen
 import org.openjwc.client.ui.theme.seedColors
 import org.openjwc.client.viewmodels.ChatViewModel
@@ -130,6 +130,14 @@ fun NavGraph(
             composable<Screen.Policy> {
                 PolicyScreen(
                     policyText = stringResource(id = R.string.policy_text),
+                    onBack = { navController.popBackStack() },
+                    onToBrowser = { uri -> uriHandler.openUri(uri) },
+                )
+            }
+
+            composable<Screen.License> {
+                LicenseScreen(
+                    licenseText = stringResource(id = R.string.license),
                     onBack = { navController.popBackStack() },
                     onToBrowser = { uri -> uriHandler.openUri(uri) },
                 )

@@ -1,4 +1,4 @@
-<resources>
+<resources xmlns:tools="http://schemas.android.com/tools">
     <string name="app_name">OpenJWC</string>
     <string name="chat">聊天</string>
     <string name="news">资讯</string>
@@ -38,5 +38,28 @@
 如用户与原开发者发生争议，应通过友好协商解决；协商不成的，任何一方均可向开发者所在地有管辖权的人民法院提起诉讼。\n\n
 # 第七条 联系与反馈\n\n
 如您对本协议有任何疑问或建议，欢迎通过项目开源平台提交反馈。对于具体的服务器运行、数据存储等问题，请直接联系为您提供服务的私有化部署管理员。
+    </string>
+    <string name="license" tools:ignore="TypographyOther">
+MIT License\n
+\n
+Copyright (c) 2026 OpenJWC\n
+\n
+Permission is hereby granted, free of charge, to any person obtaining a copy\n
+of this software and associated documentation files (the "Software"), to deal\n
+in the Software without restriction, including without limitation the rights\n
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell\n
+copies of the Software, and to permit persons to whom the Software is\n
+furnished to do so, subject to the following conditions:\n
+\n
+The above copyright notice and this permission notice shall be included in all\n
+copies or substantial portions of the Software.\n
+\n
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\n
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\n
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\n
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\n
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\n
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE\n
+SOFTWARE.\n
     </string>
 </resources>

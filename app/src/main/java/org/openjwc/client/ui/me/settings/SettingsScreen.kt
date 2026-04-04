@@ -1,6 +1,5 @@
 package org.openjwc.client.ui.me.settings
 
-import Screen
 import android.widget.Toast
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.PaddingValues
@@ -27,6 +26,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import org.openjwc.client.data.settings.Event
 import org.openjwc.client.data.settings.Menu
+import org.openjwc.client.navigation.Screen
 import org.openjwc.client.viewmodels.SettingsEvent
 import org.openjwc.client.viewmodels.SettingsViewModel
 

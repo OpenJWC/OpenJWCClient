@@ -1,7 +1,7 @@
 package org.openjwc.client.data.settings
 
-import Screen
 import androidx.compose.ui.graphics.vector.ImageVector
+import org.openjwc.client.navigation.Screen
 import org.openjwc.client.net.models.Proxy
 import org.openjwc.client.ui.theme.ColorType
 import org.openjwc.client.ui.theme.DarkThemeStyle

@@ -1,6 +1,5 @@
 package org.openjwc.client.ui.me
 
-import Screen
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -15,7 +14,8 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.OpenInNew
-import androidx.compose.material.icons.outlined.Description
+import androidx.compose.material.icons.outlined.Gavel
+import androidx.compose.material.icons.outlined.Policy
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -43,6 +43,7 @@ import org.openjwc.client.R
 import org.openjwc.client.data.settings.Event
 import org.openjwc.client.data.settings.MenuItem
 import org.openjwc.client.data.settings.SettingSection
+import org.openjwc.client.navigation.Screen
 import org.openjwc.client.ui.me.settings.MenuSectionCard
 
 
@@ -141,14 +142,19 @@ fun AboutScreen(
                 section = SettingSection(
                     title = null, items = listOf(
                         MenuItem.Action(
-                            icon = Icons.AutoMirrored.Filled.OpenInNew,
+                            icon = Icons.AutoMirrored.Default.OpenInNew,
                             label = "GitHub",
                             onClick = onToGitHub
                         ),
                         MenuItem.Route(
-                            icon = Icons.Outlined.Description,
+                            icon = Icons.Outlined.Policy,
                             title = "隐私政策",
                             route = Screen.Policy
+                        ),
+                        MenuItem.Route(
+                            icon = Icons.Outlined.Gavel,
+                            title = "开源许可证",
+                            route = Screen.License
                         )
                     )
                 )

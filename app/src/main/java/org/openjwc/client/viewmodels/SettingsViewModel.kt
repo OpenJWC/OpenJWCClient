@@ -1,6 +1,5 @@
 package org.openjwc.client.viewmodels
 
-import Screen
 import android.net.Uri
 import android.util.Log
 import androidx.compose.material.icons.Icons
@@ -27,6 +26,7 @@ import org.openjwc.client.data.settings.MenuItem
 import org.openjwc.client.data.settings.SettingSection
 import org.openjwc.client.data.settings.ToggleID
 import org.openjwc.client.data.settings.UserSettings
+import org.openjwc.client.navigation.Screen
 import org.openjwc.client.net.auth.deviceRegister
 import org.openjwc.client.net.auth.deviceUnbind
 import org.openjwc.client.net.auth.devicesQuery

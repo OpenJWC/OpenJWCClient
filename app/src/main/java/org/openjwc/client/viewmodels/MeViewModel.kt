@@ -1,6 +1,5 @@
 package org.openjwc.client.viewmodels
 
-import Screen
 import android.util.Log
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
@@ -16,6 +15,7 @@ import kotlinx.coroutines.launch
 import org.openjwc.client.data.repository.SettingsRepository
 import org.openjwc.client.data.settings.MenuItem
 import org.openjwc.client.data.settings.SettingSection
+import org.openjwc.client.navigation.Screen
 import org.openjwc.client.net.hitokoto.fetchHitokoto
 import org.openjwc.client.net.models.Hitokoto
 import org.openjwc.client.net.models.NetClient

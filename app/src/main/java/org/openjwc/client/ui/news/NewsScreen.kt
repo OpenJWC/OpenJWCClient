@@ -1,6 +1,5 @@
 package org.openjwc.client.ui.news
 
-import Screen
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -30,6 +29,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
 import kotlinx.coroutines.launch
+import org.openjwc.client.navigation.Screen
 import org.openjwc.client.net.models.FetchedNotice
 import org.openjwc.client.ui.main.MainTab
 import org.openjwc.client.viewmodels.ChatViewModel

@@ -30,6 +30,7 @@ import org.openjwc.client.data.settings.Event
 import org.openjwc.client.data.settings.MenuItem
 import org.openjwc.client.data.settings.SettingSection
 import org.openjwc.client.data.settings.ToggleID
+import org.openjwc.client.navigation.Screen
 
 @Composable
 fun MenuListItem(
