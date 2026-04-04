@@ -38,6 +38,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import org.openjwc.client.BuildConfig
 import org.openjwc.client.R
 import org.openjwc.client.data.settings.Event
 import org.openjwc.client.data.settings.MenuItem
@@ -101,21 +102,19 @@ fun AboutScreen(
 
             Spacer(modifier = Modifier.height(24.dp))
 
-            // 2. 应用名称与版本
             Text(
                 text = "OpenJWC",
                 style = MaterialTheme.typography.headlineMedium,
                 fontWeight = FontWeight.Bold
             )
             Text(
-                text = "Version 0.2.1 (Beta)",
+                text = "Version ${BuildConfig.VERSION_NAME} (Beta)",
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.outline
             )
 
             Spacer(modifier = Modifier.height(32.dp))
 
-            // 3. 项目介绍卡片
             Card(
                 modifier = Modifier.fillMaxWidth(),
                 colors = CardDefaults.cardColors(
@@ -138,10 +137,6 @@ fun AboutScreen(
             }
 
             Spacer(modifier = Modifier.height(16.dp))
-
-//            TextButton(onClick = onToGitHub) {
-//                Text("在 GitHub 上查看本项目")
-//            }
             MenuSectionCard(
                 section = SettingSection(
                     title = null, items = listOf(
