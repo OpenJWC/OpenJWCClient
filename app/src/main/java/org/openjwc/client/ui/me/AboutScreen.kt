@@ -148,7 +148,7 @@ fun AboutScreen(
                         ),
                         MenuItem.Route(
                             icon = Icons.Outlined.Policy,
-                            title = "隐私政策",
+                            title = "用户协议与隐私政策",
                             route = Screen.Policy
                         ),
                         MenuItem.Route(
