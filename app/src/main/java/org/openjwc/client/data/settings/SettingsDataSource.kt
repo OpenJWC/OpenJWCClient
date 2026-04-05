@@ -11,11 +11,13 @@ import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
+import org.openjwc.client.net.models.Hitokoto
 import org.openjwc.client.net.models.Proxy
 import org.openjwc.client.ui.theme.ColorType
 import org.openjwc.client.ui.theme.DarkThemeStyle
 import org.openjwc.client.ui.theme.toColorType
 import org.openjwc.client.ui.theme.toStorageString
+import java.time.LocalDate
 
 private val Context.dataStore by preferencesDataStore(name = "user_settings")
 
@@ -35,14 +37,34 @@ class SettingsDataSource(private val context: Context) {
         val PROXY_TYPE = stringPreferencesKey("proxy_type")
         val PROXY_ADDRESS = stringPreferencesKey("proxy_address")
         val PROXY_PORT = intPreferencesKey("proxy_port")
+        val HITOKOTO_TEXT = stringPreferencesKey("hitokoto_text")
+        val HITOKOTO_AUTHOR = stringPreferencesKey("hitokoto_author")
+        val HITOKOTO_DATE = stringPreferencesKey("hitokoto_date")
     }
 
     val userSettings: Flow<UserSettings> = context.dataStore.data.map { prefs ->
         val default = UserSettings()
+        val text = prefs[Keys.HITOKOTO_TEXT]
+        val hitokoto = if (!text.isNullOrBlank()) {
+            Hitokoto(
+                text = text,
+                author = prefs[Keys.HITOKOTO_AUTHOR]?.takeIf { it.isNotBlank() }
+            )
+        } else {
+            default.hitokoto
+        }
+        val dateStr = prefs[Keys.HITOKOTO_DATE]
+        val hitokotoRefreshedDate = if (!dateStr.isNullOrBlank()) {
+            runCatching {
+                LocalDate.parse(dateStr)
+            }.getOrDefault(default.hitokotoRefreshedDate)
+        } else {
+            default.hitokotoRefreshedDate
+        }
 
         default.copy(
             policyAgreed = prefs[Keys.POLICY_AGREED] ?: default.policyAgreed,
-            themeColor = prefs[Keys.THEME_COLOR].toColorType(),
+            themeColor = prefs[Keys.THEME_COLOR]?.toColorType() ?: default.themeColor,
             themeStyle = prefs[Keys.THEME_STYLE]?.let {
                 runCatching { DarkThemeStyle.valueOf(it) }.getOrDefault(default.themeStyle)
             } ?: default.themeStyle,
@@ -53,19 +75,25 @@ class SettingsDataSource(private val context: Context) {
             authKey = prefs[Keys.AUTH_KEY] ?: default.authKey,
             freshDays = prefs[Keys.FRESH_DAYS] ?: default.freshDays,
             uuidString = prefs[Keys.UUID_STRING] ?: default.uuidString,
-            backgroundPath = prefs[Keys.BACKGROUND_PATH]?.takeIf { it.isNotBlank() } ?: default.backgroundPath,
+            backgroundPath = prefs[Keys.BACKGROUND_PATH]?.takeIf { it.isNotBlank() }
+                ?: default.backgroundPath,
             backgroundAlpha = prefs[Keys.BACKGROUND_ALPHA] ?: default.backgroundAlpha,
-            proxy = when(prefs[Keys.PROXY_TYPE]) {
+
+            proxy = when (prefs[Keys.PROXY_TYPE]) {
                 "http" -> Proxy.HttpProxy(
                     host = prefs[Keys.PROXY_ADDRESS] ?: "localhost",
                     port = prefs[Keys.PROXY_PORT] ?: 8080
                 )
+
                 "socks" -> Proxy.SocksProxy(
                     host = prefs[Keys.PROXY_ADDRESS] ?: "localhost",
                     port = prefs[Keys.PROXY_PORT] ?: 8080
                 )
+
                 else -> Proxy.NoProxy()
             },
+            hitokoto = hitokoto,
+            hitokotoRefreshedDate = hitokotoRefreshedDate
         )
     }
 
@@ -88,18 +116,28 @@ class SettingsDataSource(private val context: Context) {
             prefs[Keys.BACKGROUND_PATH] = path ?: ""
         }
     }
-    
+
+    suspend fun saveHitokoto(hitokoto: Hitokoto) {
+        context.dataStore.edit {
+            it[Keys.HITOKOTO_TEXT] = hitokoto.text
+            it[Keys.HITOKOTO_AUTHOR] = hitokoto.author ?: ""
+            it[Keys.HITOKOTO_DATE] = LocalDate.now().toString()
+        }
+    }
+
     suspend fun saveProxy(proxy: Proxy) {
         context.dataStore.edit { prefs ->
-            when(proxy) {
+            when (proxy) {
                 is Proxy.NoProxy -> {
                     prefs[Keys.PROXY_TYPE] = ""
                 }
+
                 is Proxy.HttpProxy -> {
                     prefs[Keys.PROXY_TYPE] = "http"
                     prefs[Keys.PROXY_ADDRESS] = proxy.host
                     prefs[Keys.PROXY_PORT] = proxy.port
                 }
+
                 is Proxy.SocksProxy -> {
                     prefs[Keys.PROXY_TYPE] = "socks"
                     prefs[Keys.PROXY_ADDRESS] = proxy.host

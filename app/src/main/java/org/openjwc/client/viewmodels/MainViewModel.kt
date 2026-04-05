@@ -14,7 +14,7 @@ import kotlinx.coroutines.launch
 import org.openjwc.client.BuildConfig
 import org.openjwc.client.data.repository.SettingsRepository
 import org.openjwc.client.data.settings.UserSettings
-import org.openjwc.client.net.getLatestRelease
+import org.openjwc.client.net.update.getLatestRelease
 import org.openjwc.client.net.models.CheckUpdateClient
 import org.openjwc.client.net.models.GitHubRelease
 import org.openjwc.client.net.models.NetworkResult

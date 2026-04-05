@@ -1,4 +1,4 @@
-package org.openjwc.client.net
+package org.openjwc.client.net.update
 
 import org.openjwc.client.net.models.CheckUpdateService
 import org.openjwc.client.net.models.GitHubRelease

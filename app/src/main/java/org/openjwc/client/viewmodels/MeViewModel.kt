@@ -1,6 +1,5 @@
 package org.openjwc.client.viewmodels
 
-import android.util.Log
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Info
@@ -10,16 +9,16 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import org.openjwc.client.data.repository.SettingsRepository
 import org.openjwc.client.data.settings.MenuItem
 import org.openjwc.client.data.settings.SettingSection
 import org.openjwc.client.navigation.Screen
-import org.openjwc.client.net.hitokoto.fetchHitokoto
 import org.openjwc.client.net.models.Hitokoto
-import org.openjwc.client.net.models.NetClient
-import org.openjwc.client.net.models.NetworkResult
 
 class MeViewModel(
     private val repository: SettingsRepository
@@ -67,38 +66,14 @@ class MeViewModel(
             author = "乔鲁诺·乔巴纳"
         )
 
-    var hitokoto = MutableStateFlow(
-        defaultHitokoto
+    var hitokoto = repository.userSettings.map { it.hitokoto }.stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.Eagerly,
+        initialValue = defaultHitokoto
     )
-
     fun refreshHitokoto() {
-        if (hitokoto.value == defaultHitokoto) {
-            viewModelScope.launch {
-                try {
-                    val settings = repository.getSettingsSnapshot()
-                    val apiService =
-                        NetClient.getService(
-                            settings.host,
-                            settings.port,
-                            settings.useHttp,
-                            settings.proxy
-                        )
-
-                    val result = apiService.fetchHitokoto(
-                        settings.authKey,
-                        settings.uuidString,
-                    )
-                    when (result) {
-                        is NetworkResult.Success -> {
-                            hitokoto.value = result.response.data
-                        }
-
-                        else -> {}
-                    }
-                } catch (e: Exception) {
-                    Log.e(tag, "fetchReviewedNotices Error", e)
-                }
-            }
+        viewModelScope.launch {
+            repository.tryRefreshHitokoto()
         }
     }
 }

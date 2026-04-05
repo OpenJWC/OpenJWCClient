@@ -20,15 +20,9 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import org.openjwc.client.data.models.ChatMessage
 import org.openjwc.client.data.models.ChatMetadata
-import org.openjwc.client.data.models.Role
 import org.openjwc.client.data.repository.ChatRepository
 import org.openjwc.client.data.repository.SettingsRepository
-import org.openjwc.client.net.chat.sendMessageStream
-import org.openjwc.client.net.models.ChatHistory
-import org.openjwc.client.net.models.ChatNetworkResult
-import org.openjwc.client.net.models.ChatRequestBody
 import org.openjwc.client.net.models.FetchedNotice
-import org.openjwc.client.net.models.NetClient
 
 sealed class SendMessageState {
     data object Idle : SendMessageState()
@@ -104,84 +98,33 @@ class ChatViewModel(
         if (sendMessageState.value is SendMessageState.Sending || inputText.value.isBlank()) return
 
         sendMessageState.value = SendMessageState.Sending
-        val attachmentIds = attachments.value.map { it.id }
-        val attachmentTitles = attachments.value.map { it.title }
         val messageText = inputText.value
+        val attachments = attachments.value
         viewModelScope.launch {
-            var aiMsgId: Long? = null
             clearAttachments()
             updateInputText("")
             try {
                 var sessionId = currentSessionMetadata.value?.sessionId
                 if (sessionId == null) {
                     sessionId = chatRepository.createChatSession(messageText.take(20))
-                    // 立即更新 metadata 以便让 messages 流切换到新会话
                     currentSessionMetadata.value =
                         ChatMetadata(sessionId = sessionId, title = messageText.take(20))
                 }
 
-                chatRepository.insertMessage(
-                    ChatMessage(
-                        ownerSessionId = sessionId,
-                        text = messageText,
-                        role = Role.USER,
-                        attachmentTitles = attachmentTitles
-                    )
+                chatRepository.sendMessage(
+                    sessionId,
+                    messageText,
+                    attachments,
+                    settingsRepository.getSettingsSnapshot()
                 )
-
-                val historyList = messages.value
-                    .filter { it.text.isNotBlank() }
-                    .map {
-                        ChatHistory(
-                            role = if (it.role == Role.USER) "user" else "assistant",
-                            content = it.text
-                        )
-                    }
-
-                val currentSettings = settingsRepository.getSettingsSnapshot()
-                val apiService = NetClient.getService(
-                    currentSettings.host,
-                    currentSettings.port,
-                    currentSettings.useHttp,
-                    currentSettings.proxy
-                )
-
-                aiMsgId = chatRepository.insertMessage(
-                    ChatMessage(
-                        ownerSessionId = sessionId,
-                        text = "",
-                        role = Role.ASSISTANT
-                    )
-                )
-
-                apiService.sendMessageStream(
-                    currentSettings.authKey, settingsRepository.getOrGenerateDeviceId(),
-                    ChatRequestBody(attachmentIds, messageText, true, historyList)
-                ).collect { result ->
-                    when (result) {
-                        is ChatNetworkResult.Success -> {
-                            chatRepository.updateMessageText(aiMsgId, result.content)
-                        }
-
-                        is ChatNetworkResult.Failure -> throw Exception("请求失败(${result.code}): ${result.msg}")
-                        is ChatNetworkResult.Error -> throw Exception(result.msg)
-                        is ChatNetworkResult.ValidationError -> throw Exception("验证失败: ${result.errors.detail}")
-                    }
-                }
-
             } catch (e: Exception) {
                 Log.e("ChatViewModel", "sendMessage Error", e)
-                handleFailure(e.localizedMessage ?: "Unknown error", aiMsgId)
+                eventChannel.send(ChatEvent.ShowToast(e.localizedMessage ?: "Unknown Error"))
             } finally {
                 Log.d("ChatViewModel", "Setting state to Idle")
                 sendMessageState.value = SendMessageState.Idle
             }
         }
-    }
-
-    private suspend fun handleFailure(errorMsg: String, aiMsgId: Long? = null) {
-        aiMsgId?.let { chatRepository.deleteMessageById(it) }
-        eventChannel.send(ChatEvent.ShowToast(errorMsg))
     }
 
     fun deleteSession(sessionId: Long) {

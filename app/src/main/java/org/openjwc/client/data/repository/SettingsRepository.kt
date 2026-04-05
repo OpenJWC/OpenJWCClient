@@ -2,17 +2,22 @@ package org.openjwc.client.data.repository
 
 import android.content.Context
 import android.net.Uri
+import android.util.Log
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.withContext
 import org.openjwc.client.data.settings.SettingsDataSource
 import org.openjwc.client.data.settings.UserSettings
+import org.openjwc.client.net.hitokoto.fetchHitokoto
+import org.openjwc.client.net.models.NetClient
+import org.openjwc.client.net.models.NetworkResult
 import org.openjwc.client.net.models.Proxy
 import org.openjwc.client.ui.theme.ColorType
 import org.openjwc.client.ui.theme.DarkThemeStyle
 import java.io.File
 import java.io.FileOutputStream
+import java.time.LocalDate
 import java.util.UUID
 
 class SettingsRepository(
@@ -35,6 +40,32 @@ class SettingsRepository(
         }
         return current.uuidString
     }
+
+    suspend fun tryRefreshHitokoto() {
+        try {
+            val settings = getSettingsSnapshot()
+            if (settings.hitokotoRefreshedDate != LocalDate.now()) {
+                Log.d("SettingsRepository", "Refresh hitokoto: ${LocalDate.now()}")
+                val apiService =
+                    NetClient.getService(
+                        settings.host,
+                        settings.port,
+                        settings.useHttp,
+                        settings.proxy
+                    )
+
+                val result = apiService.fetchHitokoto(
+                    settings.authKey,
+                    settings.uuidString,
+                )
+                if (result is NetworkResult.Success) {
+                    dataSource.saveHitokoto(result.response.data)
+                }
+            }
+        } catch (_: Exception) {
+        }
+    }
+
     suspend fun agreePolicy() = dataSource.save(keys.POLICY_AGREED, true)
 
     suspend fun updateThemeColor(color: ColorType) = dataSource.saveColorType(color)

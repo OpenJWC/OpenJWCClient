@@ -2,9 +2,11 @@ package org.openjwc.client.data.settings
 
 import androidx.compose.ui.graphics.vector.ImageVector
 import org.openjwc.client.navigation.Screen
+import org.openjwc.client.net.models.Hitokoto
 import org.openjwc.client.net.models.Proxy
 import org.openjwc.client.ui.theme.ColorType
 import org.openjwc.client.ui.theme.DarkThemeStyle
+import java.time.LocalDate
 
 sealed class MenuItem {
     data class Route(
@@ -62,5 +64,10 @@ data class UserSettings(
     val freshDays: Int = 21,
     val backgroundPath: String? = null,
     val backgroundAlpha: Float = 0.3f,
-    val proxy: Proxy = Proxy.NoProxy()
+    val proxy: Proxy = Proxy.NoProxy(),
+    val hitokoto: Hitokoto = Hitokoto(
+        text = "所谓觉悟，就是在漆黑的荒野中，开辟出一条理所应当前进的光明大道。",
+        author = "乔鲁诺·乔巴纳"
+    ),
+    val hitokotoRefreshedDate: LocalDate = LocalDate.MIN
 )
