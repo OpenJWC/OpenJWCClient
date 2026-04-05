@@ -32,6 +32,7 @@ import androidx.compose.material3.rememberDrawerState
 import androidx.compose.material3.windowsizeclass.WindowSizeClass
 import androidx.compose.material3.windowsizeclass.WindowWidthSizeClass
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberCoroutineScope
@@ -39,6 +40,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.res.stringResource
 import androidx.navigation.NavController
 import coil.compose.AsyncImage
@@ -65,6 +67,15 @@ fun MainScreen(
     backgroundPath: String? = null,
     backgroundAlpha: Float = 1f
 ) {
+    val uriHandler = LocalUriHandler.current
+    val showUpdateDialog = !mainViewModel.updateDismissed.collectAsState().value
+    val updateRelease = mainViewModel.updateRelease.collectAsState().value
+    LaunchedEffect(Unit) {
+        if (showUpdateDialog && updateRelease == null) {
+            mainViewModel.checkUpdate()
+            mainViewModel.showUpdateDialog()
+        }
+    }
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -90,6 +101,17 @@ fun MainScreen(
             newsViewModel,
             meViewModel
         )
+
+        if(showUpdateDialog && updateRelease != null) {
+            UpdateDialog(
+                gitHubRelease = updateRelease,
+                onDismiss = mainViewModel::dismissUpdateDialog,
+                onUpdate = {
+                    mainViewModel.dismissUpdateDialog()
+                    uriHandler.openUri(updateRelease.htmlUrl)
+                }
+            )
+        }
     }
 }
 
@@ -189,14 +211,12 @@ private fun MainTabContent(
         targetState = currentTab,
         label = "MainTabAnimation",
         transitionSpec = {
-            // 这里定义动画效果：淡入淡出 + 轻微缩放
             (fadeIn(animationSpec = tween(220, delayMillis = 90)) +
                     scaleIn(initialScale = 0.92f, animationSpec = tween(220, delayMillis = 90)))
                 .togetherWith(fadeOut(animationSpec = tween(90)))
         },
         modifier = Modifier.fillMaxSize()
     ) { targetTab ->
-        // 注意：这里的 targetTab 是动画系统提供的状态，确保切换时新旧内容共存
         when (targetTab) {
             MainTab.Chat -> ChatScreen(
                 modifier = Modifier,

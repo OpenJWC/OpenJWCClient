@@ -16,7 +16,10 @@ import androidx.compose.material3.windowsizeclass.WindowSizeClass
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
@@ -32,6 +35,7 @@ import kotlinx.coroutines.launch
 import kotlinx.serialization.json.Json
 import org.openjwc.client.R
 import org.openjwc.client.net.models.FetchedNotice
+import org.openjwc.client.net.models.GitHubRelease
 import org.openjwc.client.ui.main.MainScreen
 import org.openjwc.client.ui.main.MainTab
 import org.openjwc.client.ui.me.AboutScreen
@@ -211,11 +215,27 @@ fun NavGraph(
                 )
             }
             composable<Screen.About> {
+                var updateRelease: GitHubRelease? by remember { mutableStateOf(null) }
+                val context = LocalContext.current
+                val scope = rememberCoroutineScope()
                 AboutScreen(
                     onBack = { navController.popBackStack() },
                     onToGitHub = { uriHandler.openUri("https://github.com/OpenJWC") },
                     onRoute = {
                         navController.navigate(it)
+                    },
+                    onCheckForUpdate = {
+                        Toast.makeText(context, "检查更新中……", Toast.LENGTH_SHORT).show()
+                        scope.launch {
+                            updateRelease = mainViewModel.checkUpdate()
+                            if (updateRelease == null) {
+                                Toast.makeText(context, "未找到更新", Toast.LENGTH_SHORT).show()
+                            }
+                        }
+                    },
+                    updateRelease = updateRelease,
+                    onUpdate = {
+                        updateRelease?.let { uriHandler.openUri(it.htmlUrl) }
                     }
                 )
             }

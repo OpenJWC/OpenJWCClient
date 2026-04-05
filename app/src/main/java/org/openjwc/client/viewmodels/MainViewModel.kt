@@ -11,8 +11,13 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import org.openjwc.client.BuildConfig
 import org.openjwc.client.data.repository.SettingsRepository
 import org.openjwc.client.data.settings.UserSettings
+import org.openjwc.client.net.getLatestRelease
+import org.openjwc.client.net.models.CheckUpdateClient
+import org.openjwc.client.net.models.GitHubRelease
+import org.openjwc.client.net.models.NetworkResult
 import org.openjwc.client.ui.main.MainTab
 import org.openjwc.client.ui.theme.ColorType
 import org.openjwc.client.ui.theme.DarkThemeStyle
@@ -61,6 +66,12 @@ class MainViewModel(
             initialValue = MainUiState()
         )
 
+    var updateRelease = MutableStateFlow<GitHubRelease?>(null)
+        private set
+
+    var updateDismissed = MutableStateFlow(false)
+        private set
+
 
     fun updateThemeColor(color: ColorType) {
         Log.d(label, "Update theme color to $color")
@@ -82,6 +93,51 @@ class MainViewModel(
             repository.agreePolicy()
         }
     }
+
+    suspend fun checkUpdate(): GitHubRelease? {
+        val proxy = repository.getSettingsSnapshot().proxy
+        val service = CheckUpdateClient.getService(proxy)
+        val result = service.getLatestRelease()
+        when (result) {
+            is NetworkResult.Success -> {
+                val input = result.response.name
+                val regex = Regex("""Version Code:\s*(\d+)""")
+                val matchResult = regex.find(input)
+                val versionCode = matchResult?.groupValues?.get(1)?.toIntOrNull() ?: 0
+                Log.d(label, "Current version code: ${BuildConfig.VERSION_CODE}")
+                Log.d(label, "Latest version code: $versionCode")
+                if (BuildConfig.VERSION_CODE < versionCode) {
+                    Log.d(label, "Update available: ${result.response.tagName}")
+                    updateRelease.value = result.response
+                    return result.response
+                } else {
+                    Log.d(label, "No update available")
+                    return null
+                }
+            }
+
+            is NetworkResult.Failure -> {
+                Log.d(label, "Check update failed: $result")
+                dismissUpdateDialog()
+                return null
+            }
+
+            is NetworkResult.Error -> {
+                Log.d(label, "Check update failed: $result")
+                dismissUpdateDialog()
+                return null
+            }
+        }
+
+    }
+
+    fun dismissUpdateDialog() {
+        updateDismissed.value = true
+    }
+
+    fun showUpdateDialog() {
+        updateDismissed.value = false
+    }
 }
 
 class MainViewModelFactory(
@@ -90,7 +146,6 @@ class MainViewModelFactory(
     override fun <T : ViewModel> create(modelClass: Class<T>): T {
         if (modelClass.isAssignableFrom(MainViewModel::class.java)) {
             @Suppress("UNCHECKED_CAST")
-            // 💡 传入两个 Repository
             return MainViewModel(settingsRepository) as T
         }
         throw IllegalArgumentException("Unknown ViewModel class")

@@ -132,7 +132,11 @@ suspend inline fun <reified T> fetch(
 ): NetworkResult<T> = withContext(Dispatchers.IO) {
     runCatching {
         val response = request()
-
+        val networkJson = Json {
+            ignoreUnknownKeys = true
+            coerceInputValues = true
+            isLenient = true
+        }
         if (response.isSuccessful) {
             val rawBody = response.body()?.string()
             Log.d(label, "Success: $rawBody")
@@ -140,7 +144,7 @@ suspend inline fun <reified T> fetch(
             if (rawBody.isNullOrEmpty()) {
                 NetworkResult.Failure(response.code(), "Empty response body")
             } else {
-                val successResponse = Json.decodeFromString<T>(rawBody)
+                val successResponse = networkJson.decodeFromString<T>(rawBody)
                 NetworkResult.Success(successResponse)
             }
         } else {

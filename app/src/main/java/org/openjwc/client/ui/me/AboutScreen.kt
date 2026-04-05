@@ -14,6 +14,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.OpenInNew
+import androidx.compose.material.icons.filled.Sync
 import androidx.compose.material.icons.outlined.Gavel
 import androidx.compose.material.icons.outlined.Policy
 import androidx.compose.material3.Card
@@ -28,6 +29,10 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
@@ -44,6 +49,8 @@ import org.openjwc.client.data.settings.Event
 import org.openjwc.client.data.settings.MenuItem
 import org.openjwc.client.data.settings.SettingSection
 import org.openjwc.client.navigation.Screen
+import org.openjwc.client.net.models.GitHubRelease
+import org.openjwc.client.ui.main.UpdateDialog
 import org.openjwc.client.ui.me.settings.MenuSectionCard
 
 
@@ -53,18 +60,25 @@ fun TestAboutScreen() {
     AboutScreen(
         onBack = {},
         onToGitHub = {},
-        onRoute = {}
+        onRoute = {},
+        onCheckForUpdate = {},
+        updateRelease = null,
+        onUpdate = {}
     )
 }
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AboutScreen(
+    updateRelease: GitHubRelease?,
     onBack: () -> Unit,
+    onCheckForUpdate: () -> Unit,
+    onUpdate: () -> Unit,
     onToGitHub: () -> Unit,
     onRoute: (Screen) -> Unit
 ) {
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
-
+    var showUpdateDialog by remember { mutableStateOf(false) }
     Scaffold(
         containerColor = MaterialTheme.colorScheme.background,
         topBar = {
@@ -84,7 +98,7 @@ fun AboutScreen(
             modifier = Modifier
                 .padding(innerPadding)
                 .fillMaxSize()
-                .verticalScroll(rememberScrollState()) // 💡 滚动只在这里定义一次
+                .verticalScroll(rememberScrollState())
                 .padding(24.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
@@ -142,10 +156,32 @@ fun AboutScreen(
                 section = SettingSection(
                     title = null, items = listOf(
                         MenuItem.Action(
+                            icon = Icons.Default.Sync,
+                            label = "检查更新",
+                            onClick = {
+                                onCheckForUpdate()
+                                showUpdateDialog = true
+                            },
+                        ),
+                        MenuItem.Action(
                             icon = Icons.AutoMirrored.Default.OpenInNew,
                             label = "GitHub",
                             onClick = onToGitHub
                         ),
+                    )
+                )
+            ) {
+                when (it) {
+                    is Event.Action -> it.onAction()
+                    is Event.Route -> onRoute(it.route)
+                    else -> {}
+                }
+            }
+
+            Spacer(modifier = Modifier.height(16.dp))
+            MenuSectionCard(
+                section = SettingSection(
+                    title = null, items = listOf(
                         MenuItem.Route(
                             icon = Icons.Outlined.Policy,
                             title = "用户协议与隐私政策",
@@ -159,11 +195,21 @@ fun AboutScreen(
                     )
                 )
             ) {
-                when(it) {
+                when (it) {
                     is Event.Action -> it.onAction()
                     is Event.Route -> onRoute(it.route)
                     else -> {}
                 }
+            }
+            if (updateRelease != null && showUpdateDialog) {
+                UpdateDialog(
+                    gitHubRelease = updateRelease,
+                    onDismiss = { showUpdateDialog = false },
+                    onUpdate = {
+                        showUpdateDialog = false
+                        onUpdate()
+                    }
+                )
             }
         }
     }
