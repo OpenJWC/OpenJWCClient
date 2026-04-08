@@ -1,38 +1,57 @@
 package org.openjwc.client.ui.me
 
+import android.widget.Toast
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkVertically
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.items
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Refresh
+import androidx.compose.material3.FilledTonalButton
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.windowsizeclass.WindowSizeClass
+import androidx.compose.material3.windowsizeclass.WindowWidthSizeClass
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
+import kotlinx.coroutines.launch
 import org.openjwc.client.data.settings.Event
+import org.openjwc.client.data.settings.SettingSection
+import org.openjwc.client.net.models.NetworkResult
 import org.openjwc.client.ui.me.settings.MenuSectionCard
 import org.openjwc.client.viewmodels.MeViewModel
-
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.lazy.LazyListScope
-import androidx.compose.material3.windowsizeclass.WindowWidthSizeClass
-import androidx.compose.runtime.LaunchedEffect
-import org.openjwc.client.data.settings.SettingSection
 
 @Composable
 fun MeScreen(
@@ -44,8 +63,10 @@ fun MeScreen(
     val sections by viewModel.sections.collectAsStateWithLifecycle()
     val isExpanded = windowSizeClass.widthSizeClass == WindowWidthSizeClass.Expanded
     val hitokoto = viewModel.hitokoto.collectAsStateWithLifecycle().value
+    val scope = rememberCoroutineScope()
+    val context = LocalContext.current
     LaunchedEffect(Unit) {
-        viewModel.refreshHitokoto()
+        viewModel.refreshHitokotoLazily()
     }
     Box(
         modifier = modifier,
@@ -53,14 +74,27 @@ fun MeScreen(
     ) {
         if (isExpanded) {
             Row(
-                modifier = Modifier.fillMaxSize().padding(24.dp),
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(24.dp),
                 horizontalArrangement = Arrangement.spacedBy(32.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Box(modifier = Modifier.weight(1f)) {
                     HitokotoView(
                         text = hitokoto.text,
-                        author = hitokoto.author
+                        author = hitokoto.author,
+                        onRefresh = {
+//                            Log.d("MeScreen", "Refresh hitokoto")
+                            scope.launch {
+                                val result = viewModel.refreshHitokoto()
+                                when (result) {
+                                    is NetworkResult.Failure -> Toast.makeText(context, result.msg, Toast.LENGTH_SHORT).show()
+                                    is NetworkResult.Error -> Toast.makeText(context, result.msg, Toast.LENGTH_SHORT).show()
+                                    is NetworkResult.Success -> Toast.makeText(context, "刷新成功", Toast.LENGTH_SHORT).show()
+                                }
+                            }
+                        }
                     )
                 }
 
@@ -82,9 +116,18 @@ fun MeScreen(
                     HitokotoView(
                         text = hitokoto.text,
                         author = hitokoto.author,
-                        modifier = Modifier
-                            .padding(vertical = 64.dp)
-                            .padding(horizontal = 16.dp)
+                        onRefresh = {
+//                            Log.d("MeScreen", "Refresh hitokoto")
+                            scope.launch {
+                                val result = viewModel.refreshHitokoto()
+                                when (result) {
+                                    is NetworkResult.Failure -> Toast.makeText(context, result.msg, Toast.LENGTH_SHORT).show()
+                                    is NetworkResult.Error -> Toast.makeText(context, result.msg, Toast.LENGTH_SHORT).show()
+                                    is NetworkResult.Success -> Toast.makeText(context, "刷新成功", Toast.LENGTH_SHORT).show()
+                                }
+                            }
+                        },
+                        modifier = Modifier.padding(vertical = 64.dp, horizontal = 16.dp)
                     )
                 }
                 menuSections(sections, navController)
@@ -123,11 +166,20 @@ fun HitokotoView(
     modifier: Modifier = Modifier,
     text: String,
     author: String? = null,
+    onRefresh: () -> Unit,
 ) {
+    var showRefreshButton by remember { mutableStateOf(false) }
     Column(
         modifier = modifier
             .fillMaxWidth()
-            .padding(vertical = 8.dp),
+            .padding(vertical = 8.dp)
+//            .animateContentSize()
+            .clickable(
+                interactionSource = remember { MutableInteractionSource() },
+                indication = null
+            ) {
+                showRefreshButton = !showRefreshButton
+            },
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Text(
@@ -145,8 +197,30 @@ fun HitokotoView(
                 style = MaterialTheme.typography.labelLarge,
                 color = MaterialTheme.colorScheme.outline,
                 textAlign = TextAlign.End,
-                modifier = Modifier.padding(top = 4.dp).fillMaxWidth()
+                modifier = Modifier
+                    .padding(top = 4.dp)
+                    .fillMaxWidth()
             )
+        }
+        AnimatedVisibility(
+            visible = showRefreshButton,
+            enter = fadeIn() + expandVertically(),
+            exit = fadeOut() + shrinkVertically()
+        ) {
+            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                Spacer(modifier = Modifier.height(16.dp))
+                FilledTonalButton(
+                    onClick = {
+                        onRefresh()
+                        showRefreshButton = false
+                    },
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Icon(Icons.Default.Refresh, contentDescription = null)
+                    Spacer(Modifier.width(8.dp))
+                    Text("刷新")
+                }
+            }
         }
     }
 }
@@ -157,5 +231,6 @@ fun TestHitokotoView(){
     HitokotoView(
         text = "逸一时，误一世！",
         author = "田所浩二",
+        onRefresh = {}
     )
 }

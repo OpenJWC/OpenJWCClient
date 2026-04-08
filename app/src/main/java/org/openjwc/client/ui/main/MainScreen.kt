@@ -73,7 +73,6 @@ fun MainScreen(
     LaunchedEffect(Unit) {
         if (showUpdateDialog && updateRelease == null) {
             mainViewModel.checkUpdate()
-            mainViewModel.showUpdateDialog()
         }
     }
     Box(

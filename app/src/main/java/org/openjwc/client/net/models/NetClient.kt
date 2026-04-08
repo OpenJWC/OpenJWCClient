@@ -1,12 +1,12 @@
 package org.openjwc.client.net.models
 
-import android.util.Log
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.Json
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.OkHttpClient
 import okhttp3.ResponseBody
+import org.openjwc.client.log.Logger
 import retrofit2.Response
 import retrofit2.Retrofit
 import retrofit2.converter.kotlinx.serialization.asConverterFactory
@@ -128,7 +128,8 @@ interface NetService {
 
 suspend inline fun <reified T> fetch(
     label: String = "NetworkFetch",
-    crossinline request: suspend () -> Response<ResponseBody>
+    level: Logger.Level = Logger.Level.DEBUG,
+    crossinline request: suspend () -> Response<ResponseBody>,
 ): NetworkResult<T> = withContext(Dispatchers.IO) {
     runCatching {
         val response = request()
@@ -139,7 +140,7 @@ suspend inline fun <reified T> fetch(
         }
         if (response.isSuccessful) {
             val rawBody = response.body()?.string()
-            Log.d(label, "Success: $rawBody")
+            Logger.log(label, "Success: $rawBody", level)
 
             if (rawBody.isNullOrEmpty()) {
                 NetworkResult.Failure(response.code(), "Empty response body")
@@ -149,11 +150,11 @@ suspend inline fun <reified T> fetch(
             }
         } else {
             val errorMsg = response.errorBody()?.string() ?: response.message()
-            Log.e(label, "Failure: ${response.code()} $errorMsg")
+            Logger.e(label, "Failure: ${response.code()} $errorMsg")
             NetworkResult.Failure(response.code(), errorMsg)
         }
     }.getOrElse { e ->
-        Log.e(label, "Exception: ${e.message}", e)
+        Logger.e(label, "Exception: ${e.message}", e)
         NetworkResult.Error("Error: ${e.localizedMessage}")
     }
 }

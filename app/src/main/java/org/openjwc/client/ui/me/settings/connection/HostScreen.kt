@@ -1,7 +1,11 @@
 package org.openjwc.client.ui.me.settings.connection
 
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.Crossfade
-import androidx.compose.animation.animateContentSize
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -49,8 +53,22 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import org.openjwc.client.net.models.Proxy
+
+@Preview
+@Composable
+fun TestHostScreen() {
+    val proxy by remember { mutableStateOf(Proxy.NoProxy()) }
+    HostScreen(
+        initialHost = "127.0.0.1",
+        initialPort = 8,
+        initialProxy = proxy,
+        onConfirm = { _, _, _, _ -> },
+        onBack = {}
+    )
+}
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -194,7 +212,6 @@ fun HostScreen(
                 Column(
                     modifier = Modifier
                         .padding(16.dp)
-                        .animateContentSize()
                 ) {
                     Text(
                         "代理设置",
@@ -244,37 +261,43 @@ fun HostScreen(
                         }
                     }
 
-                    if (proxyType != 0) {
-                        val ipv4Pattern = remember {
-                            Regex("^((25[0-5]|(2[0-4]|1\\d|[1-9]|)\\d)\\.?\\b){4}$")
-                        }
-                        val isProxyHostError =
-                            proxyHost.isBlank() || !ipv4Pattern.matches(proxyHost)
-                        val isProxyPortError = proxyPortInt == null || proxyPortInt !in 0..65535
+                    AnimatedVisibility(
+                        visible = proxyType != 0,
+                        enter = fadeIn() + expandVertically(),
+                        exit = fadeOut() + shrinkVertically()
+                    ) {
+                        Column {
+                            val ipv4Pattern = remember {
+                                Regex("^((25[0-5]|(2[0-4]|1\\d|[1-9]|)\\d)\\.?\\b){4}$")
+                            }
+                            val isProxyHostError =
+                                proxyHost.isBlank() || !ipv4Pattern.matches(proxyHost)
+                            val isProxyPortError = proxyPortInt == null || proxyPortInt !in 0..65535
 
-                        Spacer(Modifier.height(12.dp))
-                        OutlinedTextField(
-                            value = proxyHost,
-                            onValueChange = { proxyHost = it.trim() },
-                            label = { Text("代理主机") },
-                            modifier = Modifier.fillMaxWidth(),
-                            isError = isProxyHostError,
-                            supportingText = { if (isProxyHostError) Text("代理地址目前只支持 IPv4 格式") },
-                            singleLine = true,
-                            keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next)
-                        )
-                        Spacer(Modifier.height(8.dp))
-                        OutlinedTextField(
-                            value = proxyPortString,
-                            onValueChange = {
-                                if (it.all { c -> c.isDigit() }) proxyPortString = it
-                            },
-                            label = { Text("代理端口") },
-                            modifier = Modifier.fillMaxWidth(),
-                            isError = isProxyPortError,
-                            supportingText = { if (isProxyPortError) Text("端口需在 0-65535 之间") },
-                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
-                        )
+                            Spacer(Modifier.height(12.dp))
+                            OutlinedTextField(
+                                value = proxyHost,
+                                onValueChange = { proxyHost = it.trim() },
+                                label = { Text("代理主机") },
+                                modifier = Modifier.fillMaxWidth(),
+                                isError = isProxyHostError,
+                                supportingText = { if (isProxyHostError) Text("代理地址目前只支持 IPv4 格式") },
+                                singleLine = true,
+                                keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next)
+                            )
+                            Spacer(Modifier.height(8.dp))
+                            OutlinedTextField(
+                                value = proxyPortString,
+                                onValueChange = {
+                                    if (it.all { c -> c.isDigit() }) proxyPortString = it
+                                },
+                                label = { Text("代理端口") },
+                                modifier = Modifier.fillMaxWidth(),
+                                isError = isProxyPortError,
+                                supportingText = { if (isProxyPortError) Text("端口需在 0-65535 之间") },
+                                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
+                            )
+                        }
                     }
                 }
             }

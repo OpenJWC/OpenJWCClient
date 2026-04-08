@@ -1,8 +1,8 @@
 package org.openjwc.client.viewmodels
 
 import android.net.Uri
-import android.util.Log
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.BugReport
 import androidx.compose.material.icons.filled.CalendarMonth
 import androidx.compose.material.icons.filled.Dns
 import androidx.compose.material.icons.filled.Palette
@@ -26,6 +26,7 @@ import org.openjwc.client.data.settings.MenuItem
 import org.openjwc.client.data.settings.SettingSection
 import org.openjwc.client.data.settings.ToggleID
 import org.openjwc.client.data.settings.UserSettings
+import org.openjwc.client.log.Logger
 import org.openjwc.client.navigation.Screen
 import org.openjwc.client.net.auth.deviceRegister
 import org.openjwc.client.net.auth.deviceUnbind
@@ -38,12 +39,6 @@ import org.openjwc.client.net.models.Proxy
 import org.openjwc.client.net.models.SuccessResponse
 
 private const val label = "SettingsViewModel"
-
-data class UiState(
-    val showXXXDialog: Boolean = false
-    // TODO: 如果有弹窗，就写在这里
-)
-
 
 sealed class SettingsEvent {
     data class ShowToast(val message: String) : SettingsEvent()
@@ -85,14 +80,18 @@ class SettingsViewModel(
                             title = "显示设置",
                         )
                     )
+                ), SettingSection(
+                    title = "调试", items = listOf(
+                        MenuItem.Route(
+                            icon = Icons.Default.BugReport,
+                            route = Screen.Log,
+                            title = "日志",
+                        )
+                    )
                 )
             )
         )
     )
-
-    private val _uiState = MutableStateFlow(UiState())
-    val uiState = _uiState.asStateFlow()
-    // 这里的 uiState 交给 SettingsScreen 去监听，拿个 LaunchedEffect 去弹框吧
 
     val settings: StateFlow<UserSettings> = repository.userSettings
         .stateIn(
@@ -144,10 +143,10 @@ class SettingsViewModel(
 
     fun deviceRegister() {
         viewModelScope.launch {
-            Log.d(label, "deviceRegister: start")
+            Logger.d(label, "deviceRegister: start")
             try {
                 val currentSettings = repository.getSettingsSnapshot()
-                Log.d(label, "devicesQuery: $currentSettings")
+//                Logger.d(label, "devicesQuery: $currentSettings")
                 val apiService = NetClient.getService(
                     currentSettings.host,
                     currentSettings.port,
@@ -167,10 +166,10 @@ class SettingsViewModel(
     fun devicesQuery() {
         viewModelScope.launch {
             _isLoadingDeviceResult.value = true
-            Log.d(label, "devicesQuery: start")
+            Logger.d(label, "devicesQuery: start")
             try {
                 val currentSettings = repository.getSettingsSnapshot()
-                Log.d(label, "devicesQuery: $currentSettings")
+                Logger.d(label, "devicesQuery: $currentSettings")
                 val apiService = NetClient.getService(
                     currentSettings.host,
                     currentSettings.port,
@@ -181,7 +180,7 @@ class SettingsViewModel(
                     currentSettings.authKey,
                     currentSettings.uuidString
                 )
-                Log.d(label, "devicesQuery: $result")
+                Logger.d(label, "devicesQuery: $result")
                 _deviceResult.value = result
             } catch (e: Exception) {
                 handleFailure(e.localizedMessage ?: "Unknown error")
@@ -203,17 +202,17 @@ class SettingsViewModel(
                     currentSettings.proxy
                 )
 
-                Log.d(label, "执行解绑...")
+                Logger.d(label, "执行解绑...")
                 val unbindResult =
                     apiService.deviceUnbind(
                         currentSettings.authKey,
                         deviceId,
                     )
-                Log.d(label, "Unbind result: $unbindResult")
+                Logger.d(label, "Unbind result: $unbindResult")
                 _deviceUnbindNetworkResult.value = unbindResult
 
                 if (unbindResult is NetworkResult.Success<*>) {
-                    Log.d(label, "解绑成功，开始刷新列表...")
+                    Logger.d(label, "解绑成功，开始刷新列表...")
                     val result = apiService.devicesQuery(
                         currentSettings.authKey,
                         currentSettings.uuidString
@@ -235,7 +234,7 @@ class SettingsViewModel(
     }
 
     private suspend fun handleFailure(errorMsg: String) {
-        Log.d(label, "handleFailure: $errorMsg")
+        Logger.d(label, "handleFailure: $errorMsg")
         _eventChannel.send(SettingsEvent.ShowToast(errorMsg))
     }
 

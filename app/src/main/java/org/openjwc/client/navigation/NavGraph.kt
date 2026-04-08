@@ -34,6 +34,7 @@ import androidx.navigation.toRoute
 import kotlinx.coroutines.launch
 import kotlinx.serialization.json.Json
 import org.openjwc.client.R
+import org.openjwc.client.log.Logger
 import org.openjwc.client.net.models.FetchedNotice
 import org.openjwc.client.net.models.GitHubRelease
 import org.openjwc.client.ui.main.MainScreen
@@ -44,6 +45,7 @@ import org.openjwc.client.ui.me.settings.SettingsScreen
 import org.openjwc.client.ui.me.settings.connection.AuthScreen
 import org.openjwc.client.ui.me.settings.connection.HostScreen
 import org.openjwc.client.ui.me.settings.general.ThemeScreen
+import org.openjwc.client.ui.me.settings.log.LogScreen
 import org.openjwc.client.ui.me.settings.news.NewsDisplaySettingsScreen
 import org.openjwc.client.ui.news.NewsDetailScreen
 import org.openjwc.client.ui.news.upload.UploadNewsScreen
@@ -332,6 +334,16 @@ fun NavGraph(
                         navController.popBackStack()
                     },
                     onBack = { if (navController.previousBackStackEntry != null) navController.popBackStack() }
+                )
+            }
+
+            composable<Screen.Log> {
+                LogScreen(
+                    logs = Logger.logHistory,
+                    onBack = {
+                        if (navController.previousBackStackEntry != null)
+                            navController.popBackStack()
+                    }
                 )
             }
         }

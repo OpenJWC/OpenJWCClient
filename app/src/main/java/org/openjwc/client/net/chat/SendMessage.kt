@@ -1,12 +1,12 @@
 package org.openjwc.client.net.chat
 
-import android.util.Log
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.serialization.json.Json
 import okio.ByteString.Companion.encodeUtf8
+import org.openjwc.client.log.Logger
 import org.openjwc.client.net.models.ChatRequestBody
 import org.openjwc.client.net.models.NetService
 import org.openjwc.client.net.models.ChatErrorResponse
@@ -21,19 +21,19 @@ fun NetService.sendMessageStream(
 ): Flow<ChatNetworkResult> = flow {
     try {
         val response = postChatQueryStream("Bearer $auth", deviceId, chatRequestBody)
-        Log.d(LABEL, auth)
-        Log.d(LABEL, "Response: $response")
+        Logger.d(LABEL, auth)
+        Logger.d(LABEL, "Response: $response")
         if (!response.isSuccessful) {
-            Log.e(LABEL, "Failure: ${response.code()} ${response.message()}")
+            Logger.e(LABEL, "Failure: ${response.code()} ${response.message()}")
             emit(ChatNetworkResult.Failure(response.code(), response.message()))
             return@flow
         }
         if (response.code() == 422) {
-            Log.e(LABEL, "422: $response")
+            Logger.e(LABEL, "422: $response")
             val errorBody = response.errorBody()?.string()
 
             if (errorBody.isNullOrBlank()) {
-                Log.e(LABEL, "422: Unknown error")
+                Logger.e(LABEL, "422: Unknown error")
                 emit(ChatNetworkResult.Failure(422, "Unknown error"))
                 return@flow
             }
@@ -43,7 +43,7 @@ fun NetService.sendMessageStream(
                 emit(ChatNetworkResult.ValidationError(errorObj))
                 return@flow
             } catch (e: Exception) {
-                Log.e(LABEL, "Parsing 422 message failure: ${e.message}")
+                Logger.e(LABEL, "Parsing 422 message failure: ${e.message}")
                 emit(ChatNetworkResult.Failure(422, "Parsing 422 message failure"))
                 return@flow
             }
@@ -78,7 +78,7 @@ fun NetService.sendMessageStream(
                     buffer.skip(separator.length.toLong() - prefix.length.toLong())
                 }
 
-                Log.d(LABEL, "Chunk: [${chunk.replace("\n","\\n")}]")
+                Logger.d(LABEL, "Chunk: [${chunk.replace("\n","\\n")}]")
 
                 if (chunk.contains("[DONE]")) {
                     return@flow

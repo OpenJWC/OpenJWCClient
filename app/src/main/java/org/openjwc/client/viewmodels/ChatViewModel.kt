@@ -2,7 +2,6 @@ package org.openjwc.client.viewmodels
 
 import android.content.ClipData
 import android.content.Context
-import android.util.Log
 import android.widget.Toast
 import androidx.compose.ui.platform.ClipEntry
 import androidx.compose.ui.platform.Clipboard
@@ -22,6 +21,7 @@ import org.openjwc.client.data.models.ChatMessage
 import org.openjwc.client.data.models.ChatMetadata
 import org.openjwc.client.data.repository.ChatRepository
 import org.openjwc.client.data.repository.SettingsRepository
+import org.openjwc.client.log.Logger
 import org.openjwc.client.net.models.FetchedNotice
 
 sealed class SendMessageState {
@@ -38,7 +38,7 @@ class ChatViewModel(
     private val settingsRepository: SettingsRepository,
     private val chatRepository: ChatRepository
 ) : ViewModel() {
-
+    private val label = "ChatViewModel"
     var currentSessionMetadata = MutableStateFlow<ChatMetadata?>(null)
         private set
 
@@ -60,7 +60,7 @@ class ChatViewModel(
 
     fun addAttachment(attachment: FetchedNotice) {
         if (attachment in attachments.value) return
-        Log.d("ChatViewModel", "addAttachment: $attachment")
+        Logger.d(label, "addAttachment: $attachment")
         attachments.value = attachments.value + attachment
     }
 
@@ -118,10 +118,10 @@ class ChatViewModel(
                     settingsRepository.getSettingsSnapshot()
                 )
             } catch (e: Exception) {
-                Log.e("ChatViewModel", "sendMessage Error", e)
+                Logger.e(label, "sendMessage Error", e)
                 eventChannel.send(ChatEvent.ShowToast(e.localizedMessage ?: "Unknown Error"))
             } finally {
-                Log.d("ChatViewModel", "Setting state to Idle")
+                Logger.d(label, "Setting state to Idle")
                 sendMessageState.value = SendMessageState.Idle
             }
         }

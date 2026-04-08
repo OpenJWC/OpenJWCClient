@@ -19,6 +19,7 @@ import org.openjwc.client.data.settings.MenuItem
 import org.openjwc.client.data.settings.SettingSection
 import org.openjwc.client.navigation.Screen
 import org.openjwc.client.net.models.Hitokoto
+import java.time.LocalDate
 
 class MeViewModel(
     private val repository: SettingsRepository
@@ -71,11 +72,17 @@ class MeViewModel(
         started = SharingStarted.Eagerly,
         initialValue = defaultHitokoto
     )
-    fun refreshHitokoto() {
+
+    fun refreshHitokotoLazily() {
         viewModelScope.launch {
-            repository.tryRefreshHitokoto()
+            if (repository.getSettingsSnapshot().hitokotoRefreshedDate != LocalDate.now()) {
+                repository.tryRefreshHitokoto()
+            }
         }
     }
+
+    suspend fun refreshHitokoto() =
+        repository.tryRefreshHitokoto()
 }
 
 

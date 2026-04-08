@@ -1,5 +1,6 @@
 package org.openjwc.client.net.news
 
+import org.openjwc.client.log.Logger
 import org.openjwc.client.net.models.FetchLabelsResponseData
 import org.openjwc.client.net.models.FetchNewsResponseData
 import org.openjwc.client.net.models.NetService
@@ -14,7 +15,7 @@ suspend fun NetService.fetchNews(
     label: String,
     page: Int,
     size: Int
-): NetworkResult<SuccessResponse<FetchNewsResponseData>> = fetch { getNotices("Bearer $auth", deviceId, label, page, size) }
+): NetworkResult<SuccessResponse<FetchNewsResponseData>> = fetch(level = Logger.Level.VERBOSE) { getNotices("Bearer $auth", deviceId, label, page, size) }
 
 suspend fun NetService.fetchLabels(
     auth: String,

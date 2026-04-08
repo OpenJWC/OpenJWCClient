@@ -6,7 +6,10 @@ import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.Crossfade
+import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.expandVertically
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
 import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -171,8 +174,8 @@ fun ThemeScreen(
 
                     AnimatedVisibility(
                         visible = selectedColorType is ColorType.Custom,
-                        enter = expandVertically(),
-                        exit = shrinkVertically()
+                        enter = fadeIn() + expandVertically(),
+                        exit = fadeOut() + shrinkVertically()
                     ) {
                         Column {
                             Text(
@@ -209,7 +212,7 @@ fun ThemeScreen(
                 shape = MaterialTheme.shapes.extraLarge,
                 modifier = Modifier.fillMaxWidth()
             ) {
-                Column(modifier = Modifier.padding(vertical = 8.dp)) {
+                Column(modifier = Modifier.padding(vertical = 8.dp).animateContentSize()) {
                     Text(
                         "界面装饰",
                         style = MaterialTheme.typography.labelLarge,
@@ -305,119 +308,6 @@ fun ThemeScreen(
         }
     }
 }
-
-/*
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-fun ThemeStyleSelector(
-    selectedStyle: DarkThemeStyle,
-    onStyleSelected: (DarkThemeStyle) -> Unit
-) {
-    val options = listOf(
-        Triple(DarkThemeStyle.Light, "浅色", Icons.Outlined.LightMode),
-        Triple(DarkThemeStyle.Dark, "深色", Icons.Outlined.DarkMode),
-        Triple(DarkThemeStyle.Auto, "跟随系统", Icons.Outlined.Contrast)
-    )
-    SingleChoiceSegmentedButtonRow(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 8.dp)
-    ) {
-        options.forEachIndexed { index, (style, label, icon) ->
-            SegmentedButton(
-                shape = SegmentedButtonDefaults.itemShape(
-                    index = index,
-                    count = options.size
-                ),
-                onClick = { onStyleSelected(style) },
-                selected = selectedStyle == style,
-                icon = {
-                    Icon(
-                        imageVector = icon,
-                        contentDescription = null,
-                        modifier = Modifier.size(SegmentedButtonDefaults.IconSize)
-                    )
-                },
-                label = {
-                    Text(
-                        text = label,
-                        style = MaterialTheme.typography.labelLarge
-                    )
-                }
-            )
-        }
-    }
-}
-*/
-
-@Composable
-fun ThemeStyleSelector(
-    selectedStyle: DarkThemeStyle,
-    onStyleSelected: (DarkThemeStyle) -> Unit
-) {
-    // 容器使用 Surface Color，提升层级感
-    Surface(
-        tonalElevation = 2.dp,
-        shape = RoundedCornerShape(24.dp), // MD3 标志性的大圆角
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(16.dp)
-    ) {
-        Column(
-            modifier = Modifier.padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp)
-        ) {
-            Text(
-                text = "外观模式",
-                style = MaterialTheme.typography.titleMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier.padding(start = 8.dp)
-            )
-
-            SingleChoiceSegmentedButtonRow(
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                val options = listOf(
-                    DarkThemeStyle.Light to "浅色" to Icons.Default.LightMode,
-                    DarkThemeStyle.Dark to "深色" to Icons.Default.DarkMode,
-                    DarkThemeStyle.Auto to "系统" to Icons.Default.AutoMode
-                )
-
-                options.forEachIndexed { index, (pair, icon) ->
-                    val (style, label) = pair
-                    val selected = selectedStyle == style
-
-                    SegmentedButton(
-                        shape = SegmentedButtonDefaults.itemShape(
-                            index = index,
-                            count = options.size
-                        ),
-                        onClick = { onStyleSelected(style) },
-                        selected = selected,
-                        label = { Text(label) },
-                        icon = {
-                            // 使用动画切换图标
-                            Crossfade(targetState = selected) { isSelected ->
-                                Icon(
-                                    imageVector = if (isSelected) Icons.Default.Check else icon,
-                                    contentDescription = null,
-                                    modifier = Modifier.size(18.dp)
-                                )
-                            }
-                        },
-                        // 自定义颜色以符合 MD3e 的高对比度需求
-                        colors = SegmentedButtonDefaults.colors(
-                            activeContainerColor = MaterialTheme.colorScheme.primaryContainer,
-                            activeContentColor = MaterialTheme.colorScheme.onPrimaryContainer,
-                            inactiveContainerColor = MaterialTheme.colorScheme.surface
-                        )
-                    )
-                }
-            }
-        }
-    }
-}
-
 @Composable
 private fun ColorItem(
     color: Color,

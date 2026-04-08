@@ -1,6 +1,5 @@
 package org.openjwc.client.viewmodels
 
-import android.util.Log
 import androidx.compose.runtime.mutableStateMapOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
@@ -14,15 +13,16 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import org.openjwc.client.data.repository.SettingsRepository
 import org.openjwc.client.data.settings.UserSettings
-import org.openjwc.client.net.models.UploadedNotice
-import org.openjwc.client.net.models.NetClient
+import org.openjwc.client.log.Logger
 import org.openjwc.client.net.models.FetchedNotice
+import org.openjwc.client.net.models.NetClient
 import org.openjwc.client.net.models.NetworkResult
 import org.openjwc.client.net.models.ReviewedNoticesData
+import org.openjwc.client.net.models.UploadedNotice
 import org.openjwc.client.net.news.fetchLabels
 import org.openjwc.client.net.news.fetchNews
-import org.openjwc.client.net.news.uploadNews
 import org.openjwc.client.net.news.fetchReviewedNews
+import org.openjwc.client.net.news.uploadNews
 
 class NewsViewModel(
     private val repository: SettingsRepository
@@ -92,7 +92,7 @@ class NewsViewModel(
                     }
                 }
             } catch (e: Exception) {
-                Log.e(tag, "loadLabels Error", e)
+                Logger.e(tag, "loadLabels Error", e)
                 labelError.value = e.localizedMessage ?: "未知错误"
             } finally {
                 isRefreshing.value = false
@@ -132,7 +132,7 @@ class NewsViewModel(
                     is NetworkResult.Success -> {
                         val newData = result.response.data.fetchedNotices
                         for (notice in newData) {
-                            Log.d(tag, "notice: $notice")
+                            Logger.v(tag, "notice: $notice")
                         }
                         _isEndMap[label] = newData.size < size
 
@@ -155,7 +155,7 @@ class NewsViewModel(
                     }
                 }
             } catch (e: Exception) {
-                Log.e(tag, "executeLoad Error", e)
+                Logger.e(tag, "executeLoad Error", e)
                 _errorMap[label] = e.localizedMessage ?: "未知错误"
             } finally {
                 isLoading.value = false
@@ -193,7 +193,7 @@ class NewsViewModel(
                 }
             }
         } catch (e: Exception) {
-            Log.e(tag, "uploadNews Error", e)
+            Logger.e(tag, "uploadNews Error", e)
             uploadError.value = e.localizedMessage ?: "未知错误"
             false
         }
@@ -228,7 +228,7 @@ class NewsViewModel(
                     }
                 }
             } catch (e: Exception) {
-                Log.e(tag, "fetchReviewedNotices Error", e)
+                Logger.e(tag, "fetchReviewedNotices Error", e)
                 reviewedNoticesError.value = e.localizedMessage
             }
         }

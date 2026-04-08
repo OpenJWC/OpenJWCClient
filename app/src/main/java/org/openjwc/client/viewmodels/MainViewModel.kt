@@ -1,6 +1,5 @@
 package org.openjwc.client.viewmodels
 
-import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
@@ -14,6 +13,7 @@ import kotlinx.coroutines.launch
 import org.openjwc.client.BuildConfig
 import org.openjwc.client.data.repository.SettingsRepository
 import org.openjwc.client.data.settings.UserSettings
+import org.openjwc.client.log.Logger
 import org.openjwc.client.net.update.getLatestRelease
 import org.openjwc.client.net.models.CheckUpdateClient
 import org.openjwc.client.net.models.GitHubRelease
@@ -45,7 +45,7 @@ class MainViewModel(
     val currentTab = _currentTab.asStateFlow()
     fun updateTab(tab: MainTab) {
         _currentTab.value = tab
-        Log.d(label, "Update tab to $tab")
+        Logger.d(label, "Update tab to $tab")
 
     }
 
@@ -74,21 +74,21 @@ class MainViewModel(
 
 
     fun updateThemeColor(color: ColorType) {
-        Log.d(label, "Update theme color to $color")
+        Logger.d(label, "Update theme color to $color")
         viewModelScope.launch {
             repository.updateThemeColor(color)
         }
     }
 
     fun updateDarkThemeStyle(style: DarkThemeStyle) {
-        Log.d(label, "Update dark theme style to $style")
+        Logger.d(label, "Update dark theme style to $style")
         viewModelScope.launch {
             repository.updateThemeStyle(style)
         }
     }
 
     fun agreePolicy() {
-        Log.d(label, "Agree policy")
+        Logger.d(label, "Agree policy")
         viewModelScope.launch {
             repository.agreePolicy()
         }
@@ -104,26 +104,28 @@ class MainViewModel(
                 val regex = Regex("""Version Code:\s*(\d+)""")
                 val matchResult = regex.find(input)
                 val versionCode = matchResult?.groupValues?.get(1)?.toIntOrNull() ?: 0
-                Log.d(label, "Current version code: ${BuildConfig.VERSION_CODE}")
-                Log.d(label, "Latest version code: $versionCode")
+                Logger.d(label, "Current version code: ${BuildConfig.VERSION_CODE}")
+                Logger.d(label, "Latest version code: $versionCode")
                 if (BuildConfig.VERSION_CODE < versionCode) {
-                    Log.d(label, "Update available: ${result.response.tagName}")
+                    Logger.d(label, "Update available: ${result.response.tagName}")
                     updateRelease.value = result.response
+                    showUpdateDialog()
                     return result.response
                 } else {
-                    Log.d(label, "No update available")
+                    Logger.d(label, "No update available")
+                    dismissUpdateDialog()
                     return null
                 }
             }
 
             is NetworkResult.Failure -> {
-                Log.d(label, "Check update failed: $result")
+                Logger.d(label, "Check update failed: $result")
                 dismissUpdateDialog()
                 return null
             }
 
             is NetworkResult.Error -> {
-                Log.d(label, "Check update failed: $result")
+                Logger.d(label, "Check update failed: $result")
                 dismissUpdateDialog()
                 return null
             }
