@@ -109,7 +109,6 @@ class MainViewModel(
                 if (BuildConfig.VERSION_CODE < versionCode) {
                     Logger.d(label, "Update available: ${result.response.tagName}")
                     updateRelease.value = result.response
-                    showUpdateDialog()
                     return result.response
                 } else {
                     Logger.d(label, "No update available")

@@ -72,7 +72,9 @@ fun MainScreen(
     val updateRelease = mainViewModel.updateRelease.collectAsState().value
     LaunchedEffect(Unit) {
         if (showUpdateDialog && updateRelease == null) {
-            mainViewModel.checkUpdate()
+            if(mainViewModel.checkUpdate() != null) {
+                mainViewModel.showUpdateDialog()
+            }
         }
     }
     Box(
