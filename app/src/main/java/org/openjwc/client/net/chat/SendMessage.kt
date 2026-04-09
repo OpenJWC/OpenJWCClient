@@ -78,7 +78,7 @@ fun NetService.sendMessageStream(
                     buffer.skip(separator.length.toLong() - prefix.length.toLong())
                 }
 
-                Logger.d(LABEL, "Chunk: [${chunk.replace("\n","\\n")}]")
+                Logger.v(LABEL, "Chunk: [${chunk.replace("\n","\\n")}]")
 
                 if (chunk.contains("[DONE]")) {
                     return@flow
