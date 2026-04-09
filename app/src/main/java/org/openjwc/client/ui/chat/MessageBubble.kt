@@ -96,7 +96,6 @@ fun MessageBubble(
                             .padding(horizontal = 16.dp, vertical = 10.dp)
                             .widthIn(max = maxWidth)
                     ) {
-                        // 1. 插入附件标题列表
                         if (message.attachmentTitles.isNotEmpty()) {
                             androidx.compose.foundation.layout.FlowRow(
                                 modifier = Modifier.padding(bottom = 8.dp),
@@ -154,14 +153,6 @@ fun MessageBubble(
                         },
                         leadingIcon = { Icon(Icons.Default.ContentCopy, contentDescription = null) }
                     )
-/*                    DropdownMenuItem(
-                        text = { Text("转发") },
-                        onClick = {
-                            onShare(message)
-                            showMenu = false
-                        },
-                        leadingIcon = { Icon(Icons.Filled.Share, contentDescription = null) }
-                    )*/
                     DropdownMenuItem(
                         text = {
                             Text(
@@ -184,7 +175,6 @@ fun MessageBubble(
                 }
             }
 
-            // 2. 如果是 AI 正在生成，在气泡右侧显示加载动画
             if (!isUser && isLoading) {
                 LoadingIndicator(
                     modifier = Modifier

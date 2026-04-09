@@ -19,6 +19,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import org.openjwc.client.data.db.AppDatabase
 import org.openjwc.client.data.repository.ChatRepository
+import org.openjwc.client.data.repository.NewsRepository
 import org.openjwc.client.data.repository.SettingsRepository
 import org.openjwc.client.data.settings.SettingsDataSource
 import org.openjwc.client.navigation.NavGraph
@@ -40,7 +41,8 @@ class MainActivity : ComponentActivity() {
 
     private val database by lazy { AppDatabase.getDatabase(applicationContext) }
     private val settingsRepository by lazy { SettingsRepository(SettingsDataSource(applicationContext), applicationContext) }
-    private val chatRepository by lazy { ChatRepository(database.chatDao()) }
+    private val chatRepository by lazy { ChatRepository(database.chatDao()) } // 里面只有一个sendMessage去联网，为了方便就不让他拥有settingsRepository了
+    private val newsRepository by lazy { NewsRepository(settingsRepository) } // 这里面联网的东西太多，传参有点麻烦
 
     private val mainViewModel: MainViewModel by viewModels { MainViewModelFactory(settingsRepository) }
     private val settingsViewModel: SettingsViewModel by viewModels {
@@ -54,7 +56,7 @@ class MainActivity : ComponentActivity() {
             chatRepository
         )
     }
-    private val newsViewModel: NewsViewModel by viewModels { NewsViewModelFactory(settingsRepository) }
+    private val newsViewModel: NewsViewModel by viewModels { NewsViewModelFactory(settingsRepository, newsRepository) }
     private val meViewModel: MeViewModel by viewModels { MeViewModelFactory(settingsRepository) }
 
     @RequiresApi(Build.VERSION_CODES.TIRAMISU)

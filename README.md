@@ -23,39 +23,28 @@
 ```
              【 表现层 (UI Layer - Jetpack Compose) 】
            ┌──────────────────────────────────────────┐
-           │  Activities & Screens (Composable)       │ <──────┐
-           │  (MainActivity, ChatScreen, NewsScreen)  │        │
-           └────────────────────┬─────────────────────┘        │
-                                │ 用户事件 (Events)             │ 观察状态 (State/Flow)
-                                ▼                              │
-            【 状态层 (ViewModel Layer - AAC) 】                 │
-           ┌──────────────────────────────────────────┐        │
-           │  ViewModels (ChatVM, NewsVM, MeVM...)    │────────┘
-           │  - 维护 UI 状态 (StateFlow/Compose State)  │
+           │  Activities & Screens (Composables)      │
+           └────────────────────┬─────────────────────┘
+                                │ (1) 用户操作 (Events)
+                                ▼
+            【 状态层 (ViewModel Layer - AAC) 】
+           ┌──────────────────────────────────────────┐
+           │  ViewModels (NewsVM, SettingsVM, etc.)   │ <──┐
+           └────────────────────┬─────────────────────┘    │
+                                │ (2) 请求数据 (Calls)      │ (3) 响应数据
+                                ▼                          │     (Flows/States)
+            【 领域/数据层 (Repository Layer) 】            │
+           ┌──────────────────────────────────────────┐    │
+           │  Repositories (News, Settings, Chat)     │ ───┘
            └──────────┬───────────────────────┬───────┘
                       │                       │
-      (已解耦)         │ 调用业务逻辑            │ 直接访问 (NewsViewModel 待重构!)
-      ┌───────────────▼──────────────┐        │
-      │ 【 领域/数据层 (Repository) 】 │        │
-      │ - ChatRepository    (完成)   │        │
-      │ - SettingsRepository  (完成） │        │
-      │ - NewsRepository    (计划中)  │        │
-      └───────────────┬──────────────┘        │
-                      │                       │
-          ┌───────────┴──────────┬────────────┼──────────┐
-          ▼                      ▼            ▼          ▼
-    【 本地持久化 (Local) 】       【 网络通讯 (Remote/Net) 】
-  ┌───────────────────────┐    ┌───────────────────────────┐
-  │  ● Room DB (DAO)      │    │  ● NetClient (OkHttp3)    │
-  │  ● DataStore (Settings)│    │  ● API Actions (Retrofit) │
-  └───────────────────────┘    └─────────────┬─────────────┘
-                              │              │
-                              ▼              ▼
-                        【 实体模型层 (Common Models) 】
-                       ┌───────────────────────────────┐
-                       │  - Entity (Room 数据实体)      │
-                       │  - DTO (网络传输/JSON 模型)     │
-                       └───────────────────────────────┘
+           (4) 读取/写入│                 (4) 网络请求
+                      ▼                       ▼
+    【 本地数据源 (Local) 】         【 远程数据源 (Remote) 】
+  ┌────────────────────────┐      ┌─────────────────────────┐
+  │ ● DataStore (Settings) │      │ ● NetClient (OkHttp)    │
+  │ ● Room DB (Cache)      │      │ ● API Service (Retrofit)│
+  └────────────────────────┘      └─────────────────────────┘
 ```
 ## 用户协议
 

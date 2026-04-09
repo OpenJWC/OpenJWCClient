@@ -47,7 +47,6 @@ class SettingsRepository(
     suspend fun tryRefreshHitokoto(): NetworkResult<SuccessResponse<Hitokoto>> {
         try {
             val settings = getSettingsSnapshot()
-            Logger.i(label, "Refresh hitokoto: ${LocalDate.now()}")
             val apiService =
                 NetClient.getService(
                     settings.host,
@@ -61,10 +60,12 @@ class SettingsRepository(
                 settings.uuidString,
             )
             if (result is NetworkResult.Success) {
+                Logger.i(label, "Refresh hitokoto: ${LocalDate.now()}")
                 dataSource.saveHitokoto(result.response.data)
             }
             return result
-        } catch (_: Exception) {
+        } catch (e: Exception) {
+            Logger.e(label, "Failed to refresh hitokoto: ${e.localizedMessage}")
             return NetworkResult.Error("Unknown Error")
         }
     }

@@ -21,8 +21,8 @@ android {
         applicationId = "org.openjwc.client"
         minSdk = 26
         targetSdk = 36
-        versionCode = 8
-        versionName = "0.2.4"
+        versionCode = 9
+        versionName = "0.2.5"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
@@ -42,7 +42,6 @@ android {
     }
 
     compileOptions {
-        // 直接引用 toml 中的 java 版本，确保全局统一
         val javaVersion = JavaVersion.toVersion(libs.versions.java.get())
         sourceCompatibility = javaVersion
         targetCompatibility = javaVersion
@@ -56,10 +55,7 @@ android {
 
 kotlin {
     compilerOptions {
-        // 自动根据 toml 中的 java 版本设置 jvmTarget
         jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.fromTarget(libs.versions.java.get()))
-
-        // 开启实验性 API，支持 WavyProgressIndicator
         freeCompilerArgs.add("-opt-in=androidx.compose.material3.ExperimentalMaterial3ExpressiveApi")
     }
 }
@@ -102,7 +98,6 @@ dependencies {
     implementation(libs.androidx.room.ktx)
     implementation(libs.androidx.datastore)
 
-    // 测试相关
     testImplementation(libs.junit)
     testImplementation(kotlin("test"))
     androidTestImplementation(libs.androidx.junit)
