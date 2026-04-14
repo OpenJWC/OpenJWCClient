@@ -74,69 +74,6 @@ class ChatRepository(
         aiMsgId?.let { deleteMessageById(it) }
     }
 
-    /*suspend fun sendMessage(
-        sessionId: Long,
-        messageText: String,
-        attachments: List<FetchedNotice>,
-        currentSettings: UserSettings,
-    ): ChatNetworkResult {
-        var aiMsgId: Long? = null
-        val authSession = authDataSource.authSession.first()
-        val messages = getMessagesBySessionId(sessionId).first()
-        val attachmentIds = attachments.map { it.id }
-        val attachmentTitles = attachments.map { it.title }
-        insertMessage(
-            ChatMessage(
-                ownerSessionId = sessionId,
-                text = messageText,
-                role = Role.USER,
-                attachmentTitles = attachmentTitles
-            )
-        )
-        if (!authSession.isLoggedIn) return ChatNetworkResult.Failure(401, "Not Logged in")
-        val historyList = messages
-            .filter { it.text.isNotBlank() }
-            .map {
-                ChatHistory(
-                    role = if (it.role == Role.USER) "user" else "assistant",
-                    content = it.text
-                )
-            }
-        val apiService = NetClient.getService(
-            currentSettings.host,
-            currentSettings.port,
-            currentSettings.useHttp,
-            currentSettings.proxy
-        )
-        aiMsgId = insertMessage(
-            ChatMessage(
-                ownerSessionId = sessionId,
-                text = "",
-                role = Role.ASSISTANT
-            )
-        )
-        var resultToReturn: ChatNetworkResult = ChatNetworkResult.Error("Not logged in")
-        apiService.sendMessageStream(
-            authSession.token ?: return ChatNetworkResult.Failure(401, "No token"),
-            authSession.uuid,
-            ChatRequestBody(attachmentIds, messageText, true, historyList)
-        ).collect { result ->
-            resultToReturn = result
-            if (result is ChatNetworkResult.Failure && result.code == 401) authDataSource.clearSession()
-            when (result) {
-                is ChatNetworkResult.Success -> {
-                    updateMessageText(aiMsgId, result.content)
-                }
-
-                else ->  {
-                    handleFailure(aiMsgId)
-                    return@collect
-                }
-            }
-        }
-        return resultToReturn
-    }*/
-
     fun sendMessage(
         sessionId: Long,
         messageText: String,

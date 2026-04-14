@@ -19,7 +19,6 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.pointer.pointerInput
@@ -33,7 +32,6 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.toRoute
 import kotlinx.coroutines.flow.receiveAsFlow
-import kotlinx.coroutines.launch
 import kotlinx.serialization.json.Json
 import org.openjwc.client.R
 import org.openjwc.client.log.Logger
@@ -59,13 +57,13 @@ import org.openjwc.client.ui.policy.LicenseScreen
 import org.openjwc.client.ui.policy.PolicyScreen
 import org.openjwc.client.ui.theme.seedColors
 import org.openjwc.client.viewmodels.AuthViewModel
-import org.openjwc.client.viewmodels.UiEvent
 import org.openjwc.client.viewmodels.ChatViewModel
 import org.openjwc.client.viewmodels.MainViewModel
 import org.openjwc.client.viewmodels.MeViewModel
 import org.openjwc.client.viewmodels.NavEvent
 import org.openjwc.client.viewmodels.NewsViewModel
 import org.openjwc.client.viewmodels.SettingsViewModel
+import org.openjwc.client.viewmodels.UiEvent
 import kotlin.reflect.typeOf
 
 val NoticeNavType = object : NavType<FetchedNotice>(isNullableAllowed = false) {
@@ -287,8 +285,6 @@ fun NavGraph(
 
             composable<Screen.UploadNews> {
                 val errorMessage = newsViewModel.uploadError.collectAsState().value
-                val context = LocalContext.current
-                val lifecycleScope = rememberCoroutineScope()
                 UploadNewsScreen(
                     errorMessage = errorMessage,
                     onBack = {
@@ -296,17 +292,7 @@ fun NavGraph(
                             navController.popBackStack()
                         newsViewModel.clearUploadError()
                     },
-                    onUpload = {
-                        lifecycleScope.launch {
-                            val succeeded = newsViewModel.uploadNews(it)
-                            if (succeeded) {
-                                Toast.makeText(context, "上传成功", Toast.LENGTH_SHORT)
-                                    .show()
-                                if (navController.previousBackStackEntry != null)
-                                    navController.popBackStack()
-                            }
-                        }
-                    }
+                    onUpload = newsViewModel::uploadNews
                 )
             }
             composable<Screen.Settings> {

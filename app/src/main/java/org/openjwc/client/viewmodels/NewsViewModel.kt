@@ -13,6 +13,7 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import org.openjwc.client.data.datastore.UserSettings
+import org.openjwc.client.data.repository.AuthRepository
 import org.openjwc.client.data.repository.NewsRepository
 import org.openjwc.client.data.repository.SettingsRepository
 import org.openjwc.client.log.Logger
@@ -23,7 +24,8 @@ import org.openjwc.client.net.models.UploadedNotice
 
 class NewsViewModel(
     repository: SettingsRepository,
-    private val newsRepository: NewsRepository
+    private val newsRepository: NewsRepository,
+    authRepository: AuthRepository,
 ) : ViewModel() {
     private val tag = "NewsViewModel"
 
@@ -58,12 +60,18 @@ class NewsViewModel(
     var reviewedNoticesData = MutableStateFlow<ReviewedNoticesData?>(null)
         private set
 
-    var isLoggedIn = MutableStateFlow(false)
-        private set
+    val isLoggedIn =
+        authRepository.authSession.map { it.isLoggedIn }.distinctUntilChanged().stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5000),
+            initialValue = false
+        )
 
     var navEvent = Channel<NavEvent>(Channel.BUFFERED)
         private set
 
+    var uiEvent = Channel<UiEvent>(Channel.BUFFERED)
+        private set
     var reviewedNoticesError = MutableStateFlow<String?>(null)
     fun getNewsState(label: String): List<FetchedNotice> = _newsCache[label] ?: emptyList()
     fun getError(label: String): String? = _errorMap[label]
@@ -77,13 +85,9 @@ class NewsViewModel(
                     is NetworkResult.Success -> {
                         labels.value = result.response.data.labels
                         labelError.value = null
-                        isLoggedIn.value = true
                     }
                     is NetworkResult.Failure -> {
                         labelError.value = "加载错误(${result.code}): ${result.msg}"
-                        if (result.code == 401) {
-                            isLoggedIn.value = false
-                        }
                     }
                     is NetworkResult.Error -> {
                         labelError.value = result.msg
@@ -120,7 +124,10 @@ class NewsViewModel(
                             _pageMap[label] = page
                         }
                     }
-                    is NetworkResult.Failure -> _errorMap[label] = "加载错误(${result.code}): ${result.msg}"
+
+                    is NetworkResult.Failure -> _errorMap[label] =
+                        "加载错误(${result.code}): ${result.msg}"
+
                     is NetworkResult.Error -> _errorMap[label] = result.msg
                 }
             } catch (e: Exception) {
@@ -133,25 +140,30 @@ class NewsViewModel(
         }
     }
 
-    suspend fun uploadNews(uploadedNotice: UploadedNotice): Boolean {
-        uploadError.value = null
-        return try {
-            val result = newsRepository.uploadNews(uploadedNotice)
-            when (result) {
-                is NetworkResult.Success -> true
-                is NetworkResult.Failure -> {
-                    uploadError.value = "加载错误(${result.code}): ${result.msg}"
-                    false
+    fun uploadNews(uploadedNotice: UploadedNotice) {
+        viewModelScope.launch {
+            uploadError.value = null
+            try {
+                val result = newsRepository.uploadNews(uploadedNotice)
+                when (result) {
+                    is NetworkResult.Success -> {
+                        navEvent.send(NavEvent.ToBack())
+                        uiEvent.send(UiEvent.ShowToast("上传成功"))
+                    }
+
+                    is NetworkResult.Failure -> {
+                        uploadError.value = "加载错误(${result.code}): ${result.msg}"
+                    }
+
+                    is NetworkResult.Error -> {
+                        uploadError.value = result.msg
+
+                    }
                 }
-                is NetworkResult.Error -> {
-                    uploadError.value = result.msg
-                    false
-                }
+            } catch (e: Exception) {
+                Logger.e(tag, "uploadNews Error", e)
+                uploadError.value = e.localizedMessage ?: "未知错误"
             }
-        } catch (e: Exception) {
-            Logger.e(tag, "uploadNews Error", e)
-            uploadError.value = e.localizedMessage ?: "未知错误"
-            false
         }
     }
 
@@ -164,7 +176,10 @@ class NewsViewModel(
                         reviewedNoticesData.value = result.response.data
                         reviewedNoticesError.value = null
                     }
-                    is NetworkResult.Failure -> reviewedNoticesError.value = "加载错误(${result.code}): ${result.msg}"
+
+                    is NetworkResult.Failure -> reviewedNoticesError.value =
+                        "加载错误(${result.code}): ${result.msg}"
+
                     is NetworkResult.Error -> reviewedNoticesError.value = result.msg
                 }
             } catch (e: Exception) {
@@ -184,6 +199,7 @@ class NewsViewModel(
         val nextPage = (_pageMap[label] ?: 1) + 1
         executeLoadNews(label, page = nextPage, size = 20, isRefresh = false)
     }
+
     fun clearUploadError() {
         uploadError.value = null
     }
@@ -193,12 +209,13 @@ class NewsViewModel(
 
 class NewsViewModelFactory(
     private val settingsRepository: SettingsRepository,
-    private val newsRepository: NewsRepository
+    private val newsRepository: NewsRepository,
+    private val authRepository: AuthRepository
 ) : ViewModelProvider.Factory {
     override fun <T : ViewModel> create(modelClass: Class<T>): T {
         if (modelClass.isAssignableFrom(NewsViewModel::class.java)) {
             @Suppress("UNCHECKED_CAST")
-            return NewsViewModel(settingsRepository, newsRepository) as T
+            return NewsViewModel(settingsRepository, newsRepository, authRepository) as T
         }
         throw IllegalArgumentException("Unknown ViewModel class")
     }

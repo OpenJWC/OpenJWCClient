@@ -163,12 +163,10 @@ class ChatViewModel(
                     currentAttachments,
                     settingsRepository.getSettingsSnapshot()
                 ).collect { status ->
-                    // 1. 处理导航逻辑 (401 跳转)
                     if (status is ChatStreamStatus.Failure && status.code == 401) {
                         navEvent.send(NavEvent.ToLogin())
                     }
 
-                    // 2. 映射 UI 状态
                     updateSessionState(sessionId, when(status) {
                         is ChatStreamStatus.Loading -> ChatSessionState.Loading
                         is ChatStreamStatus.ToolCalling -> ChatSessionState.ToolCalling
