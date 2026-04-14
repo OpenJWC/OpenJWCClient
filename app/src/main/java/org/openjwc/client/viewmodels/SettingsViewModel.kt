@@ -20,20 +20,17 @@ import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import org.openjwc.client.data.datastore.UserSettings
+import org.openjwc.client.data.repository.AuthRepository
 import org.openjwc.client.data.repository.SettingsRepository
 import org.openjwc.client.data.settings.Menu
 import org.openjwc.client.data.settings.MenuItem
 import org.openjwc.client.data.settings.SettingSection
 import org.openjwc.client.data.settings.ToggleID
-import org.openjwc.client.data.settings.UserSettings
 import org.openjwc.client.log.Logger
 import org.openjwc.client.navigation.Screen
-import org.openjwc.client.net.auth.deviceRegister
-import org.openjwc.client.net.auth.deviceUnbind
-import org.openjwc.client.net.auth.devicesQuery
 import org.openjwc.client.net.models.DevicesQueryResponseData
 import org.openjwc.client.net.models.DevicesUnbindSuccessResponse
-import org.openjwc.client.net.models.NetClient
 import org.openjwc.client.net.models.NetworkResult
 import org.openjwc.client.net.models.Proxy
 import org.openjwc.client.net.models.SuccessResponse
@@ -46,7 +43,8 @@ sealed class SettingsEvent {
 }
 
 class SettingsViewModel(
-    private val repository: SettingsRepository
+    private val settingsRepository: SettingsRepository,
+    private val authRepository: AuthRepository,
 ) : ViewModel() {
     private val menuTemplates = listOf(
         Menu(
@@ -68,8 +66,8 @@ class SettingsViewModel(
                         ),
                         MenuItem.Route(
                             icon = Icons.Default.VpnKey,
-                            route = Screen.Auth,
-                            title = "鉴权设置",
+                            route = Screen.Account,
+                            title = "账户设置",
                         )
                     )
                 ), SettingSection(
@@ -93,7 +91,7 @@ class SettingsViewModel(
         )
     )
 
-    val settings: StateFlow<UserSettings> = repository.userSettings
+    val settings: StateFlow<UserSettings> = settingsRepository.userSettings
         .stateIn(
             scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(5000),
@@ -103,125 +101,68 @@ class SettingsViewModel(
     private val _eventChannel = Channel<SettingsEvent>(Channel.BUFFERED)
     val events = _eventChannel.receiveAsFlow()
 
-
-    // 更新函数直接调用 repository
-    fun updateAuthKey(key: String) = viewModelScope.launch { repository.updateAuthKey(key) }
-    fun updateHost(host: String) = viewModelScope.launch { repository.updateHost(host) }
-    fun updatePort(port: Int) = viewModelScope.launch { repository.updatePort(port) }
+    fun updateHost(host: String) = viewModelScope.launch { settingsRepository.updateHost(host) }
+    fun updatePort(port: Int) = viewModelScope.launch { settingsRepository.updatePort(port) }
     fun updateUseHttp(useHttp: Boolean) =
-        viewModelScope.launch { repository.updateUseHttp(useHttp) }
+        viewModelScope.launch { settingsRepository.updateUseHttp(useHttp) }
 
     fun updateFreshDays(freshDays: Int) =
-        viewModelScope.launch { repository.updateFreshDays(freshDays) }
+        viewModelScope.launch { settingsRepository.updateFreshDays(freshDays) }
 
-    fun updateBackground(uri: Uri) = viewModelScope.launch { repository.updateBackground(uri) }
-    fun deleteBackground() = viewModelScope.launch { repository.deleteBackground() }
-    fun updateBackgroundAlpha(alpha: Float) = viewModelScope.launch { repository.updateBackgroundAlpha(alpha) }
+    fun updateBackground(uri: Uri) =
+        viewModelScope.launch { settingsRepository.updateBackground(uri) }
 
-    fun updateProxy(proxy: Proxy) = viewModelScope.launch { repository.updateProxy(proxy) }
+    fun deleteBackground() = viewModelScope.launch { settingsRepository.deleteBackground() }
+    fun updateBackgroundAlpha(alpha: Float) =
+        viewModelScope.launch { settingsRepository.updateBackgroundAlpha(alpha) }
 
-    private var _deviceResult = MutableStateFlow<NetworkResult<SuccessResponse<DevicesQueryResponseData>>>(
-        NetworkResult.Success(
-            response = SuccessResponse(
-                message = "success",
-                data = DevicesQueryResponseData(
-                    limitedDeviceCount = 3,
-                    deviceIDs = emptyList()
+    fun updateProxy(proxy: Proxy) = viewModelScope.launch { settingsRepository.updateProxy(proxy) }
+
+    private var _deviceResult =
+        MutableStateFlow<NetworkResult<SuccessResponse<DevicesQueryResponseData>>>(
+            NetworkResult.Success(
+                response = SuccessResponse(
+                    message = "success",
+                    data = DevicesQueryResponseData(
+                        limitedDeviceCount = 3,
+                        deviceQueries = emptyList()
+                    )
                 )
             )
         )
-    )
     private var _isLoadingDeviceResult = MutableStateFlow(false)
     val isLoadingDeviceResult = _isLoadingDeviceResult.asStateFlow()
     val deviceResult = _deviceResult.asStateFlow()
 
-    private var _deviceUnbindNetworkResult = MutableStateFlow<NetworkResult<DevicesUnbindSuccessResponse>>(
-        NetworkResult.Success(DevicesUnbindSuccessResponse(""))
-    )
+    private var _deviceUnbindNetworkResult =
+        MutableStateFlow<NetworkResult<DevicesUnbindSuccessResponse>>(
+            NetworkResult.Success(DevicesUnbindSuccessResponse(""))
+        )
 
     val deviceUnbindNetworkResult = _deviceUnbindNetworkResult.asStateFlow()
 
-    fun deviceRegister() {
-        viewModelScope.launch {
-            Logger.d(label, "deviceRegister: start")
-            try {
-                val currentSettings = repository.getSettingsSnapshot()
-//                Logger.d(label, "devicesQuery: $currentSettings")
-                val apiService = NetClient.getService(
-                    currentSettings.host,
-                    currentSettings.port,
-                    currentSettings.useHttp,
-                    currentSettings.proxy
-                )
-                apiService.deviceRegister(
-                    currentSettings.authKey,
-                    currentSettings.uuidString
-                )
-            } catch (e: Exception) {
-                handleFailure(e.localizedMessage ?: "Unknown error")
-            }
-        }
-    }
-
     fun devicesQuery() {
         viewModelScope.launch {
+            Logger.d(label, "devicesQuery start...")
             _isLoadingDeviceResult.value = true
-            Logger.d(label, "devicesQuery: start")
-            try {
-                val currentSettings = repository.getSettingsSnapshot()
-                Logger.d(label, "devicesQuery: $currentSettings")
-                val apiService = NetClient.getService(
-                    currentSettings.host,
-                    currentSettings.port,
-                    currentSettings.useHttp,
-                    currentSettings.proxy
-                )
-                val result = apiService.devicesQuery(
-                    currentSettings.authKey,
-                    currentSettings.uuidString
-                )
-                Logger.d(label, "devicesQuery: $result")
-                _deviceResult.value = result
-            } catch (e: Exception) {
-                handleFailure(e.localizedMessage ?: "Unknown error")
-            } finally {
-                _isLoadingDeviceResult.value = false
-            }
+            val result = authRepository.deviceQuery()
+            _deviceResult.value = result
+            Logger.d(label, "devicesQuery end...")
+            _isLoadingDeviceResult.value = false
         }
     }
 
     fun unbindAndRefresh(deviceId: String) {
         viewModelScope.launch {
             _isLoadingDeviceResult.value = true
-            try {
-                val currentSettings = repository.getSettingsSnapshot()
-                val apiService = NetClient.getService(
-                    currentSettings.host,
-                    currentSettings.port,
-                    currentSettings.useHttp,
-                    currentSettings.proxy
-                )
-
-                Logger.d(label, "执行解绑...")
-                val unbindResult =
-                    apiService.deviceUnbind(
-                        currentSettings.authKey,
-                        deviceId,
-                    )
-                Logger.d(label, "Unbind result: $unbindResult")
-                _deviceUnbindNetworkResult.value = unbindResult
-
-                if (unbindResult is NetworkResult.Success<*>) {
-                    Logger.d(label, "解绑成功，开始刷新列表...")
-                    val result = apiService.devicesQuery(
-                        currentSettings.authKey,
-                        currentSettings.uuidString
-                    )
-                    _deviceResult.value = result
-                }
-            } catch (e: Exception) {
-                handleFailure(e.localizedMessage ?: "操作失败")
-            } finally {
+            Logger.d(label, "执行解绑...")
+            val unbindResult = authRepository.deviceUnbind(deviceId)
+            Logger.d(label, "Unbind result: $unbindResult")
+            _deviceUnbindNetworkResult.value = unbindResult
+            if (unbindResult is NetworkResult.Success<*>) {
+                Logger.d(label, "解绑成功，开始刷新列表...")
+                val result = authRepository.deviceQuery()
+                _deviceResult.value = result
                 _isLoadingDeviceResult.value = false
             }
         }
@@ -231,11 +172,6 @@ class SettingsViewModel(
         _deviceUnbindNetworkResult.value = NetworkResult.Success(
             response = DevicesUnbindSuccessResponse("")
         )
-    }
-
-    private suspend fun handleFailure(errorMsg: String) {
-        Logger.d(label, "handleFailure: $errorMsg")
-        _eventChannel.send(SettingsEvent.ShowToast(errorMsg))
     }
 
     // TODO: 设置里的每一个 Toggle 都得让 ViewModel 来保存状态。
@@ -277,12 +213,13 @@ class SettingsViewModel(
 }
 
 class SettingsViewModelFactory(
-    private val settingsRepository: SettingsRepository
+    private val settingsRepository: SettingsRepository,
+    private val authRepository: AuthRepository
 ) : ViewModelProvider.Factory {
     override fun <T : ViewModel> create(modelClass: Class<T>): T {
         if (modelClass.isAssignableFrom(SettingsViewModel::class.java)) {
             @Suppress("UNCHECKED_CAST")
-            return SettingsViewModel(settingsRepository) as T
+            return SettingsViewModel(settingsRepository, authRepository) as T
         }
         throw IllegalArgumentException("Unknown ViewModel class")
     }

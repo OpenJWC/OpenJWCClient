@@ -2,21 +2,38 @@ package org.openjwc.client.data.repository
 
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.map
 import org.openjwc.client.data.dao.ChatDao
+import org.openjwc.client.data.datastore.AuthDataSource
+import org.openjwc.client.data.datastore.UserSettings
 import org.openjwc.client.data.models.ChatMessage
 import org.openjwc.client.data.models.ChatMetadata
 import org.openjwc.client.data.models.ChatSession
 import org.openjwc.client.data.models.Role
-import org.openjwc.client.data.settings.UserSettings
+import org.openjwc.client.data.repository.ChatStreamStatus.Failure
+import org.openjwc.client.data.repository.ChatStreamStatus.Generating
+import org.openjwc.client.data.repository.ChatStreamStatus.Loading
 import org.openjwc.client.net.chat.sendMessageStream
 import org.openjwc.client.net.models.ChatHistory
 import org.openjwc.client.net.models.ChatNetworkResult
 import org.openjwc.client.net.models.ChatRequestBody
 import org.openjwc.client.net.models.FetchedNotice
 import org.openjwc.client.net.models.NetClient
+import kotlin.coroutines.cancellation.CancellationException
 
-class ChatRepository(private val chatDao: ChatDao) {
+sealed class ChatStreamStatus {
+    data object Loading : ChatStreamStatus()
+    data object ToolCalling : ChatStreamStatus()
+    data class Generating(val content: String) : ChatStreamStatus()
+    data class Finished(val finalContent: String) : ChatStreamStatus()
+    data class Failure(val code: Int, val msg: String) : ChatStreamStatus()
+}
+
+class ChatRepository(
+    private val chatDao: ChatDao,
+    private val authDataSource: AuthDataSource
+) {
     // 返回 session 的 metadata 里面的 id
     suspend fun createChatSession(title: String): Long {
         val metadata = ChatMetadata(title = title)
@@ -49,33 +66,113 @@ class ChatRepository(private val chatDao: ChatDao) {
 
     suspend fun deleteMessageById(messageId: Long) = chatDao.deleteMessageById(messageId)
     suspend fun deleteSession(sessionId: Long) = chatDao.deleteSession(sessionId)
-/*
-    suspend fun deleteAllSessions() = chatDao.deleteAllSessions()
-*/
+    /*
+        suspend fun deleteAllSessions() = chatDao.deleteAllSessions()
+    */
 
     private suspend fun handleFailure(aiMsgId: Long? = null) {
         aiMsgId?.let { deleteMessageById(it) }
     }
 
-    suspend fun sendMessage(
+    /*suspend fun sendMessage(
         sessionId: Long,
         messageText: String,
         attachments: List<FetchedNotice>,
         currentSettings: UserSettings,
-    ) {
+    ): ChatNetworkResult {
         var aiMsgId: Long? = null
+        val authSession = authDataSource.authSession.first()
+        val messages = getMessagesBySessionId(sessionId).first()
+        val attachmentIds = attachments.map { it.id }
+        val attachmentTitles = attachments.map { it.title }
+        insertMessage(
+            ChatMessage(
+                ownerSessionId = sessionId,
+                text = messageText,
+                role = Role.USER,
+                attachmentTitles = attachmentTitles
+            )
+        )
+        if (!authSession.isLoggedIn) return ChatNetworkResult.Failure(401, "Not Logged in")
+        val historyList = messages
+            .filter { it.text.isNotBlank() }
+            .map {
+                ChatHistory(
+                    role = if (it.role == Role.USER) "user" else "assistant",
+                    content = it.text
+                )
+            }
+        val apiService = NetClient.getService(
+            currentSettings.host,
+            currentSettings.port,
+            currentSettings.useHttp,
+            currentSettings.proxy
+        )
+        aiMsgId = insertMessage(
+            ChatMessage(
+                ownerSessionId = sessionId,
+                text = "",
+                role = Role.ASSISTANT
+            )
+        )
+        var resultToReturn: ChatNetworkResult = ChatNetworkResult.Error("Not logged in")
+        apiService.sendMessageStream(
+            authSession.token ?: return ChatNetworkResult.Failure(401, "No token"),
+            authSession.uuid,
+            ChatRequestBody(attachmentIds, messageText, true, historyList)
+        ).collect { result ->
+            resultToReturn = result
+            if (result is ChatNetworkResult.Failure && result.code == 401) authDataSource.clearSession()
+            when (result) {
+                is ChatNetworkResult.Success -> {
+                    updateMessageText(aiMsgId, result.content)
+                }
+
+                else ->  {
+                    handleFailure(aiMsgId)
+                    return@collect
+                }
+            }
+        }
+        return resultToReturn
+    }*/
+
+    fun sendMessage(
+        sessionId: Long,
+        messageText: String,
+        attachments: List<FetchedNotice>,
+        currentSettings: UserSettings,
+    ) = flow {
+        val authSession = authDataSource.authSession.first()
+        if (!authSession.isLoggedIn || authSession.token == null) {
+            emit(Failure(401, "Not Logged in"))
+            return@flow
+        }
+
+        val attachmentTitles = attachments.map { it.title }
+        val attachmentIds = attachments.map { it.id }
+
+        insertMessage(
+            ChatMessage(
+                ownerSessionId = sessionId,
+                text = messageText,
+                role = Role.USER,
+                attachmentTitles = attachmentTitles
+            )
+        )
+
+        val aiMsgId = insertMessage(
+            ChatMessage(
+                ownerSessionId = sessionId,
+                text = "",
+                role = Role.ASSISTANT
+            )
+        )
+
+        emit(Loading)
+
         try {
             val messages = getMessagesBySessionId(sessionId).first()
-            val attachmentIds = attachments.map { it.id }
-            val attachmentTitles = attachments.map { it.title }
-            insertMessage(
-                ChatMessage(
-                    ownerSessionId = sessionId,
-                    text = messageText,
-                    role = Role.USER,
-                    attachmentTitles = attachmentTitles
-                )
-            )
             val historyList = messages
                 .filter { it.text.isNotBlank() }
                 .map {
@@ -84,37 +181,49 @@ class ChatRepository(private val chatDao: ChatDao) {
                         content = it.text
                     )
                 }
+
             val apiService = NetClient.getService(
                 currentSettings.host,
                 currentSettings.port,
                 currentSettings.useHttp,
                 currentSettings.proxy
             )
-            aiMsgId = insertMessage(
-                ChatMessage(
-                    ownerSessionId = sessionId,
-                    text = "",
-                    role = Role.ASSISTANT
-                )
-            )
+
+            var currentFullText = ""
+            var lastWriteTime = 0L
 
             apiService.sendMessageStream(
-                currentSettings.authKey, currentSettings.uuidString,
+                authSession.token,
+                authSession.uuid,
                 ChatRequestBody(attachmentIds, messageText, true, historyList)
             ).collect { result ->
                 when (result) {
                     is ChatNetworkResult.Success -> {
-                        updateMessageText(aiMsgId, result.content)
+                        currentFullText = result.content
+                        emit(Generating(currentFullText))
+                        val currentTime = System.currentTimeMillis()
+                        if (currentTime - lastWriteTime > 500L) {
+                            updateMessageText(aiMsgId, currentFullText)
+                            lastWriteTime = currentTime
+                        }
                     }
-
-                    is ChatNetworkResult.Failure -> throw Exception("请求失败(${result.code}): ${result.msg}")
-                    is ChatNetworkResult.Error -> throw Exception(result.msg)
-                    is ChatNetworkResult.ValidationError -> throw Exception("验证失败: ${result.errors.detail}")
+                    is ChatNetworkResult.Failure -> {
+                        handleFailure(aiMsgId)
+                        emit(Failure(result.code, result.msg))
+                        throw CancellationException("Network request failed")
+                    }
+                    else -> { /* 处理其他情况 */ }
                 }
             }
+
+            updateMessageText(aiMsgId, currentFullText)
+            emit(ChatStreamStatus.Finished(currentFullText))
+
         } catch (e: Exception) {
-            handleFailure(aiMsgId)
-            throw e
+            if (e !is CancellationException) {
+                handleFailure(aiMsgId)
+                emit(Failure(-1, e.localizedMessage ?: "Unknown Error"))
+            }
         }
     }
 }

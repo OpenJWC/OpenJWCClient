@@ -15,23 +15,23 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import org.openjwc.client.data.models.ChatMessage
 import org.openjwc.client.data.models.ChatMetadata
 import org.openjwc.client.data.repository.ChatRepository
+import org.openjwc.client.data.repository.ChatStreamStatus
 import org.openjwc.client.data.repository.SettingsRepository
 import org.openjwc.client.log.Logger
 import org.openjwc.client.net.models.FetchedNotice
 
-sealed class SendMessageState {
-    data object Idle : SendMessageState()
-    data object Sending : SendMessageState()
-}
-
-sealed class ChatEvent {
-    data class ShowToast(val message: String) : ChatEvent()
-    data class ShowSnackBar(val message: String) : ChatEvent()
+sealed class ChatSessionState {
+    data object Idle : ChatSessionState()
+    data object Loading : ChatSessionState()      // 刚发出请求，等待响应
+    data object Generating: ChatSessionState()     // 正在生成
+    data object ToolCalling : ChatSessionState()  // AI 正在查课表或爬取网页
+    data class Error(val msg: String) : ChatSessionState()
 }
 
 class ChatViewModel(
@@ -39,13 +39,24 @@ class ChatViewModel(
     private val chatRepository: ChatRepository
 ) : ViewModel() {
     private val label = "ChatViewModel"
+    private val _sessionStates = MutableStateFlow<Map<Long?, ChatSessionState>>(emptyMap())
+
+    fun getSessionState(sessionId: Long?): StateFlow<ChatSessionState> {
+        return _sessionStates.map { it[sessionId] ?: ChatSessionState.Idle }
+            .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), ChatSessionState.Idle)
+    }
+
+    private fun updateSessionState(sessionId: Long?, state: ChatSessionState) {
+        _sessionStates.value = _sessionStates.value + (sessionId to state)
+    }
     var currentSessionMetadata = MutableStateFlow<ChatMetadata?>(null)
         private set
 
-    var sendMessageState = MutableStateFlow<SendMessageState>(SendMessageState.Idle)
+
+    var uiEvent = Channel<UiEvent>(Channel.BUFFERED)
         private set
 
-    var eventChannel = Channel<ChatEvent>(Channel.BUFFERED)
+    var navEvent = Channel<NavEvent>(Channel.BUFFERED)
         private set
 
     var attachments = MutableStateFlow<List<FetchedNotice>>(emptyList())
@@ -94,7 +105,7 @@ class ChatViewModel(
         currentSessionMetadata.value = null
     }
 
-    fun sendMessage() {
+    /*fun sendMessage() {
         if (sendMessageState.value is SendMessageState.Sending || inputText.value.isBlank()) return
 
         sendMessageState.value = SendMessageState.Sending
@@ -111,18 +122,64 @@ class ChatViewModel(
                         ChatMetadata(sessionId = sessionId, title = messageText.take(20))
                 }
 
-                chatRepository.sendMessage(
+                val result = chatRepository.sendMessage(
                     sessionId,
                     messageText,
                     attachments,
                     settingsRepository.getSettingsSnapshot()
                 )
+
+                if(result is ChatNetworkResult.Failure && result.code == 401) {
+                    navEvent.send(NavEvent.ToLogin())
+                }
             } catch (e: Exception) {
                 Logger.e(label, "sendMessage Error", e)
-                eventChannel.send(ChatEvent.ShowToast(e.localizedMessage ?: "Unknown Error"))
+                uiEvent.send(UiEvent.ShowToast(e.localizedMessage ?: "Unknown Error"))
             } finally {
                 Logger.d(label, "Setting state to Idle")
                 sendMessageState.value = SendMessageState.Idle
+            }
+        }
+    }*/
+    fun sendMessage() {
+        val messageText = inputText.value
+        if (messageText.isBlank()) return
+        updateInputText("")
+        val currentAttachments = attachments.value
+        clearAttachments()
+
+        viewModelScope.launch {
+            try {
+                var sessionId = currentSessionMetadata.value?.sessionId
+                if (sessionId == null) {
+                    sessionId = chatRepository.createChatSession(messageText.take(20))
+                    val newMetadata = ChatMetadata(sessionId = sessionId, title = messageText.take(20))
+                    currentSessionMetadata.value = newMetadata
+                }
+
+                chatRepository.sendMessage(
+                    sessionId,
+                    messageText,
+                    currentAttachments,
+                    settingsRepository.getSettingsSnapshot()
+                ).collect { status ->
+                    // 1. 处理导航逻辑 (401 跳转)
+                    if (status is ChatStreamStatus.Failure && status.code == 401) {
+                        navEvent.send(NavEvent.ToLogin())
+                    }
+
+                    // 2. 映射 UI 状态
+                    updateSessionState(sessionId, when(status) {
+                        is ChatStreamStatus.Loading -> ChatSessionState.Loading
+                        is ChatStreamStatus.ToolCalling -> ChatSessionState.ToolCalling
+                        is ChatStreamStatus.Generating -> ChatSessionState.Generating
+                        is ChatStreamStatus.Finished -> ChatSessionState.Idle
+                        is ChatStreamStatus.Failure -> ChatSessionState.Error(status.msg)
+                    })
+                }
+            } catch (e: Exception) {
+                Logger.e(label, "sendMessage Error", e)
+                uiEvent.send(UiEvent.ShowToast(e.localizedMessage ?: "Unknown Error"))
             }
         }
     }

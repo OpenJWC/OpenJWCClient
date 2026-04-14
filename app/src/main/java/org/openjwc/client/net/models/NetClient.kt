@@ -78,7 +78,6 @@ interface NetService {
         @Header("X-Device-ID") deviceId: String,
     ): Response<ResponseBody>
 
-    //    @Headers("Content-Type: application/json")
     @GET("api/v1/client/device")
     suspend fun getDevicesQuery(
         @Header("Authorization") auth: String,
@@ -123,6 +122,24 @@ interface NetService {
     suspend fun postRegister(
         @Header("Authorization") auth: String,
         @Header("X-Device-ID") deviceId: String,
+    ): Response<ResponseBody>
+
+    @POST("api/v2/client/login")
+    suspend fun postLogin(
+        @Header("Authorization") auth: String?,
+        @Header("X-Device-ID") deviceId: String,
+        @Header("X-Request-ID") requestId: String,
+        @Header("X-Client-Version") clientVersion: String,
+        @Body request: LoginRequestBody
+    ): Response<ResponseBody>
+
+    @POST("api/v2/client/auth/register")
+    suspend fun postRegister(
+        @Header("Authorization") auth: String?,
+        @Header("X-Device-ID") deviceId: String,
+        @Header("X-Request-ID") requestId: String,
+        @Header("X-Client-Version") clientVersion: String,
+        @Body request: RegisterRequestBody
     ): Response<ResponseBody>
 }
 

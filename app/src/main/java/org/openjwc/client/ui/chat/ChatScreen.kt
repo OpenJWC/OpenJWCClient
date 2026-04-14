@@ -50,7 +50,6 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.windowsizeclass.WindowSizeClass
 import androidx.compose.material3.windowsizeclass.WindowWidthSizeClass
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
@@ -66,16 +65,14 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
 import org.openjwc.client.data.models.ChatMessage
 import org.openjwc.client.data.models.ChatMetadata
 import org.openjwc.client.data.models.ChatSession
 import org.openjwc.client.ui.main.MainTab
-import org.openjwc.client.viewmodels.ChatEvent
+import org.openjwc.client.viewmodels.ChatSessionState
 import org.openjwc.client.viewmodels.ChatViewModel
 import org.openjwc.client.viewmodels.MainViewModel
-import org.openjwc.client.viewmodels.SendMessageState
 
 
 @Composable
@@ -83,7 +80,7 @@ fun ChatList(
     listState: LazyListState,
     chatMessages: List<ChatMessage>,
     modifier: Modifier = Modifier,
-    sendMessageState: SendMessageState,
+    sessionState: ChatSessionState,
     onDelete: (ChatMessage) -> Unit = {},
     onCopy: (ChatMessage) -> Unit = {},
     onShare: (ChatMessage) -> Unit = {}
@@ -117,7 +114,11 @@ fun ChatList(
         ) {
             itemsIndexed(chatMessages) { index, message ->
                 val isLastMessage = index == chatMessages.lastIndex
-                val isSending = sendMessageState is SendMessageState.Sending && isLastMessage
+                val isVisualLoading = isLastMessage &&
+                        (sessionState is ChatSessionState.Loading ||
+                                sessionState is ChatSessionState.ToolCalling ||
+                                sessionState is ChatSessionState.Generating)
+                val isSending = isVisualLoading
 
                 MessageBubble(
                     message = message,
@@ -175,26 +176,13 @@ fun ChatScreen(
 ) {
     val historySessions by chatViewModel.allSessions.collectAsStateWithLifecycle(emptyList())
     val scope = rememberCoroutineScope()
-    val context = LocalContext.current
+    LocalContext.current
     val showEditMetadataDialog = remember { MutableStateFlow(false) }
-    LaunchedEffect(Unit) {
-        chatViewModel.eventChannel.receiveAsFlow().collect { event ->
-            when (event) {
-                is ChatEvent.ShowToast -> {
-                    Toast.makeText(context, event.message, Toast.LENGTH_SHORT).show()
-                }
 
-                is ChatEvent.ShowSnackBar -> {
-                    // TODO: 显示 SnackBar
-                }
-            }
-        }
-    }
 //    val isExpanded = windowSizeClass.widthSizeClass == WindowWidthSizeClass.Expanded
 
     val drawerContent = @Composable {
         ModalDrawerSheet(windowInsets = WindowInsets.systemBars.only(WindowInsetsSides.Top)) {
-            // 直接放置列表，将 padding 移入 ChatHistoryList 内部或作为 Modifier
             ChatHistoryList(
                 sessions = historySessions,
                 currentSessionId = sessionId,
@@ -380,7 +368,8 @@ private fun ChatMainContent(
     contentPadding: PaddingValues
 ) {
     val messages by chatViewModel.messages.collectAsStateWithLifecycle()
-    val sendMessageState by chatViewModel.sendMessageState.collectAsStateWithLifecycle()
+    val currentMetadata by chatViewModel.currentSessionMetadata.collectAsStateWithLifecycle()
+    val sessionState by chatViewModel.getSessionState(currentMetadata?.sessionId).collectAsStateWithLifecycle()
     val listState = rememberLazyListState()
     val clipboardManager = LocalClipboard.current
     val context = LocalContext.current
@@ -405,7 +394,7 @@ private fun ChatMainContent(
                 .weight(1f)
                 .fillMaxWidth(),
             chatMessages = messages,
-            sendMessageState = sendMessageState,
+            sessionState = sessionState,
             onCopy = {
                 chatViewModel.copyMessage(it, clipboardManager, context)
             },
@@ -425,7 +414,7 @@ private fun ChatMainContent(
                 .fillMaxWidth()
                 .padding(vertical = 8.dp)
                 .imePadding(),
-            isSending = sendMessageState is SendMessageState.Sending,
+            isSending = sessionState !is ChatSessionState.Idle && sessionState !is ChatSessionState.Error,
             attachments = chatViewModel.attachments.collectAsStateWithLifecycle().value,
             onDeleteAttachment = {chatViewModel.deleteAttachment(it)},
         )

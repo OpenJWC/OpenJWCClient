@@ -11,18 +11,17 @@ import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import org.openjwc.client.data.datastore.CachedHitokoto
 import org.openjwc.client.data.repository.SettingsRepository
 import org.openjwc.client.data.settings.MenuItem
 import org.openjwc.client.data.settings.SettingSection
 import org.openjwc.client.navigation.Screen
-import org.openjwc.client.net.models.Hitokoto
 import java.time.LocalDate
 
 class MeViewModel(
-    private val repository: SettingsRepository
+    private val repository: SettingsRepository,
 ) : ViewModel() {
     private val tag = "MeViewModel"
     private val _sections = MutableStateFlow(
@@ -61,21 +60,15 @@ class MeViewModel(
     )
     val sections = _sections.asStateFlow()
 
-    val defaultHitokoto =
-        Hitokoto(
-            text = "所谓觉悟，就是在漆黑的荒野中，开辟出一条理所应当前进的光明大道。",
-            author = "乔鲁诺·乔巴纳"
-        )
-
-    var hitokoto = repository.userSettings.map { it.hitokoto }.stateIn(
+    var hitokoto = repository.hitokotoFlow.stateIn(
         scope = viewModelScope,
         started = SharingStarted.Eagerly,
-        initialValue = defaultHitokoto
+        initialValue = CachedHitokoto()
     )
 
     fun refreshHitokotoLazily() {
         viewModelScope.launch {
-            if (repository.getSettingsSnapshot().hitokotoRefreshedDate != LocalDate.now()) {
+            if (hitokoto.value.date != LocalDate.now()) {
                 repository.tryRefreshHitokoto()
             }
         }

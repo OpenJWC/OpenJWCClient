@@ -1,7 +1,6 @@
-package org.openjwc.client.data.settings
+package org.openjwc.client.data.datastore
 
 import android.content.Context
-import androidx.datastore.preferences.core.MutablePreferences
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
@@ -11,17 +10,28 @@ import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
-import org.openjwc.client.net.models.Hitokoto
 import org.openjwc.client.net.models.Proxy
 import org.openjwc.client.ui.theme.ColorType
 import org.openjwc.client.ui.theme.DarkThemeStyle
 import org.openjwc.client.ui.theme.toColorType
 import org.openjwc.client.ui.theme.toStorageString
-import java.time.LocalDate
 
-private val Context.dataStore by preferencesDataStore(name = "user_settings")
+data class UserSettings(
+    val policyAgreed: Boolean = false,
+    val themeStyle: DarkThemeStyle = DarkThemeStyle.Auto,
+    val themeColor: ColorType = ColorType.Dynamic,
+    val host: String = "101.132.106.186",
+    val port: Int = 8000,
+    val useHttp: Boolean = false,
+    val freshDays: Int = 21,
+    val backgroundPath: String? = null,
+    val backgroundAlpha: Float = 0.3f,
+    val proxy: Proxy = Proxy.NoProxy(),
+)
 
+private val Context.settingsStore by preferencesDataStore(name = "user_settings")
 class SettingsDataSource(private val context: Context) {
+
     object Keys {
         val POLICY_AGREED = booleanPreferencesKey("policy_agreed")
         val THEME_COLOR = stringPreferencesKey("theme_color")
@@ -29,39 +39,16 @@ class SettingsDataSource(private val context: Context) {
         val HOST = stringPreferencesKey("host")
         val PORT = intPreferencesKey("port")
         val USE_HTTP = booleanPreferencesKey("use_http")
-        val AUTH_KEY = stringPreferencesKey("auth_key")
         val FRESH_DAYS = intPreferencesKey("fresh_days")
-        val UUID_STRING = stringPreferencesKey("uuid_string")
         val BACKGROUND_PATH = stringPreferencesKey("background_path")
         val BACKGROUND_ALPHA = floatPreferencesKey("background_alpha")
         val PROXY_TYPE = stringPreferencesKey("proxy_type")
         val PROXY_ADDRESS = stringPreferencesKey("proxy_address")
         val PROXY_PORT = intPreferencesKey("proxy_port")
-        val HITOKOTO_TEXT = stringPreferencesKey("hitokoto_text")
-        val HITOKOTO_AUTHOR = stringPreferencesKey("hitokoto_author")
-        val HITOKOTO_DATE = stringPreferencesKey("hitokoto_date")
     }
 
-    val userSettings: Flow<UserSettings> = context.dataStore.data.map { prefs ->
+    val userSettings: Flow<UserSettings> = context.settingsStore.data.map { prefs ->
         val default = UserSettings()
-        val text = prefs[Keys.HITOKOTO_TEXT]
-        val hitokoto = if (!text.isNullOrBlank()) {
-            Hitokoto(
-                text = text,
-                author = prefs[Keys.HITOKOTO_AUTHOR]?.takeIf { it.isNotBlank() }
-            )
-        } else {
-            default.hitokoto
-        }
-        val dateStr = prefs[Keys.HITOKOTO_DATE]
-        val hitokotoRefreshedDate = if (!dateStr.isNullOrBlank()) {
-            runCatching {
-                LocalDate.parse(dateStr)
-            }.getOrDefault(default.hitokotoRefreshedDate)
-        } else {
-            default.hitokotoRefreshedDate
-        }
-
         default.copy(
             policyAgreed = prefs[Keys.POLICY_AGREED] ?: default.policyAgreed,
             themeColor = prefs[Keys.THEME_COLOR]?.toColorType() ?: default.themeColor,
@@ -72,9 +59,7 @@ class SettingsDataSource(private val context: Context) {
             host = prefs[Keys.HOST] ?: default.host,
             port = prefs[Keys.PORT] ?: default.port,
             useHttp = prefs[Keys.USE_HTTP] ?: default.useHttp,
-            authKey = prefs[Keys.AUTH_KEY] ?: default.authKey,
             freshDays = prefs[Keys.FRESH_DAYS] ?: default.freshDays,
-            uuidString = prefs[Keys.UUID_STRING] ?: default.uuidString,
             backgroundPath = prefs[Keys.BACKGROUND_PATH]?.takeIf { it.isNotBlank() }
                 ?: default.backgroundPath,
             backgroundAlpha = prefs[Keys.BACKGROUND_ALPHA] ?: default.backgroundAlpha,
@@ -92,41 +77,24 @@ class SettingsDataSource(private val context: Context) {
 
                 else -> Proxy.NoProxy()
             },
-            hitokoto = hitokoto,
-            hitokotoRefreshedDate = hitokotoRefreshedDate
         )
     }
-
-    suspend fun updateSettings(transform: (MutablePreferences) -> Unit) {
-        context.dataStore.edit { prefs ->
-            transform(prefs)
-        }
-    }
-
     suspend fun <T> save(key: Preferences.Key<T>, value: T) {
-        context.dataStore.edit { it[key] = value }
+        context.settingsStore.edit { it[key] = value }
     }
 
     suspend fun saveColorType(color: ColorType) {
-        context.dataStore.edit { it[Keys.THEME_COLOR] = color.toStorageString() }
+        context.settingsStore.edit { it[Keys.THEME_COLOR] = color.toStorageString() }
     }
 
     suspend fun saveBackgroundPath(path: String?) {
-        context.dataStore.edit { prefs ->
+        context.settingsStore.edit { prefs ->
             prefs[Keys.BACKGROUND_PATH] = path ?: ""
         }
     }
 
-    suspend fun saveHitokoto(hitokoto: Hitokoto) {
-        context.dataStore.edit {
-            it[Keys.HITOKOTO_TEXT] = hitokoto.text
-            it[Keys.HITOKOTO_AUTHOR] = hitokoto.author ?: ""
-            it[Keys.HITOKOTO_DATE] = LocalDate.now().toString()
-        }
-    }
-
     suspend fun saveProxy(proxy: Proxy) {
-        context.dataStore.edit { prefs ->
+        context.settingsStore.edit { prefs ->
             when (proxy) {
                 is Proxy.NoProxy -> {
                     prefs[Keys.PROXY_TYPE] = ""

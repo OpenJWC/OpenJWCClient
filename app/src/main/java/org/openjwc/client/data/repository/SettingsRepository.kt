@@ -6,8 +6,11 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.withContext
-import org.openjwc.client.data.settings.SettingsDataSource
-import org.openjwc.client.data.settings.UserSettings
+import org.openjwc.client.data.datastore.AuthDataSource
+import org.openjwc.client.data.datastore.CachedDataSource
+import org.openjwc.client.data.datastore.CachedHitokoto
+import org.openjwc.client.data.datastore.SettingsDataSource
+import org.openjwc.client.data.datastore.UserSettings
 import org.openjwc.client.log.Logger
 import org.openjwc.client.net.hitokoto.fetchHitokoto
 import org.openjwc.client.net.models.Hitokoto
@@ -20,31 +23,24 @@ import org.openjwc.client.ui.theme.DarkThemeStyle
 import java.io.File
 import java.io.FileOutputStream
 import java.time.LocalDate
-import java.util.UUID
 
 class SettingsRepository(
-    private val dataSource: SettingsDataSource,
+    private val settingsDataSource: SettingsDataSource,
+    private val cachedDataSource: CachedDataSource,
+    private val authDataSource: AuthDataSource,
     private val context: Context
 ) {
     private val label = "SettingsRepository"
-    val userSettings: Flow<UserSettings> = dataSource.userSettings
+    val userSettings: Flow<UserSettings> = settingsDataSource.userSettings
+    val hitokotoFlow: Flow<CachedHitokoto> = cachedDataSource.cachedHitokotoFlow
     val keys = SettingsDataSource.Keys
 
     suspend fun getSettingsSnapshot(): UserSettings {
         return userSettings.first()
     }
 
-    suspend fun getOrGenerateDeviceId(): String {
-        val current = getSettingsSnapshot()
-        if (current.uuidString.isBlank()) {
-            val newId = UUID.randomUUID().toString()
-            updateUUID(newId)
-            return newId
-        }
-        return current.uuidString
-    }
-
     suspend fun tryRefreshHitokoto(): NetworkResult<SuccessResponse<Hitokoto>> {
+        if (!authDataSource.authSession.first().isLoggedIn) return NetworkResult.Error("Not logged in")
         try {
             val settings = getSettingsSnapshot()
             val apiService =
@@ -56,12 +52,12 @@ class SettingsRepository(
                 )
 
             val result = apiService.fetchHitokoto(
-                settings.authKey,
-                settings.uuidString,
+                authDataSource.authSession.first().token ?: throw Exception("No token"),
+                authDataSource.authSession.first().uuid,
             )
             if (result is NetworkResult.Success) {
                 Logger.i(label, "Refresh hitokoto: ${LocalDate.now()}")
-                dataSource.saveHitokoto(result.response.data)
+                cachedDataSource.saveHitokoto(result.response.data)
             }
             return result
         } catch (e: Exception) {
@@ -70,27 +66,26 @@ class SettingsRepository(
         }
     }
 
-    suspend fun agreePolicy() = dataSource.save(keys.POLICY_AGREED, true)
+    suspend fun agreePolicy() = settingsDataSource.save(keys.POLICY_AGREED, true)
 
-    suspend fun updateThemeColor(color: ColorType) = dataSource.saveColorType(color)
+    suspend fun updateThemeColor(color: ColorType) = settingsDataSource.saveColorType(color)
 
     suspend fun updateThemeStyle(style: DarkThemeStyle) =
-        dataSource.save(keys.THEME_STYLE, style.name)
+        settingsDataSource.save(keys.THEME_STYLE, style.name)
 
-    suspend fun updateHost(host: String) = dataSource.save(keys.HOST, host)
+    suspend fun updateHost(host: String) = settingsDataSource.save(keys.HOST, host)
 
-    suspend fun updatePort(port: Int) = dataSource.save(keys.PORT, port)
+    suspend fun updatePort(port: Int) = settingsDataSource.save(keys.PORT, port)
 
-    suspend fun updateUseHttp(useHttp: Boolean) = dataSource.save(keys.USE_HTTP, useHttp)
+    suspend fun updateUseHttp(useHttp: Boolean) = settingsDataSource.save(keys.USE_HTTP, useHttp)
 
-    suspend fun updateAuthKey(key: String) = dataSource.save(keys.AUTH_KEY, key)
+    suspend fun updateFreshDays(days: Int) = settingsDataSource.save(keys.FRESH_DAYS, days)
 
-    suspend fun updateFreshDays(days: Int) = dataSource.save(keys.FRESH_DAYS, days)
+    private suspend fun updateBackgroundPath(path: String?) =
+        settingsDataSource.saveBackgroundPath(path)
 
-    private suspend fun updateBackgroundPath(path: String?) = dataSource.saveBackgroundPath(path)
-    private suspend fun updateUUID(uuid: String) = dataSource.save(keys.UUID_STRING, uuid)
-
-    suspend fun updateBackgroundAlpha(alpha: Float) = dataSource.save(keys.BACKGROUND_ALPHA, alpha)
+    suspend fun updateBackgroundAlpha(alpha: Float) =
+        settingsDataSource.save(keys.BACKGROUND_ALPHA, alpha)
 
     suspend fun updateBackground(uri: Uri): Boolean = withContext(Dispatchers.IO) {
         try {
@@ -133,5 +128,5 @@ class SettingsRepository(
         }
     }
 
-    suspend fun updateProxy(proxy: Proxy) = dataSource.saveProxy(proxy)
+    suspend fun updateProxy(proxy: Proxy) = settingsDataSource.saveProxy(proxy)
 }

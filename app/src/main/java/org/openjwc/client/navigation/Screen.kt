@@ -15,7 +15,11 @@ sealed interface Screen {
     @Serializable
     object Host : Screen
     @Serializable
-    object Auth : Screen
+    object Login : Screen
+    @Serializable
+    object Register : Screen
+    @Serializable
+    object Account : Screen
     @Serializable
     object Theme : Screen
     @Serializable

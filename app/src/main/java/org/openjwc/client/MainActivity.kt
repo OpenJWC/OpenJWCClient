@@ -17,14 +17,19 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
+import org.openjwc.client.data.datastore.AuthDataSource
+import org.openjwc.client.data.datastore.CachedDataSource
 import org.openjwc.client.data.db.AppDatabase
 import org.openjwc.client.data.repository.ChatRepository
 import org.openjwc.client.data.repository.NewsRepository
 import org.openjwc.client.data.repository.SettingsRepository
-import org.openjwc.client.data.settings.SettingsDataSource
+import org.openjwc.client.data.datastore.SettingsDataSource
+import org.openjwc.client.data.repository.AuthRepository
 import org.openjwc.client.navigation.NavGraph
 import org.openjwc.client.ui.policy.PolicyDialog
 import org.openjwc.client.ui.theme.OpenJWCClientTheme
+import org.openjwc.client.viewmodels.AuthViewModel
+import org.openjwc.client.viewmodels.AuthViewModelFactory
 import org.openjwc.client.viewmodels.ChatViewModel
 import org.openjwc.client.viewmodels.ChatViewModelFactory
 import org.openjwc.client.viewmodels.MainViewModel
@@ -35,19 +40,30 @@ import org.openjwc.client.viewmodels.NewsViewModel
 import org.openjwc.client.viewmodels.NewsViewModelFactory
 import org.openjwc.client.viewmodels.SettingsViewModel
 import org.openjwc.client.viewmodels.SettingsViewModelFactory
+import kotlin.getValue
 
 
 class MainActivity : ComponentActivity() {
 
     private val database by lazy { AppDatabase.getDatabase(applicationContext) }
-    private val settingsRepository by lazy { SettingsRepository(SettingsDataSource(applicationContext), applicationContext) }
-    private val chatRepository by lazy { ChatRepository(database.chatDao()) } // 里面只有一个sendMessage去联网，为了方便就不让他拥有settingsRepository了
-    private val newsRepository by lazy { NewsRepository(settingsRepository) } // 这里面联网的东西太多，传参有点麻烦
+    private val authDataSource by lazy { AuthDataSource(applicationContext) }
+    private val settingsDataSource by lazy { SettingsDataSource(applicationContext) }
+    private val cachedDataSource by lazy { CachedDataSource(applicationContext) }
+    private val settingsRepository by lazy { SettingsRepository(
+        settingsDataSource = SettingsDataSource(applicationContext),
+        cachedDataSource = cachedDataSource,
+        authDataSource = authDataSource,
+        context = applicationContext
+    ) }
+    private val chatRepository by lazy { ChatRepository(database.chatDao(), authDataSource) } // 里面只有一个sendMessage去联网，为了方便就不让他拥有settingsRepository了
+    private val newsRepository by lazy { NewsRepository(settingsDataSource, authDataSource) } // 这里面联网的东西太多，传参有点麻烦
+    private val authRepository by lazy { AuthRepository(authDataSource, settingsDataSource) }
 
     private val mainViewModel: MainViewModel by viewModels { MainViewModelFactory(settingsRepository) }
     private val settingsViewModel: SettingsViewModel by viewModels {
         SettingsViewModelFactory(
-            settingsRepository
+            settingsRepository,
+            authRepository = authRepository
         )
     }
     private val chatViewModel: ChatViewModel by viewModels {
@@ -59,10 +75,16 @@ class MainActivity : ComponentActivity() {
     private val newsViewModel: NewsViewModel by viewModels { NewsViewModelFactory(settingsRepository, newsRepository) }
     private val meViewModel: MeViewModel by viewModels { MeViewModelFactory(settingsRepository) }
 
+    private val authViewModel: AuthViewModel by viewModels { AuthViewModelFactory(authRepository) }
+
     @RequiresApi(Build.VERSION_CODES.TIRAMISU)
     @OptIn(ExperimentalMaterial3WindowSizeClassApi::class)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        authViewModel.getOrCreateUuid()
+        authViewModel.getOrCreateDeviceName()
+
         val splashScreen = installSplashScreen()
 
         splashScreen.setKeepOnScreenCondition {
@@ -96,6 +118,7 @@ class MainActivity : ComponentActivity() {
                             chatViewModel,
                             newsViewModel,
                             meViewModel,
+                            authViewModel,
                             state.backgroundPath,
                             state.backgroundAlpha
                         )

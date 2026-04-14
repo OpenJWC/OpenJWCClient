@@ -14,6 +14,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.windowsizeclass.WindowSizeClass
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -31,18 +32,23 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.toRoute
+import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
 import kotlinx.serialization.json.Json
 import org.openjwc.client.R
 import org.openjwc.client.log.Logger
 import org.openjwc.client.net.models.FetchedNotice
 import org.openjwc.client.net.models.GitHubRelease
+import org.openjwc.client.net.models.NetworkResult
 import org.openjwc.client.ui.main.MainScreen
 import org.openjwc.client.ui.main.MainTab
+import org.openjwc.client.ui.main.UpdateDialog
 import org.openjwc.client.ui.me.AboutScreen
 import org.openjwc.client.ui.me.ReviewedNoticesScreen
 import org.openjwc.client.ui.me.settings.SettingsScreen
-import org.openjwc.client.ui.me.settings.connection.AuthScreen
+import org.openjwc.client.ui.me.settings.auth.AccountScreen
+import org.openjwc.client.ui.me.settings.auth.LoginScreen
+import org.openjwc.client.ui.me.settings.auth.RegisterScreen
 import org.openjwc.client.ui.me.settings.connection.HostScreen
 import org.openjwc.client.ui.me.settings.general.ThemeScreen
 import org.openjwc.client.ui.me.settings.log.LogScreen
@@ -52,9 +58,12 @@ import org.openjwc.client.ui.news.upload.UploadNewsScreen
 import org.openjwc.client.ui.policy.LicenseScreen
 import org.openjwc.client.ui.policy.PolicyScreen
 import org.openjwc.client.ui.theme.seedColors
+import org.openjwc.client.viewmodels.AuthViewModel
+import org.openjwc.client.viewmodels.UiEvent
 import org.openjwc.client.viewmodels.ChatViewModel
 import org.openjwc.client.viewmodels.MainViewModel
 import org.openjwc.client.viewmodels.MeViewModel
+import org.openjwc.client.viewmodels.NavEvent
 import org.openjwc.client.viewmodels.NewsViewModel
 import org.openjwc.client.viewmodels.SettingsViewModel
 import kotlin.reflect.typeOf
@@ -85,12 +94,110 @@ fun NavGraph(
     chatViewModel: ChatViewModel,
     newsViewModel: NewsViewModel,
     meViewModel: MeViewModel,
+    authViewModel: AuthViewModel,
     backgroundPath: String? = null,
     backgroundAlpha: Float = 1f
 ) {
     val navController = rememberNavController()
     val uriHandler = LocalUriHandler.current
     val focusManager = LocalFocusManager.current
+    val context = LocalContext.current
+    val showUpdateDialog by mainViewModel.showUpdateDialog.collectAsState()
+    val updateRelease by mainViewModel.updateRelease.collectAsState()
+
+    LaunchedEffect(Unit) {
+        mainViewModel.checkUpdate(false)
+    }
+
+    LaunchedEffect(Unit) {
+        mainViewModel.updateEvent.collect {
+            mainViewModel.showUpdateDialog.value = true
+        }
+    }
+
+    LaunchedEffect(Unit) {
+        chatViewModel.uiEvent.receiveAsFlow().collect { event ->
+            when (event) {
+                is UiEvent.ShowToast -> {
+                    Toast.makeText(context, event.message, Toast.LENGTH_SHORT).show()
+                }
+
+                is UiEvent.ShowSnackBar -> {
+                    // TODO: 显示 SnackBar
+                }
+            }
+        }
+    }
+
+    LaunchedEffect(Unit) {
+        mainViewModel.uiEvent.receiveAsFlow().collect { event ->
+            when (event) {
+                is UiEvent.ShowToast -> {
+                    Toast.makeText(context, event.message, Toast.LENGTH_SHORT).show()
+                }
+
+                else -> {}
+            }
+        }
+    }
+
+    LaunchedEffect(Unit) {
+        chatViewModel.navEvent.receiveAsFlow().collect { event ->
+            when(event) {
+                is NavEvent.ToLogin ->  {
+                    navController.navigate(Screen.Login)
+                }
+                is NavEvent.ToRegister -> {
+                    navController.navigate(Screen.Register)
+                }
+                is NavEvent.ToBack -> {
+                    navController.popBackStack()
+                }
+            }
+        }
+    }
+    LaunchedEffect(Unit) {
+        newsViewModel.navEvent.receiveAsFlow().collect { event ->
+            when(event) {
+                is NavEvent.ToLogin ->  {
+                    navController.navigate(Screen.Login)
+                }
+                is NavEvent.ToRegister -> {
+                    navController.navigate(Screen.Register)
+                }
+                is NavEvent.ToBack -> {
+                    navController.popBackStack()
+                }
+            }
+        }
+    }
+
+    LaunchedEffect(Unit) {
+        authViewModel.navEvent.receiveAsFlow().collect { event ->
+            when(event) {
+                is NavEvent.ToLogin ->  {
+                    navController.navigate(Screen.Login)
+                }
+                is NavEvent.ToRegister -> {
+                    navController.navigate(Screen.Register)
+                }
+                is NavEvent.ToBack -> {
+                    navController.popBackStack()
+                }
+            }
+        }
+    }
+
+    if (showUpdateDialog && updateRelease != null) {
+        UpdateDialog(
+            gitHubRelease = updateRelease!!,
+            onDismiss = mainViewModel::dismissUpdateDialog,
+            onUpdate = {
+                mainViewModel.dismissUpdateDialog()
+                uriHandler.openUri(updateRelease!!.htmlUrl)
+            }
+        )
+    }
     Surface(
         color = MaterialTheme.colorScheme.background,
         modifier = Modifier
@@ -99,7 +206,6 @@ fun NavGraph(
                     focusManager.clearFocus()
                 })
             }
-
     ) {
         NavHost(
             navController = navController,
@@ -219,7 +325,6 @@ fun NavGraph(
             composable<Screen.About> {
                 var updateRelease: GitHubRelease? by remember { mutableStateOf(null) }
                 val context = LocalContext.current
-                val scope = rememberCoroutineScope()
                 AboutScreen(
                     onBack = { navController.popBackStack() },
                     onToGitHub = { uriHandler.openUri("https://github.com/OpenJWC") },
@@ -228,12 +333,8 @@ fun NavGraph(
                     },
                     onCheckForUpdate = {
                         Toast.makeText(context, "检查更新中……", Toast.LENGTH_SHORT).show()
-                        scope.launch {
-                            updateRelease = mainViewModel.checkUpdate()
-                            if (updateRelease == null) {
-                                Toast.makeText(context, "未找到更新", Toast.LENGTH_SHORT).show()
-                            }
-                        }
+                        mainViewModel.checkUpdate(true)
+
                     },
                     updateRelease = updateRelease,
                     onUpdate = {
@@ -260,36 +361,81 @@ fun NavGraph(
                 )
             }
 
-            composable<Screen.Auth> {
-                val currentSettings by settingsViewModel.settings.collectAsState()
+            composable<Screen.Account> {
+                val authSession by authViewModel.authSession.collectAsState()
                 val deviceResult by settingsViewModel.deviceResult.collectAsState()
+                val deviceUnbindResult by settingsViewModel.deviceUnbindNetworkResult.collectAsState()
                 val isLoadingDeviceIds by settingsViewModel.isLoadingDeviceResult.collectAsState()
-                AuthScreen(
-                    initialAuthKey = currentSettings.authKey,
-                    onConfirm = { key ->
-                        settingsViewModel.updateAuthKey(key)
-                        settingsViewModel.deviceRegister()
-                        navController.popBackStack()
-                    },
-                    onBack = { navController.popBackStack() },
+                AccountScreen(
+                    onBack = { if (navController.previousBackStackEntry != null) navController.popBackStack() },
                     onRefreshDevices = {
                         settingsViewModel.clearUnbindResult()
                         settingsViewModel.devicesQuery()
                     },
-                    thisDeviceId = currentSettings.uuidString,
-                    onUnbindDevice = {
-                        settingsViewModel.unbindAndRefresh(it)
-                    },
-                    devicesResult = deviceResult,
                     isLoadingDeviceIds = isLoadingDeviceIds,
-                    unbindResult = settingsViewModel.deviceUnbindNetworkResult.collectAsState().value
+                    onUnbindDevice = { settingsViewModel.unbindAndRefresh(it) },
+                    thisDeviceId = authSession.uuid,
+                    devicesResult = deviceResult,
+                    unbindResult = deviceUnbindResult,
+                    onLogin = { navController.navigate(Screen.Login) },
+                    onRegister = { navController.navigate(Screen.Register) },
+                    onLogout = { authViewModel.logout() },
+                    authSession = authSession
+                )
+            }
+
+            composable<Screen.Login> {
+                val loginResult by authViewModel.loginResult.collectAsState()
+                val isLoggingIn by authViewModel.isLoggingIn.collectAsState()
+                LoginScreen(
+                    isLoggingIn = isLoggingIn,
+                    loginError = when (val result = loginResult) {
+                        is NetworkResult.Failure -> "(${result.code}) ${result.msg}"
+                        is NetworkResult.Error -> result.msg
+                        else -> null
+                    },
+                    onLogin = { account, password ->
+                        authViewModel.login(account, password)
+                    },
+                    onToRegisterScreen = {
+                        navController.navigate(Screen.Register)
+                    },
+                    onBack = {
+                        if (navController.previousBackStackEntry != null) {
+                            navController.popBackStack()
+                        }
+                    }
+                )
+            }
+
+            composable<Screen.Register> {
+                val registerResult by authViewModel.registerResult.collectAsState()
+                val isRegistering by authViewModel.isRegistering.collectAsState()
+                LaunchedEffect(registerResult) {
+                    if (registerResult is NetworkResult.Success) {
+                        navController.popBackStack()
+//                        authViewModel.resetRegisterResult()
+                    }
+                }
+                RegisterScreen(
+                    onBack = { if (navController.previousBackStackEntry != null) navController.popBackStack() },
+                    onRegister = { username, password, email ->
+                        authViewModel.register(username, password, email)
+                    },
+                    isRegistering = isRegistering,
+                    registerError = when (val result = registerResult) {
+                        is NetworkResult.Failure -> "(${result.code}) ${result.msg}"
+                        is NetworkResult.Error -> result.msg
+                        else -> null
+                    }
                 )
             }
 
             composable<Screen.Theme> {
                 val currentColor = mainViewModel.uiState.collectAsState().value.themeColor
                 val currentStyle = mainViewModel.uiState.collectAsState().value.darkThemeStyle
-                val backgroundPath = settingsViewModel.settings.collectAsState().value.backgroundPath
+                val backgroundPath =
+                    settingsViewModel.settings.collectAsState().value.backgroundPath
                 val brightness = settingsViewModel.settings.collectAsState().value.backgroundAlpha
 
                 ThemeScreen(

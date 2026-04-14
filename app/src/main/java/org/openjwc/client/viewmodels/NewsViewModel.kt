@@ -4,6 +4,7 @@ import androidx.compose.runtime.mutableStateMapOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
+import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -11,9 +12,9 @@ import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import org.openjwc.client.data.datastore.UserSettings
 import org.openjwc.client.data.repository.NewsRepository
 import org.openjwc.client.data.repository.SettingsRepository
-import org.openjwc.client.data.settings.UserSettings
 import org.openjwc.client.log.Logger
 import org.openjwc.client.net.models.FetchedNotice
 import org.openjwc.client.net.models.NetworkResult
@@ -21,7 +22,7 @@ import org.openjwc.client.net.models.ReviewedNoticesData
 import org.openjwc.client.net.models.UploadedNotice
 
 class NewsViewModel(
-    private val repository: SettingsRepository,
+    repository: SettingsRepository,
     private val newsRepository: NewsRepository
 ) : ViewModel() {
     private val tag = "NewsViewModel"
@@ -57,6 +58,12 @@ class NewsViewModel(
     var reviewedNoticesData = MutableStateFlow<ReviewedNoticesData?>(null)
         private set
 
+    var isLoggedIn = MutableStateFlow(false)
+        private set
+
+    var navEvent = Channel<NavEvent>(Channel.BUFFERED)
+        private set
+
     var reviewedNoticesError = MutableStateFlow<String?>(null)
     fun getNewsState(label: String): List<FetchedNotice> = _newsCache[label] ?: emptyList()
     fun getError(label: String): String? = _errorMap[label]
@@ -66,14 +73,17 @@ class NewsViewModel(
         viewModelScope.launch {
             isRefreshing.value = true
             try {
-                // 直接调用 repository
                 when (val result = newsRepository.getLabels()) {
                     is NetworkResult.Success -> {
                         labels.value = result.response.data.labels
                         labelError.value = null
+                        isLoggedIn.value = true
                     }
                     is NetworkResult.Failure -> {
                         labelError.value = "加载错误(${result.code}): ${result.msg}"
+                        if (result.code == 401) {
+                            isLoggedIn.value = false
+                        }
                     }
                     is NetworkResult.Error -> {
                         labelError.value = result.msg
@@ -94,7 +104,6 @@ class NewsViewModel(
 
         viewModelScope.launch {
             try {
-                // 使用 newsRepository 获取数据
                 val result = newsRepository.getNews(label, page, size)
 
                 when (result) {

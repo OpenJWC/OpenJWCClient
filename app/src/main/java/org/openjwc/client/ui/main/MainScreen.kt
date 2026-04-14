@@ -32,7 +32,6 @@ import androidx.compose.material3.rememberDrawerState
 import androidx.compose.material3.windowsizeclass.WindowSizeClass
 import androidx.compose.material3.windowsizeclass.WindowWidthSizeClass
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberCoroutineScope
@@ -67,16 +66,7 @@ fun MainScreen(
     backgroundPath: String? = null,
     backgroundAlpha: Float = 1f
 ) {
-    val uriHandler = LocalUriHandler.current
-    val showUpdateDialog = !mainViewModel.updateDismissed.collectAsState().value
-    val updateRelease = mainViewModel.updateRelease.collectAsState().value
-    LaunchedEffect(Unit) {
-        if (showUpdateDialog && updateRelease == null) {
-            if(mainViewModel.checkUpdate() != null) {
-                mainViewModel.showUpdateDialog()
-            }
-        }
-    }
+    LocalUriHandler.current
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -102,17 +92,6 @@ fun MainScreen(
             newsViewModel,
             meViewModel
         )
-
-        if(showUpdateDialog && updateRelease != null) {
-            UpdateDialog(
-                gitHubRelease = updateRelease,
-                onDismiss = mainViewModel::dismissUpdateDialog,
-                onUpdate = {
-                    mainViewModel.dismissUpdateDialog()
-                    uriHandler.openUri(updateRelease.htmlUrl)
-                }
-            )
-        }
     }
 }
 

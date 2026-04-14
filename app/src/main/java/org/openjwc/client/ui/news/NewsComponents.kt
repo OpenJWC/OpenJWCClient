@@ -161,7 +161,12 @@ fun NewsList(
                         ) {
                             DropdownMenuItem(
                                 text = { Text("添加到附件") },
-                                leadingIcon = { Icon(Icons.Outlined.Add, contentDescription = null) },
+                                leadingIcon = {
+                                    Icon(
+                                        Icons.Outlined.Add,
+                                        contentDescription = null
+                                    )
+                                },
                                 onClick = {
                                     onAddToAttachment(item)
                                     onMenuDismiss()
@@ -232,7 +237,10 @@ fun EmptyErrorState(errorMessage: String, onRetry: () -> Unit) {
         )
         Spacer(Modifier.height(8.dp))
         Text(text = errorMessage, modifier = Modifier.padding(top = 8.dp))
-        FilledTonalButton(onClick = onRetry, modifier = Modifier.padding(top = 16.dp)) { Text("重试") }
+        FilledTonalButton(
+            onClick = onRetry,
+            modifier = Modifier.padding(top = 16.dp)
+        ) { Text("重试") }
     }
 }
 
@@ -271,7 +279,10 @@ fun InfoCard(
         elevation = CardDefaults.cardElevation(
             defaultElevation = if (isFresh) 6.dp else 1.dp,
         ),
-        border = if (isFresh) BorderStroke(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.5f)) else null,
+        border = if (isFresh) BorderStroke(
+            1.dp,
+            MaterialTheme.colorScheme.primary.copy(alpha = 0.5f)
+        ) else null,
         colors = CardDefaults.cardColors(
             containerColor = if (isFresh)
                 MaterialTheme.colorScheme.primaryContainer
@@ -298,7 +309,9 @@ fun InfoCard(
                 Text(
                     text = fetchedNotice.date,
                     style = MaterialTheme.typography.labelMedium,
-                    color = if (isFresh) MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.8f) else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.8f),
+                    color = if (isFresh) MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.8f) else MaterialTheme.colorScheme.onSurfaceVariant.copy(
+                        alpha = 0.8f
+                    ),
                     modifier = Modifier.align(Alignment.End),
                     maxLines = 1
                 )
@@ -309,7 +322,9 @@ fun InfoCard(
 
 @Composable
 fun EmptyLabelsPlaceholder(
+    isLoggedIn: Boolean = false,
     onRefresh: () -> Unit,
+    onToLogin: () -> Unit,
     errorMessage: String?,
     modifier: Modifier = Modifier
 ) {
@@ -349,13 +364,24 @@ fun EmptyLabelsPlaceholder(
 
         Spacer(modifier = Modifier.height(8.dp))
 
-        Text(
-            text = "暂时无法获取到新闻标签，请检查网络连接或稍后重试",
-            style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-            textAlign = TextAlign.Center,
-            modifier = Modifier.padding(horizontal = 16.dp)
-        )
+        if (isLoggedIn) {
+            Text(
+                text = "暂时无法获取到新闻标签，请检查网络连接或稍后重试",
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                textAlign = TextAlign.Center,
+                modifier = Modifier.padding(horizontal = 16.dp)
+            )
+        }
+        else {
+            Text(
+                text = "您尚未登录",
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                textAlign = TextAlign.Center,
+                modifier = Modifier.padding(horizontal = 16.dp)
+            )
+        }
 
         Spacer(modifier = Modifier.height(8.dp))
 
@@ -368,11 +394,17 @@ fun EmptyLabelsPlaceholder(
         }
         Spacer(modifier = Modifier.height(32.dp))
 
+        if(isLoggedIn) {
         FilledTonalButton(
             onClick = onRefresh,
             contentPadding = PaddingValues(horizontal = 24.dp, vertical = 12.dp)
         ) {
             Text("重新获取分类")
+        }}
+        else {
+            TextButton(onClick = onToLogin) {
+                Text("登录")
+            }
         }
     }
 }

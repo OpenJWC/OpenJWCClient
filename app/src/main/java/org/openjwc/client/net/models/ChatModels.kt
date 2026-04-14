@@ -43,4 +43,3 @@ sealed class ChatNetworkResult {
         val msg: String
     ) : ChatNetworkResult()
 }
-
