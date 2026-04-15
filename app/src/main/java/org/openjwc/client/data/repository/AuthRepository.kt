@@ -36,10 +36,10 @@ class AuthRepository(
         return authDataSource.getOrCreateUuid()
     }
 
-    suspend fun getOrCreateDeviceName() : String {
+    suspend fun getOrCreateDeviceName(): String {
         return authDataSource.getOrCreateDeviceName()
     }
-    
+
     suspend fun login(
         account: String,
         password: String
@@ -114,7 +114,8 @@ class AuthRepository(
             val apiService =
                 NetClient.getService(settings.host, settings.port, settings.useHttp, settings.proxy)
             val result = apiService.devicesQuery(
-                authDataSource.authSession.first().token ?: throw Exception("No token"), authDataSource.getOrCreateUuid()
+                authDataSource.authSession.first().token ?: throw Exception("No token"),
+                authDataSource.getOrCreateUuid()
             )
             return result
         } catch (e: Exception) {
@@ -123,9 +124,11 @@ class AuthRepository(
     }
 
 
-    suspend fun logout(): NetworkResult<DevicesUnbindSuccessResponse>  {
+    suspend fun logout(): NetworkResult<DevicesUnbindSuccessResponse> {
         val result = deviceUnbind(authDataSource.getOrCreateUuid())
         authDataSource.clearSession()
         return result
     }
+
+    suspend fun clearSession() = authDataSource.clearSession()
 }

@@ -18,9 +18,9 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import org.openjwc.client.data.models.ChatMessage
 import org.openjwc.client.data.models.ChatMetadata
+import org.openjwc.client.data.repository.AuthRepository
 import org.openjwc.client.data.repository.ChatRepository
 import org.openjwc.client.data.repository.ChatStreamStatus
-import org.openjwc.client.data.repository.SettingsRepository
 import org.openjwc.client.log.Logger
 import org.openjwc.client.net.models.FetchedNotice
 
@@ -33,8 +33,8 @@ sealed class ChatSessionState {
 }
 
 class ChatViewModel(
-    private val settingsRepository: SettingsRepository,
-    private val chatRepository: ChatRepository
+    private val chatRepository: ChatRepository,
+    private val authRepository: AuthRepository
 ) : ViewModel() {
     private val label = "ChatViewModel"
     private val _sessionStates = MutableStateFlow<Map<Long?, ChatSessionState>>(emptyMap())
@@ -159,9 +159,9 @@ class ChatViewModel(
                     sessionId,
                     messageText,
                     currentAttachments,
-                    settingsRepository.getSettingsSnapshot()
                 ).collect { status ->
                     if (status is ChatStreamStatus.Failure && status.code == 401) {
+                        authRepository.clearSession()
                         navEvent.send(NavEvent.ToLogin())
                     }
 
@@ -224,13 +224,13 @@ class ChatViewModel(
 }
 
 class ChatViewModelFactory(
-    private val settingsRepository: SettingsRepository,
-    private val chatRepository: ChatRepository
+    private val chatRepository: ChatRepository,
+    private val authRepository: AuthRepository
 ) : ViewModelProvider.Factory {
     override fun <T : ViewModel> create(modelClass: Class<T>): T {
         if (modelClass.isAssignableFrom(ChatViewModel::class.java)) {
             @Suppress("UNCHECKED_CAST")
-            return ChatViewModel(settingsRepository, chatRepository) as T
+            return ChatViewModel(chatRepository, authRepository) as T
         }
         throw IllegalArgumentException("Unknown ViewModel class")
     }

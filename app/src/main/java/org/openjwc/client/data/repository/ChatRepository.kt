@@ -6,7 +6,7 @@ import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.map
 import org.openjwc.client.data.dao.ChatDao
 import org.openjwc.client.data.datastore.AuthDataSource
-import org.openjwc.client.data.datastore.UserSettings
+import org.openjwc.client.data.datastore.SettingsDataSource
 import org.openjwc.client.data.models.ChatMessage
 import org.openjwc.client.data.models.ChatMetadata
 import org.openjwc.client.data.models.ChatSession
@@ -32,6 +32,7 @@ sealed class ChatStreamStatus {
 
 class ChatRepository(
     private val chatDao: ChatDao,
+    private val settingsDataSource: SettingsDataSource,
     private val authDataSource: AuthDataSource
 ) {
     // 返回 session 的 metadata 里面的 id
@@ -53,10 +54,6 @@ class ChatRepository(
     suspend fun updateMetadata(metadata: ChatMetadata) = chatDao.updateMetadata(metadata)
 
     fun getChatSessions(): Flow<List<ChatSession>> = chatDao.getAllChatSessions()
-
-    // 太浪费，已弃用
-    fun getChatSessionById(id: Long): Flow<ChatSession?> = chatDao.getChatSessionById(id)
-
     fun getChatMetadataById(id: Long): Flow<ChatMetadata?> =
         chatDao.getChatSessionById(id).map { it?.metadata }
 
@@ -78,8 +75,8 @@ class ChatRepository(
         sessionId: Long,
         messageText: String,
         attachments: List<FetchedNotice>,
-        currentSettings: UserSettings,
     ) = flow {
+        val currentSettings = settingsDataSource.userSettings.first()
         val authSession = authDataSource.authSession.first()
         if (!authSession.isLoggedIn || authSession.token == null) {
             emit(Failure(401, "Not Logged in"))
@@ -135,6 +132,7 @@ class ChatRepository(
                 ChatRequestBody(attachmentIds, messageText, true, historyList)
             ).collect { result ->
                 when (result) {
+                    // TODO: 目前只支持Generating状态，等后端写好tool calling 再补全
                     is ChatNetworkResult.Success -> {
                         currentFullText = result.content
                         emit(Generating(currentFullText))

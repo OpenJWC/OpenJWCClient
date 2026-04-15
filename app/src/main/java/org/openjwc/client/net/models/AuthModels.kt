@@ -5,8 +5,8 @@ import kotlinx.serialization.Serializable
 
 @Serializable
 data class DevicesQueryResponseData(
-    @SerialName("total") val limitedDeviceCount: Int,
-    @SerialName("bound_devices") val deviceQueries: List<DeviceQuery>
+//    @SerialName("total") val limitedDeviceCount: Int,
+    @SerialName("devices") val deviceQueries: List<DeviceQuery>
 )
 
 

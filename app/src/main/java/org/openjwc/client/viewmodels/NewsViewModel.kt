@@ -25,7 +25,7 @@ import org.openjwc.client.net.models.UploadedNotice
 class NewsViewModel(
     repository: SettingsRepository,
     private val newsRepository: NewsRepository,
-    authRepository: AuthRepository,
+    private val authRepository: AuthRepository,
 ) : ViewModel() {
     private val tag = "NewsViewModel"
 
@@ -86,9 +86,12 @@ class NewsViewModel(
                         labels.value = result.response.data.labels
                         labelError.value = null
                     }
+
                     is NetworkResult.Failure -> {
                         labelError.value = "加载错误(${result.code}): ${result.msg}"
+                        if (result.code == 401) authRepository.clearSession()
                     }
+
                     is NetworkResult.Error -> {
                         labelError.value = result.msg
                     }
@@ -125,8 +128,10 @@ class NewsViewModel(
                         }
                     }
 
-                    is NetworkResult.Failure -> _errorMap[label] =
-                        "加载错误(${result.code}): ${result.msg}"
+                    is NetworkResult.Failure -> {
+                        _errorMap[label] = "加载错误(${result.code}): ${result.msg}"
+                        if (result.code == 401) authRepository.clearSession()
+                    }
 
                     is NetworkResult.Error -> _errorMap[label] = result.msg
                 }
@@ -153,6 +158,7 @@ class NewsViewModel(
 
                     is NetworkResult.Failure -> {
                         uploadError.value = "加载错误(${result.code}): ${result.msg}"
+                        if (result.code == 401) authRepository.clearSession()
                     }
 
                     is NetworkResult.Error -> {
@@ -177,8 +183,11 @@ class NewsViewModel(
                         reviewedNoticesError.value = null
                     }
 
-                    is NetworkResult.Failure -> reviewedNoticesError.value =
-                        "加载错误(${result.code}): ${result.msg}"
+                    is NetworkResult.Failure -> {
+                        reviewedNoticesError.value =
+                            "加载错误(${result.code}): ${result.msg}"
+                        if (result.code == 401) authRepository.clearSession()
+                    }
 
                     is NetworkResult.Error -> reviewedNoticesError.value = result.msg
                 }

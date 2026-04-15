@@ -151,6 +151,17 @@ fun NavGraph(
     }
 
     LaunchedEffect(Unit) {
+        authViewModel.uiEvent.receiveAsFlow().collect { event ->
+            when (event) {
+                is UiEvent.ShowToast -> {
+                    Toast.makeText(context, event.message, Toast.LENGTH_SHORT).show()
+                }
+                else -> {}
+            }
+        }
+    }
+
+    LaunchedEffect(Unit) {
         chatViewModel.navEvent.receiveAsFlow().collect { event ->
             when(event) {
                 is NavEvent.ToLogin ->  {

@@ -15,6 +15,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import org.openjwc.client.data.datastore.CachedHitokoto
+import org.openjwc.client.data.repository.AuthRepository
 import org.openjwc.client.data.repository.SettingsRepository
 import org.openjwc.client.data.settings.MenuItem
 import org.openjwc.client.data.settings.SettingSection
@@ -24,6 +25,7 @@ import java.time.LocalDate
 
 class MeViewModel(
     private val repository: SettingsRepository,
+    private val authRepository: AuthRepository
 ) : ViewModel() {
     private val tag = "MeViewModel"
     private val _sections = MutableStateFlow(
@@ -83,7 +85,11 @@ class MeViewModel(
         viewModelScope.launch {
             val result = repository.tryRefreshHitokoto()
             when (result) {
-                is NetworkResult.Failure -> uiEvent.send(UiEvent.ShowToast("(${result.code}) ${result.msg}"))
+                is NetworkResult.Failure -> {
+                    uiEvent.send(UiEvent.ShowToast("(${result.code}) ${result.msg}"))
+                    if (result.code == 401) authRepository.clearSession()
+                }
+
                 is NetworkResult.Error -> uiEvent.send(UiEvent.ShowToast(result.msg))
                 is NetworkResult.Success -> uiEvent.send(UiEvent.ShowToast("刷新成功"))
             }
@@ -93,12 +99,13 @@ class MeViewModel(
 
 
 class MeViewModelFactory(
-    private val settingsRepository: SettingsRepository
+    private val settingsRepository: SettingsRepository,
+    private val authRepository: AuthRepository
 ) : ViewModelProvider.Factory {
     override fun <T : ViewModel> create(modelClass: Class<T>): T {
         if (modelClass.isAssignableFrom(MeViewModel::class.java)) {
             @Suppress("UNCHECKED_CAST")
-            return MeViewModel(settingsRepository) as T
+            return MeViewModel(settingsRepository, authRepository) as T
         }
         throw IllegalArgumentException("Unknown ViewModel class")
     }

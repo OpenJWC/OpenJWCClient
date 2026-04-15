@@ -137,7 +137,7 @@ fun LoginScreen(
             Spacer(modifier = Modifier.height(8.dp))
 
             Button(
-                onClick = { onLogin(username, password) },
+                onClick = { onLogin(username.trim(), password.trim()) },
                 modifier = Modifier.fillMaxWidth(),
                 enabled = !isLoggingIn && username.isNotBlank() && password.isNotBlank()
             ) {

@@ -55,7 +55,7 @@ class MainActivity : ComponentActivity() {
         authDataSource = authDataSource,
         context = applicationContext
     ) }
-    private val chatRepository by lazy { ChatRepository(database.chatDao(), authDataSource) } // 里面只有一个sendMessage去联网，为了方便就不让他拥有settingsRepository了
+    private val chatRepository by lazy { ChatRepository(database.chatDao(), settingsDataSource, authDataSource) } // 里面只有一个sendMessage去联网，为了方便就不让他拥有settingsRepository了
     private val newsRepository by lazy { NewsRepository(settingsDataSource, authDataSource) } // 这里面联网的东西太多，传参有点麻烦
     private val authRepository by lazy { AuthRepository(authDataSource, settingsDataSource) }
 
@@ -68,12 +68,11 @@ class MainActivity : ComponentActivity() {
     }
     private val chatViewModel: ChatViewModel by viewModels {
         ChatViewModelFactory(
-            settingsRepository,
-            chatRepository
+            chatRepository, authRepository
         )
     }
     private val newsViewModel: NewsViewModel by viewModels { NewsViewModelFactory(settingsRepository, newsRepository, authRepository) }
-    private val meViewModel: MeViewModel by viewModels { MeViewModelFactory(settingsRepository) }
+    private val meViewModel: MeViewModel by viewModels { MeViewModelFactory(settingsRepository, authRepository) }
 
     private val authViewModel: AuthViewModel by viewModels { AuthViewModelFactory(authRepository) }
 

@@ -72,13 +72,13 @@ interface NetService {
         @Body request: ChatRequestBody
     ): Response<ResponseBody>
 
-    @POST("api/v1/client/device/unbind")
+    @POST("api/v2/client/device/unbind")
     suspend fun postDeviceUnbind(
         @Header("Authorization") auth: String,
         @Header("X-Device-ID") deviceId: String,
     ): Response<ResponseBody>
 
-    @GET("api/v1/client/device")
+    @GET("api/v2/client/device")
     suspend fun getDevicesQuery(
         @Header("Authorization") auth: String,
         @Header("X-Device-ID") deviceId: String,
@@ -118,6 +118,7 @@ interface NetService {
         @Header("X-Device-ID") deviceId: String,
     ): Response<ResponseBody>
 
+    @Deprecated("v1 only")
     @POST("api/v1/client/register")
     suspend fun postRegister(
         @Header("Authorization") auth: String,

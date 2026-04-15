@@ -74,7 +74,7 @@ fun TestAccountScreen() {
             response = SuccessResponse(
                 message = "success",
                 data = DevicesQueryResponseData(
-                    limitedDeviceCount = 3,
+//                    limitedDeviceCount = 3,
                     deviceQueries = listOf(
                         DeviceQuery(
                             deviceUUID = "1",
@@ -324,13 +324,13 @@ fun DeviceList(
     ) {
         Column(modifier = Modifier.animateContentSize()) {
             Text("设备管理", style = MaterialTheme.typography.titleLarge)
-            if (devicesResult is NetworkResult.Success) {
+            /*if (devicesResult is NetworkResult.Success) {
                 val data = devicesResult.response.data
                 Text(
                     "${data.deviceQueries.size} / ${data.limitedDeviceCount} 个配额已使用",
                     style = MaterialTheme.typography.bodySmall
                 )
-            }
+            }*/
         }
         FilledTonalButton(onClick = onRefreshDevices) {
             Icon(
@@ -452,7 +452,7 @@ fun DeviceItem(
                     Text(
                         text = id,
                         style = MaterialTheme.typography.labelSmall,
-                        color = MaterialTheme.colorScheme.outlineVariant,
+                        color = MaterialTheme.colorScheme.outline,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis
                     )

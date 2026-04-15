@@ -119,6 +119,7 @@ fun RegisterScreen(
                 onValueChange = { username = it },
                 label = { Text("用户名") },
                 modifier = Modifier.fillMaxWidth(),
+                singleLine = true,
                 enabled = !isRegistering, // 禁用
                 isError = usernameError,
                 supportingText = { if (usernameError) Text("用户名至少需要3个字符") },
@@ -132,6 +133,7 @@ fun RegisterScreen(
                 label = { Text("电子邮箱") },
                 modifier = Modifier.fillMaxWidth(),
                 enabled = !isRegistering, // 禁用
+                singleLine = true,
                 isError = emailError,
                 supportingText = { if (emailError) Text("请输入有效的邮箱地址") },
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
@@ -146,6 +148,7 @@ fun RegisterScreen(
                 modifier = Modifier.fillMaxWidth(),
                 enabled = !isRegistering, // 禁用
                 isError = passwordError,
+                singleLine = true,
                 supportingText = { if (passwordError) Text("密码需包含大小写字母、数字及特殊字符，且至少 8 位") },
                 visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
                 leadingIcon = { Icon(Icons.Default.Lock, contentDescription = null) },
@@ -163,6 +166,7 @@ fun RegisterScreen(
                 onValueChange = { confirmPassword = it },
                 label = { Text("确认密码") },
                 modifier = Modifier.fillMaxWidth(),
+                singleLine = true,
                 enabled = !isRegistering, // 禁用
                 isError = confirmPasswordError,
                 supportingText = { if (confirmPasswordError) Text("两次输入的密码不一致") },
@@ -183,7 +187,7 @@ fun RegisterScreen(
             Spacer(modifier = Modifier.height(16.dp))
 
             Button(
-                onClick = { onRegister(username, password, email) },
+                onClick = { onRegister(username.trim(), password.trim(), email.trim()) },
                 modifier = Modifier.fillMaxWidth(),
                 enabled = !isRegistering && !usernameError && !emailError &&
                         !passwordError && !confirmPasswordError &&

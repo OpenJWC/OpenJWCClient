@@ -11,6 +11,7 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import org.openjwc.client.data.datastore.AuthSession
 import org.openjwc.client.data.repository.AuthRepository
+import org.openjwc.client.log.Logger
 import org.openjwc.client.net.models.LoginSuccessResponse
 import org.openjwc.client.net.models.NetworkResult
 import org.openjwc.client.net.models.SuccessResponse
@@ -43,34 +44,46 @@ class AuthViewModel(
     var navEvent = Channel<NavEvent>(Channel.BUFFERED)
         private set
 
+    var uiEvent = Channel<UiEvent>(Channel.BUFFERED)
+        private set
+
     fun login(account: String, password: String) {
+        Logger.d(tag, "login: $account")
         viewModelScope.launch {
             isLoggingIn.value = true
             loginResult.value = authRepository.login(account, password)
             isLoggingIn.value = false
             if (loginResult.value is NetworkResult.Success) {
                 navEvent.send(NavEvent.ToBack())
+                UiEvent.ShowToast("登录成功")
             }
         }
     }
 
     fun register(username: String, password: String, email: String) {
+        Logger.d(tag, "register: $username")
         viewModelScope.launch {
             isRegistering.value = true
             registerResult.value = authRepository.register(username, password, email)
             isRegistering.value = false
             if (registerResult.value is NetworkResult.Success) {
                 navEvent.send(NavEvent.ToBack())
+                uiEvent.send(UiEvent.ShowToast("注册成功"))
             }
         }
     }
 
     fun logout() {
+        Logger.d(tag, "logout")
         viewModelScope.launch {
-            authRepository.logout()
+            val result = authRepository.logout()
+            when (result) {
+                is NetworkResult.Failure -> uiEvent.send(UiEvent.ShowToast("注销失败(${result.code}): ${result.msg}"))
+                is NetworkResult.Error -> uiEvent.send(UiEvent.ShowToast("注销失败: ${result.msg}"))
+                else -> {}
+            }
         }
     }
-
 
     fun getOrCreateUuid() {
         viewModelScope.launch {

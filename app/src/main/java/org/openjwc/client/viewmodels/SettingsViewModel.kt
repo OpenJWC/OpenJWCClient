@@ -124,7 +124,7 @@ class SettingsViewModel(
                 response = SuccessResponse(
                     message = "success",
                     data = DevicesQueryResponseData(
-                        limitedDeviceCount = 3,
+//                        limitedDeviceCount = 3,
                         deviceQueries = emptyList()
                     )
                 )
@@ -146,6 +146,7 @@ class SettingsViewModel(
             Logger.d(label, "devicesQuery start...")
             _isLoadingDeviceResult.value = true
             val result = authRepository.deviceQuery()
+            if (result is NetworkResult.Failure && result.code == 401) authRepository.clearSession()
             _deviceResult.value = result
             Logger.d(label, "devicesQuery end...")
             _isLoadingDeviceResult.value = false
@@ -159,11 +160,13 @@ class SettingsViewModel(
             val unbindResult = authRepository.deviceUnbind(deviceId)
             Logger.d(label, "Unbind result: $unbindResult")
             _deviceUnbindNetworkResult.value = unbindResult
-            if (unbindResult is NetworkResult.Success<*>) {
+            if (unbindResult is NetworkResult.Success) {
                 Logger.d(label, "解绑成功，开始刷新列表...")
                 val result = authRepository.deviceQuery()
                 _deviceResult.value = result
                 _isLoadingDeviceResult.value = false
+            } else if (unbindResult is NetworkResult.Failure && unbindResult.code == 401) {
+                authRepository.clearSession()
             }
         }
     }
