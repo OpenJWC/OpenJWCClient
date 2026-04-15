@@ -8,6 +8,7 @@ import androidx.compose.material.icons.filled.Settings
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
+import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.asStateFlow
@@ -18,6 +19,7 @@ import org.openjwc.client.data.repository.SettingsRepository
 import org.openjwc.client.data.settings.MenuItem
 import org.openjwc.client.data.settings.SettingSection
 import org.openjwc.client.navigation.Screen
+import org.openjwc.client.net.models.NetworkResult
 import java.time.LocalDate
 
 class MeViewModel(
@@ -66,6 +68,9 @@ class MeViewModel(
         initialValue = CachedHitokoto()
     )
 
+    var uiEvent = Channel<UiEvent>(Channel.BUFFERED)
+        private set
+
     fun refreshHitokotoLazily() {
         viewModelScope.launch {
             if (hitokoto.value.date != LocalDate.now()) {
@@ -74,8 +79,16 @@ class MeViewModel(
         }
     }
 
-    suspend fun refreshHitokoto() =
-        repository.tryRefreshHitokoto()
+    fun refreshHitokoto() {
+        viewModelScope.launch {
+            val result = repository.tryRefreshHitokoto()
+            when (result) {
+                is NetworkResult.Failure -> uiEvent.send(UiEvent.ShowToast("(${result.code}) ${result.msg}"))
+                is NetworkResult.Error -> uiEvent.send(UiEvent.ShowToast(result.msg))
+                is NetworkResult.Success -> uiEvent.send(UiEvent.ShowToast("刷新成功"))
+            }
+        }
+    }
 }
 
 

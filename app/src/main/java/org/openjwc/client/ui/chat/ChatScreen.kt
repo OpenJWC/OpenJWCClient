@@ -396,7 +396,7 @@ private fun ChatMainContent(
             chatMessages = messages,
             sessionState = sessionState,
             onCopy = {
-                chatViewModel.copyMessage(it, clipboardManager, context)
+                chatViewModel.copyMessage(it, clipboardManager)
             },
             onShare = { /*TODO: viewModel.shareMessage(it)*/ },
             onDelete = { chatViewModel.deleteMessage(it.messageId) }

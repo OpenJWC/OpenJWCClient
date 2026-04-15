@@ -124,7 +124,7 @@ interface NetService {
         @Header("X-Device-ID") deviceId: String,
     ): Response<ResponseBody>
 
-    @POST("api/v2/client/login")
+    @POST("api/v2/client/auth/login")
     suspend fun postLogin(
         @Header("Authorization") auth: String?,
         @Header("X-Device-ID") deviceId: String,

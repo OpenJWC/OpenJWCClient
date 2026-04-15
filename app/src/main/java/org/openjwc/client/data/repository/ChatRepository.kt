@@ -149,6 +149,11 @@ class ChatRepository(
                         emit(Failure(result.code, result.msg))
                         throw CancellationException("Network request failed")
                     }
+                    is ChatNetworkResult.Error -> {
+                        handleFailure(aiMsgId)
+                        emit(Failure(-1, result.msg))
+                        throw CancellationException("Network request failed")
+                    }
                     else -> { /* 处理其他情况 */ }
                 }
             }

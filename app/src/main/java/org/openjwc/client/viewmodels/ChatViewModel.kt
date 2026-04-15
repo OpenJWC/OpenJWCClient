@@ -1,8 +1,6 @@
 package org.openjwc.client.viewmodels
 
 import android.content.ClipData
-import android.content.Context
-import android.widget.Toast
 import androidx.compose.ui.platform.ClipEntry
 import androidx.compose.ui.platform.Clipboard
 import androidx.lifecycle.ViewModel
@@ -172,7 +170,10 @@ class ChatViewModel(
                         is ChatStreamStatus.ToolCalling -> ChatSessionState.ToolCalling
                         is ChatStreamStatus.Generating -> ChatSessionState.Generating
                         is ChatStreamStatus.Finished -> ChatSessionState.Idle
-                        is ChatStreamStatus.Failure -> ChatSessionState.Error(status.msg)
+                        is ChatStreamStatus.Failure -> {
+                            uiEvent.send(UiEvent.ShowToast("${status.code}: ${status.msg}"))
+                            ChatSessionState.Error(status.msg)
+                        }
                     })
                 }
             } catch (e: Exception) {
@@ -194,10 +195,9 @@ class ChatViewModel(
     fun copyMessage(
         message: ChatMessage,
         clipboardManager: Clipboard,
-        context: Context
     ) {
         viewModelScope.launch {
-            Toast.makeText(context, "复制成功", Toast.LENGTH_SHORT).show()
+            uiEvent.send(UiEvent.ShowToast("复制成功"))
             clipboardManager.setClipEntry(
                 ClipEntry(
                     ClipData.newPlainText(

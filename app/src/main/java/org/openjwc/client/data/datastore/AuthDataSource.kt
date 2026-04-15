@@ -8,6 +8,7 @@ import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
+import org.openjwc.client.log.Logger
 import java.util.UUID
 
 data class AuthSession(
@@ -47,6 +48,7 @@ class AuthDataSource(private val context: Context) {
             prefs[Keys.TOKEN] = token
             prefs[Keys.IS_LOGGED_IN] = true
         }
+        Logger.d("AuthDataSource", "saveSession: $username, $email, $token")
     }
 
     suspend fun clearSession() {
@@ -69,7 +71,7 @@ class AuthDataSource(private val context: Context) {
     suspend fun getOrCreateDeviceName(): String {
         return context.authStore.edit { prefs ->
             if (prefs[Keys.DEVICE_NAME] == null) {
-                prefs[Keys.DEVICE_NAME] = Build.MODEL
+                prefs[Keys.DEVICE_NAME] = "${Build.MANUFACTURER} ${Build.MODEL}"
             }
         }.let { it[Keys.DEVICE_NAME] ?: "" }
     }

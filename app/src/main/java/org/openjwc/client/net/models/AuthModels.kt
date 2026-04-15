@@ -38,7 +38,7 @@ data class LoginRequestBody(
 
 @Serializable
 data class RegisterRequestBody(
-    val account: String,
+    val username: String,
     @SerialName("password_hash") val passwordHash: String,
     val email: String,
 )

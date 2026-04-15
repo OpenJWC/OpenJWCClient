@@ -1,6 +1,5 @@
 package org.openjwc.client.ui.me
 
-import android.widget.Toast
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
@@ -35,21 +34,17 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
-import kotlinx.coroutines.launch
 import org.openjwc.client.data.settings.Event
 import org.openjwc.client.data.settings.SettingSection
-import org.openjwc.client.net.models.NetworkResult
 import org.openjwc.client.ui.me.settings.MenuSectionCard
 import org.openjwc.client.viewmodels.MeViewModel
 
@@ -63,8 +58,6 @@ fun MeScreen(
     val sections by viewModel.sections.collectAsStateWithLifecycle()
     val isExpanded = windowSizeClass.widthSizeClass == WindowWidthSizeClass.Expanded
     val hitokoto = viewModel.hitokoto.collectAsStateWithLifecycle().value
-    val scope = rememberCoroutineScope()
-    val context = LocalContext.current
     LaunchedEffect(Unit) {
         viewModel.refreshHitokotoLazily()
     }
@@ -85,15 +78,7 @@ fun MeScreen(
                         text = hitokoto.text,
                         author = hitokoto.author,
                         onRefresh = {
-//                            Log.d("MeScreen", "Refresh hitokoto")
-                            scope.launch {
-                                val result = viewModel.refreshHitokoto()
-                                when (result) {
-                                    is NetworkResult.Failure -> Toast.makeText(context, result.msg, Toast.LENGTH_SHORT).show()
-                                    is NetworkResult.Error -> Toast.makeText(context, result.msg, Toast.LENGTH_SHORT).show()
-                                    is NetworkResult.Success -> Toast.makeText(context, "刷新成功", Toast.LENGTH_SHORT).show()
-                                }
-                            }
+                            viewModel.refreshHitokoto()
                         }
                     )
                 }
@@ -117,15 +102,7 @@ fun MeScreen(
                         text = hitokoto.text,
                         author = hitokoto.author,
                         onRefresh = {
-//                            Log.d("MeScreen", "Refresh hitokoto")
-                            scope.launch {
-                                val result = viewModel.refreshHitokoto()
-                                when (result) {
-                                    is NetworkResult.Failure -> Toast.makeText(context, result.msg, Toast.LENGTH_SHORT).show()
-                                    is NetworkResult.Error -> Toast.makeText(context, result.msg, Toast.LENGTH_SHORT).show()
-                                    is NetworkResult.Success -> Toast.makeText(context, "刷新成功", Toast.LENGTH_SHORT).show()
-                                }
-                            }
+                            viewModel.refreshHitokoto()
                         },
                         modifier = Modifier.padding(vertical = 64.dp, horizontal = 16.dp)
                     )
