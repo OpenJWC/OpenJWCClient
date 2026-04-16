@@ -76,6 +76,7 @@ interface NetService {
     suspend fun postDeviceUnbind(
         @Header("Authorization") auth: String,
         @Header("X-Device-ID") deviceId: String,
+        @Body request: DeviceUnbindRequestBody
     ): Response<ResponseBody>
 
     @GET("api/v2/client/device")

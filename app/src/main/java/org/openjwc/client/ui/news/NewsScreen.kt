@@ -66,7 +66,7 @@ fun NewsScreen(
                 EmptyLabelsPlaceholder(
                     onRefresh = { newsViewModel.loadLabels() },
                     errorMessage = labelError,
-                    isLoggedIn = newsViewModel.isLoggedIn.collectAsStateWithLifecycle().value,
+                    isLoggedIn = newsViewModel.needsAuth.collectAsStateWithLifecycle().value,
                     onToLogin = { navController.navigate(Screen.Login) }
                 )
             } else {

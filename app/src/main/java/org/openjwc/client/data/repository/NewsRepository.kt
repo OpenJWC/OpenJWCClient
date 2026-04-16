@@ -23,9 +23,8 @@ class NewsRepository(
 
     suspend fun getLabels(): NetworkResult<SuccessResponse<FetchLabelsResponseData>> {
         val authSession = authDataSource.authSession.first()
-        if (!authSession.isLoggedIn) return NetworkResult.Failure(401,"Not logged in")
         return getApiService().fetchLabels(
-            authSession.token ?: return NetworkResult.Failure(401, "No token"),
+            authSession.token ?: "",
             authSession.uuid
         )
     }
@@ -36,9 +35,8 @@ class NewsRepository(
         size: Int
     ): NetworkResult<SuccessResponse<FetchNewsResponseData>> {
         val authSession = authDataSource.authSession.first()
-        if (!authSession.isLoggedIn) return NetworkResult.Failure(401,"Not logged in")
         return getApiService().fetchNews(
-            authSession.token ?: return NetworkResult.Failure(401, "No token"),
+            authSession.token ?: "",
             authSession.uuid,
             label,
             page,

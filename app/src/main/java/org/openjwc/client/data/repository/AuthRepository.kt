@@ -93,13 +93,15 @@ class AuthRepository(
     }
 
     suspend fun deviceUnbind(uuid: String): NetworkResult<DevicesUnbindSuccessResponse> {
-        if (!authDataSource.authSession.first().isLoggedIn) return NetworkResult.Error("Not logged in")
+        if (!authDataSource.authSession.first().isLoggedIn) return NetworkResult.Failure(401,"Not logged in")
         val settings = settingsDataSource.userSettings.first()
         try {
             val apiService =
                 NetClient.getService(settings.host, settings.port, settings.useHttp, settings.proxy)
             val result = apiService.deviceUnbind(
-                authDataSource.authSession.first().token ?: throw Exception("No token"), uuid
+                authDataSource.authSession.first().token ?: throw Exception("No token"),
+                authDataSource.getOrCreateUuid(),
+                uuid
             )
             return result
         } catch (e: Exception) {
@@ -108,7 +110,7 @@ class AuthRepository(
     }
 
     suspend fun deviceQuery(): NetworkResult<SuccessResponse<DevicesQueryResponseData>> {
-        if (!authDataSource.authSession.first().isLoggedIn) return NetworkResult.Error("Not logged in")
+        if (!authDataSource.authSession.first().isLoggedIn) return NetworkResult.Failure(401,"Not logged in")
         val settings = settingsDataSource.userSettings.first()
         try {
             val apiService =

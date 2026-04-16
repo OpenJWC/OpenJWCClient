@@ -18,6 +18,11 @@ data class DeviceQuery(
 )
 
 @Serializable
+data class DeviceUnbindRequestBody(
+    @SerialName("device_uuid") val deviceUUID: String
+)
+
+@Serializable
 data class DevicesUnbindSuccessResponse(
     val detail: String
 )

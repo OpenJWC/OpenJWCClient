@@ -60,12 +60,8 @@ class NewsViewModel(
     var reviewedNoticesData = MutableStateFlow<ReviewedNoticesData?>(null)
         private set
 
-    val isLoggedIn =
-        authRepository.authSession.map { it.isLoggedIn }.distinctUntilChanged().stateIn(
-            scope = viewModelScope,
-            started = SharingStarted.WhileSubscribed(5000),
-            initialValue = false
-        )
+    var needsAuth = MutableStateFlow(false)
+        private set
 
     var navEvent = Channel<NavEvent>(Channel.BUFFERED)
         private set
@@ -84,12 +80,16 @@ class NewsViewModel(
                 when (val result = newsRepository.getLabels()) {
                     is NetworkResult.Success -> {
                         labels.value = result.response.data.labels
+                        needsAuth.value = false
                         labelError.value = null
                     }
 
                     is NetworkResult.Failure -> {
                         labelError.value = "加载错误(${result.code}): ${result.msg}"
-                        if (result.code == 401) authRepository.clearSession()
+                        if (result.code == 401) {
+                            authRepository.clearSession()
+                            needsAuth.value = true
+                        }
                     }
 
                     is NetworkResult.Error -> {
@@ -115,6 +115,7 @@ class NewsViewModel(
 
                 when (result) {
                     is NetworkResult.Success -> {
+                        needsAuth.value = false
                         val newData = result.response.data.fetchedNotices
                         _isEndMap[label] = newData.size < size
 
@@ -130,7 +131,10 @@ class NewsViewModel(
 
                     is NetworkResult.Failure -> {
                         _errorMap[label] = "加载错误(${result.code}): ${result.msg}"
-                        if (result.code == 401) authRepository.clearSession()
+                        if (result.code == 401) {
+                            authRepository.clearSession()
+                            needsAuth.value = true
+                        }
                     }
 
                     is NetworkResult.Error -> _errorMap[label] = result.msg

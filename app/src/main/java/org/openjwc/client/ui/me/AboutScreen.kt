@@ -123,7 +123,7 @@ fun AboutScreen(
                 fontWeight = FontWeight.Bold
             )
             Text(
-                text = "Version ${BuildConfig.VERSION_NAME} (Beta)",
+                text = "Version ${BuildConfig.VERSION_NAME}",
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.outline
             )

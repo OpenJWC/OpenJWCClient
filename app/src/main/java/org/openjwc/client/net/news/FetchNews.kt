@@ -15,7 +15,7 @@ suspend fun NetService.fetchNews(
     label: String,
     page: Int,
     size: Int
-): NetworkResult<SuccessResponse<FetchNewsResponseData>> = fetch(level = Logger.Level.VERBOSE) { getNotices("Bearer $auth", deviceId, label, page, size) }
+): NetworkResult<SuccessResponse<FetchNewsResponseData>> = fetch(level = Logger.Level.DEBUG) { getNotices("Bearer $auth", deviceId, label, page, size) }
 
 suspend fun NetService.fetchLabels(
     auth: String,

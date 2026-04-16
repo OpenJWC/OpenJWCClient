@@ -162,8 +162,7 @@ class SettingsViewModel(
             _deviceUnbindNetworkResult.value = unbindResult
             if (unbindResult is NetworkResult.Success) {
                 Logger.d(label, "解绑成功，开始刷新列表...")
-                val result = authRepository.deviceQuery()
-                _deviceResult.value = result
+                devicesQuery()
                 _isLoadingDeviceResult.value = false
             } else if (unbindResult is NetworkResult.Failure && unbindResult.code == 401) {
                 authRepository.clearSession()
