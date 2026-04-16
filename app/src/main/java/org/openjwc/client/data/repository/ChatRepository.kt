@@ -1,9 +1,12 @@
 package org.openjwc.client.data.repository
 
+import kotlinx.coroutines.cancel
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.launch
 import org.openjwc.client.data.dao.ChatDao
 import org.openjwc.client.data.datastore.AuthDataSource
 import org.openjwc.client.data.datastore.SettingsDataSource
@@ -14,6 +17,7 @@ import org.openjwc.client.data.models.Role
 import org.openjwc.client.data.repository.ChatStreamStatus.Failure
 import org.openjwc.client.data.repository.ChatStreamStatus.Generating
 import org.openjwc.client.data.repository.ChatStreamStatus.Loading
+import org.openjwc.client.log.Logger
 import org.openjwc.client.net.chat.sendMessageStream
 import org.openjwc.client.net.models.ChatHistory
 import org.openjwc.client.net.models.ChatNetworkResult
@@ -35,6 +39,7 @@ class ChatRepository(
     private val settingsDataSource: SettingsDataSource,
     private val authDataSource: AuthDataSource
 ) {
+    private val tag = "ChatRepository"
     // 返回 session 的 metadata 里面的 id
     suspend fun createChatSession(title: String): Long {
         val metadata = ChatMetadata(title = title)
@@ -78,23 +83,23 @@ class ChatRepository(
     ) = flow {
         val currentSettings = settingsDataSource.userSettings.first()
         val authSession = authDataSource.authSession.first()
+
         if (!authSession.isLoggedIn || authSession.token == null) {
             emit(Failure(401, "Not Logged in"))
             return@flow
         }
 
-        val attachmentTitles = attachments.map { it.title }
-        val attachmentIds = attachments.map { it.id }
-
+        // 1. 插入用户消息
         insertMessage(
             ChatMessage(
                 ownerSessionId = sessionId,
                 text = messageText,
                 role = Role.USER,
-                attachmentTitles = attachmentTitles
+                attachmentTitles = attachments.map { it.title }
             )
         )
 
+        // 2. 插入 AI 占位消息并获取 ID
         val aiMsgId = insertMessage(
             ChatMessage(
                 ownerSessionId = sessionId,
@@ -126,42 +131,55 @@ class ChatRepository(
             var currentFullText = ""
             var lastWriteTime = 0L
 
-            apiService.sendMessageStream(
-                authSession.token,
-                authSession.uuid,
-                ChatRequestBody(attachmentIds, messageText, true, historyList)
-            ).collect { result ->
-                when (result) {
-                    // TODO: 目前只支持Generating状态，等后端写好tool calling 再补全
-                    is ChatNetworkResult.Success -> {
-                        currentFullText = result.content
-                        emit(Generating(currentFullText))
-                        val currentTime = System.currentTimeMillis()
-                        if (currentTime - lastWriteTime > 500L) {
-                            updateMessageText(aiMsgId, currentFullText)
-                            lastWriteTime = currentTime
+            // 使用 coroutineScope 来支撑内部的异步 launch 写入
+            coroutineScope {
+                apiService.sendMessageStream(
+                    authSession.token,
+                    authSession.uuid,
+                    ChatRequestBody(attachments.map { it.id }, messageText, true, historyList)
+                ).collect { result ->
+                    when (result) {
+                        is ChatNetworkResult.Success -> {
+                            currentFullText = result.content
+
+                            // 【UI 轨】立即发射，让 ViewModel 刷新内存数据
+                            emit(Generating(currentFullText))
+
+                            // 【DB 轨】节流异步写入
+                            val currentTime = System.currentTimeMillis()
+                            if (currentTime - lastWriteTime > 500L) {
+                                lastWriteTime = currentTime
+                                // 启动一个并行的非阻塞任务去更新数据库
+                                launch {
+                                    updateMessageText(aiMsgId, currentFullText)
+                                }
+                            }
                         }
+                        is ChatNetworkResult.Failure -> {
+                            handleFailure(aiMsgId)
+                            emit(Failure(result.code, result.msg))
+                            Logger.e(tag, "Failure: (${result.code}) ${result.msg}")
+                            cancel(CancellationException("Network request failed"))
+                        }
+                        is ChatNetworkResult.Error -> {
+                            handleFailure(aiMsgId)
+                            emit(Failure(-1, result.msg))
+                            Logger.e(tag, result.msg)
+                            cancel(CancellationException("Network request failed"))
+                        }
+                        else -> { /* 处理 ToolCalling 等 */ }
                     }
-                    is ChatNetworkResult.Failure -> {
-                        handleFailure(aiMsgId)
-                        emit(Failure(result.code, result.msg))
-                        throw CancellationException("Network request failed")
-                    }
-                    is ChatNetworkResult.Error -> {
-                        handleFailure(aiMsgId)
-                        emit(Failure(-1, result.msg))
-                        throw CancellationException("Network request failed")
-                    }
-                    else -> { /* 处理其他情况 */ }
                 }
             }
 
+            // 3. 最终校准：确保存入数据库的是 100% 完整的内容
             updateMessageText(aiMsgId, currentFullText)
             emit(ChatStreamStatus.Finished(currentFullText))
 
         } catch (e: Exception) {
             if (e !is CancellationException) {
                 handleFailure(aiMsgId)
+                Logger.e(tag, e.localizedMessage ?: "Unknown Error")
                 emit(Failure(-1, e.localizedMessage ?: "Unknown Error"))
             }
         }

@@ -43,6 +43,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -131,6 +132,26 @@ fun HostScreen(
         initialHost != host || initialPort != portInt || initialUseHttp != useHttp || initialProxy != currentProxy
     val canSave = isHostValid && isPortValid && isProxyValid && isChanged
 
+    LaunchedEffect(initialHost, initialPort, initialUseHttp, initialProxy) {
+        host = initialHost
+        portString = initialPort.toString()
+        useHttp = initialUseHttp
+        proxyType = when (initialProxy) {
+            is Proxy.NoProxy -> 0
+            is Proxy.HttpProxy -> 1
+            is Proxy.SocksProxy -> 2
+        }
+        proxyHost = when (initialProxy) {
+            is Proxy.HttpProxy -> initialProxy.host
+            is Proxy.SocksProxy -> initialProxy.host
+            else -> "127.0.0.1"
+        }
+        proxyPortString = when (initialProxy) {
+            is Proxy.HttpProxy -> initialProxy.port.toString()
+            is Proxy.SocksProxy -> initialProxy.port.toString()
+            else -> "8888"
+        }
+    }
     Scaffold(
         modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
         topBar = {

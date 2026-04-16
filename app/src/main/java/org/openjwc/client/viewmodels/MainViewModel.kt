@@ -118,8 +118,8 @@ class MainViewModel(
                     }
                 }
                 else -> {
-                    Logger.d(label, "检查更新失败或无更新")
-                    uiEvent.send(UiEvent.ShowToast("检查更新失败或无更新"))
+                    Logger.d(label, "检查更新失败")
+                    uiEvent.send(UiEvent.ShowToast("检查更新失败"))
                 }
             }
         }

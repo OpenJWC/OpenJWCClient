@@ -75,7 +75,7 @@ class MeViewModel(
 
     fun refreshHitokotoLazily() {
         viewModelScope.launch {
-            if (hitokoto.value.date != LocalDate.now()) {
+            if (hitokoto.value.date != LocalDate.now().toString()) {
                 repository.tryRefreshHitokoto()
             }
         }

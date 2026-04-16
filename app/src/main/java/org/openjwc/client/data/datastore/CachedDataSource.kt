@@ -6,15 +6,16 @@ import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
+import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 import org.openjwc.client.net.models.Hitokoto
 import java.time.LocalDate
 
-
+@Serializable
 data class CachedHitokoto(
     val text: String = Hitokoto().text,
     val author: String? = Hitokoto().author,
-    val date: LocalDate = LocalDate.now()
+    val date: String = LocalDate.now().toString()
 )
 private val Context.cacheStore by preferencesDataStore(name = "cached_prefs")
 class CachedDataSource(private val context: Context) {
@@ -26,7 +27,7 @@ class CachedDataSource(private val context: Context) {
         val data = CachedHitokoto(
             text = hitokoto.text,
             author = hitokoto.author,
-            date = LocalDate.now()
+            date = LocalDate.now().toString()
         )
         context.cacheStore.edit {
             it[Keys.HITOKOTO_JSON] = Json.encodeToString(data)

@@ -178,9 +178,6 @@ fun ChatScreen(
     val scope = rememberCoroutineScope()
     LocalContext.current
     val showEditMetadataDialog = remember { MutableStateFlow(false) }
-
-//    val isExpanded = windowSizeClass.widthSizeClass == WindowWidthSizeClass.Expanded
-
     val drawerContent = @Composable {
         ModalDrawerSheet(windowInsets = WindowInsets.systemBars.only(WindowInsetsSides.Top)) {
             ChatHistoryList(

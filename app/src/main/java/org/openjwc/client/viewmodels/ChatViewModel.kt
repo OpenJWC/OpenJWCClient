@@ -10,14 +10,17 @@ import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import org.openjwc.client.data.models.ChatMessage
 import org.openjwc.client.data.models.ChatMetadata
+import org.openjwc.client.data.models.Role
 import org.openjwc.client.data.repository.AuthRepository
 import org.openjwc.client.data.repository.ChatRepository
 import org.openjwc.client.data.repository.ChatStreamStatus
@@ -50,6 +53,9 @@ class ChatViewModel(
     var currentSessionMetadata = MutableStateFlow<ChatMetadata?>(null)
         private set
 
+    // 用来记录正在生成的文本，key 是 sessionId，value 是生成的文本
+    private val _generatingTexts = MutableStateFlow<Map<Long, String>>(emptyMap())
+
 
     var uiEvent = Channel<UiEvent>(Channel.BUFFERED)
         private set
@@ -81,13 +87,29 @@ class ChatViewModel(
         attachments.value = emptyList()
     }
 
+    /// Repository 以 500ms 的周期写数据库，同时 UI 立刻渲染出来
     @OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)
-    val messages: StateFlow<List<ChatMessage>> = currentSessionMetadata
-        .flatMapLatest { metadata ->
+    val messages: StateFlow<List<ChatMessage>> = combine(
+        currentSessionMetadata.flatMapLatest { metadata ->
             if (metadata == null) flowOf(emptyList())
             else chatRepository.getMessagesBySessionId(metadata.sessionId)
+        },
+        _generatingTexts
+    ) { dbMessages, generatingMap ->
+        val currentSessionId = currentSessionMetadata.value?.sessionId
+        val liveText = generatingMap[currentSessionId]
+        if (liveText != null) {
+            dbMessages.mapIndexed { index, msg ->
+                if (index == dbMessages.lastIndex && msg.role == Role.ASSISTANT) {
+                    msg.copy(text = liveText)
+                } else {
+                    msg
+                }
+            }
+        } else {
+            dbMessages
         }
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
     val allSessions = chatRepository.getChatSessions()
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
@@ -155,27 +177,30 @@ class ChatViewModel(
                     currentSessionMetadata.value = newMetadata
                 }
 
-                chatRepository.sendMessage(
-                    sessionId,
-                    messageText,
-                    currentAttachments,
-                ).collect { status ->
-                    if (status is ChatStreamStatus.Failure && status.code == 401) {
-                        authRepository.clearSession()
-                        navEvent.send(NavEvent.ToLogin())
-                    }
-
-                    updateSessionState(sessionId, when(status) {
-                        is ChatStreamStatus.Loading -> ChatSessionState.Loading
-                        is ChatStreamStatus.ToolCalling -> ChatSessionState.ToolCalling
-                        is ChatStreamStatus.Generating -> ChatSessionState.Generating
-                        is ChatStreamStatus.Finished -> ChatSessionState.Idle
-                        is ChatStreamStatus.Failure -> {
-                            uiEvent.send(UiEvent.ShowToast("${status.code}: ${status.msg}"))
-                            ChatSessionState.Error(status.msg)
+                chatRepository.sendMessage(sessionId, messageText, currentAttachments)
+                    .collect { status ->
+                        if (status is ChatStreamStatus.Generating) {
+                            _generatingTexts.update { it + (sessionId to status.content) }
                         }
-                    })
-                }
+
+                        // 流结束或失败时，清理内存占位
+                        if (status is ChatStreamStatus.Finished || status is ChatStreamStatus.Failure) {
+                            _generatingTexts.update { it - sessionId }
+                        }
+
+                        // 更新会话状态 (Loading/Generating/Idle)
+                        updateSessionState(sessionId, when(status) {
+                            is ChatStreamStatus.Loading -> ChatSessionState.Loading
+                            is ChatStreamStatus.Generating -> ChatSessionState.Generating
+                            is ChatStreamStatus.Finished -> ChatSessionState.Idle
+                            is ChatStreamStatus.Failure ->
+                            {
+                                uiEvent.send(UiEvent.ShowToast(status.msg))
+                                ChatSessionState.Error(status.msg)
+                            }
+                            else -> ChatSessionState.Idle
+                        })
+                    }
             } catch (e: Exception) {
                 Logger.e(label, "sendMessage Error", e)
                 uiEvent.send(UiEvent.ShowToast(e.localizedMessage ?: "Unknown Error"))

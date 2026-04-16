@@ -21,7 +21,6 @@ fun NetService.sendMessageStream(
 ): Flow<ChatNetworkResult> = flow {
     try {
         val response = postChatQueryStream("Bearer $auth", deviceId, chatRequestBody)
-        Logger.d(LABEL, auth)
         Logger.d(LABEL, "Response: $response")
         if (!response.isSuccessful) {
             Logger.e(LABEL, "Failure: ${response.code()} ${response.message()}")
