@@ -58,6 +58,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import org.openjwc.client.log.Logger
 import org.openjwc.client.net.models.FetchedNotice
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
@@ -322,11 +323,11 @@ fun InfoCard(
 
 @Composable
 fun EmptyLabelsPlaceholder(
+    modifier: Modifier = Modifier,
     isLoggedIn: Boolean = false,
     onRefresh: () -> Unit,
     onToLogin: () -> Unit,
     errorMessage: String?,
-    modifier: Modifier = Modifier
 ) {
     Column(
         modifier = modifier
@@ -418,6 +419,7 @@ fun isDateFresh(dateString: String, freshDays: Int?): Boolean {
         val daysBetween = ChronoUnit.DAYS.between(noticeDate, today)
         daysBetween in 0..freshDays.toLong()
     } catch (e: Exception) {
+        Logger.e("isDateFresh", e.localizedMessage ?: "Unknown Error")
         false
     }
 }

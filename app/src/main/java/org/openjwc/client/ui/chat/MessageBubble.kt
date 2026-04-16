@@ -27,6 +27,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
@@ -79,13 +80,14 @@ fun MessageBubble(
                 )
             }
 
-            Box(
-                modifier = Modifier.combinedClickable(
-                    onClick = { /* 单击逻辑 */ },
-                    onLongClick = { showMenu = true }
-                )
-            ) {
+            Box {
                 Surface(
+                    modifier = Modifier
+                        .clip(bubbleShape)
+                        .combinedClickable(
+                        onClick = { /* 单击逻辑 */ },
+                        onLongClick = { showMenu = true }
+                    ),
                     color = containerColor,
                     contentColor = contentColor,
                     shape = bubbleShape,

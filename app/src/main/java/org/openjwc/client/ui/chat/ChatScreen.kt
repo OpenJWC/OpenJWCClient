@@ -12,16 +12,11 @@ import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.WindowInsets
-import androidx.compose.foundation.layout.WindowInsetsSides
 import androidx.compose.foundation.layout.consumeWindowInsets
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.imePadding
-import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.systemBars
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.items
@@ -35,7 +30,6 @@ import androidx.compose.material.icons.filled.ChatBubbleOutline
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.MoreVert
-import androidx.compose.material3.DrawerState
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -43,8 +37,6 @@ import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.ModalDrawerSheet
-import androidx.compose.material3.ModalNavigationDrawer
 import androidx.compose.material3.NavigationDrawerItem
 import androidx.compose.material3.Text
 import androidx.compose.material3.windowsizeclass.WindowSizeClass
@@ -64,7 +56,6 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
 import org.openjwc.client.data.models.ChatMessage
 import org.openjwc.client.data.models.ChatMetadata
@@ -166,70 +157,18 @@ fun BackToBottomButton(visible: Boolean, onClick: () -> Unit, modifier: Modifier
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ChatScreen(
-    modifier: Modifier = Modifier,
-    sessionId: Long? = null,
+
     windowSizeClass: WindowSizeClass,
-    drawerState: DrawerState,
     chatViewModel: ChatViewModel,
     mainViewModel: MainViewModel,
     contentPadding: PaddingValues,
 ) {
-    val historySessions by chatViewModel.allSessions.collectAsStateWithLifecycle(emptyList())
-    val scope = rememberCoroutineScope()
-    LocalContext.current
-    val showEditMetadataDialog = remember { MutableStateFlow(false) }
-    val drawerContent = @Composable {
-        ModalDrawerSheet(windowInsets = WindowInsets.systemBars.only(WindowInsetsSides.Top)) {
-            ChatHistoryList(
-                sessions = historySessions,
-                currentSessionId = sessionId,
-                onSessionClick = { id ->
-                    chatViewModel.loadSession(id)
-                    scope.launch { drawerState.close() }
-                },
-                onNewChat = {
-                    chatViewModel.toNewChat()
-                    scope.launch { drawerState.close() }
-                },
-                onDeleteSession = { id -> chatViewModel.deleteSession(id) },
-                onUpdateSessionMetadata = {
-                    showEditMetadataDialog.value = true
-                },
-                // 确保它占据可用空间
-                modifier = Modifier
-                    .fillMaxHeight()
-                    .padding(top = contentPadding.calculateTopPadding())
-            )
-        }
-    }
-
-    ModalNavigationDrawer(
-        drawerState = drawerState,
-        drawerContent = drawerContent,
-        modifier = modifier
-    ) {
-        Box(Modifier.fillMaxSize()) {
-            ChatMainContent(
-                chatViewModel = chatViewModel,
-                windowSizeClass = windowSizeClass,
-                contentPadding = contentPadding,
-                mainViewModel = mainViewModel
-            )
-        }
-    }
-
-    if (showEditMetadataDialog.collectAsState().value) {
-        EditMetadataDialog(
-            onDismiss = { showEditMetadataDialog.value = false },
-            onConfirm = { newTitle ->
-                showEditMetadataDialog.value = false
-                chatViewModel.currentSessionMetadata.value?.let {
-                    chatViewModel.updateMetadata(it.copy(title = newTitle))
-                }
-            },
-            initialTitle = chatViewModel.currentSessionMetadata.value?.title ?: ""
-        )
-    }
+    ChatMainContent(
+        chatViewModel = chatViewModel,
+        windowSizeClass = windowSizeClass,
+        contentPadding = contentPadding,
+        mainViewModel = mainViewModel
+    )
 }
 
 @Composable
@@ -366,7 +305,8 @@ private fun ChatMainContent(
 ) {
     val messages by chatViewModel.messages.collectAsStateWithLifecycle()
     val currentMetadata by chatViewModel.currentSessionMetadata.collectAsStateWithLifecycle()
-    val sessionState by chatViewModel.getSessionState(currentMetadata?.sessionId).collectAsStateWithLifecycle()
+    val sessionState by chatViewModel.getSessionState(currentMetadata?.sessionId)
+        .collectAsStateWithLifecycle()
     val listState = rememberLazyListState()
     val clipboardManager = LocalClipboard.current
     val context = LocalContext.current
@@ -413,7 +353,7 @@ private fun ChatMainContent(
                 .imePadding(),
             isSending = sessionState !is ChatSessionState.Idle && sessionState !is ChatSessionState.Error,
             attachments = chatViewModel.attachments.collectAsStateWithLifecycle().value,
-            onDeleteAttachment = {chatViewModel.deleteAttachment(it)},
+            onDeleteAttachment = { chatViewModel.deleteAttachment(it) },
         )
     }
 }
