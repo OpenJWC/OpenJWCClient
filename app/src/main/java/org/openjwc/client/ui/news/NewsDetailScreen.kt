@@ -53,8 +53,10 @@ fun TestNewsDetailScreen() {
             detailUrl = "https://www.baidu.com",
             isPage = true,
             contentText = "测试正文",
-            attachmentUrls = listOf("https://www.bilibili.com"),
+            attachmentUrls = listOf(
+                "https://www.bilibili.com", "https://www.baidu.com"
             ),
+        ),
         onBack = {},
         onToBrowser = {},
         onAddToAttachments = {}
@@ -131,7 +133,7 @@ fun NewsDetailScreen(
                     color = MaterialTheme.colorScheme.primary,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
-                    modifier = Modifier.clickable {onToBrowser(fetchedNotice.detailUrl)}
+                    modifier = Modifier.clickable { onToBrowser(fetchedNotice.detailUrl) }
                 )
             }
 
@@ -170,12 +172,14 @@ fun AttachmentList(
             color = MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.5f),
             shape = MaterialTheme.shapes.extraLarge,
         ) {
-            urls.forEachIndexed { index, url ->
-                AttachmentItem(
-                    url = url,
-                    index = index,
-                    onClick = { onAttachmentClick(url) }
-                )
+            Column {
+                urls.forEachIndexed { index, url ->
+                    AttachmentItem(
+                        url = url,
+                        index = index,
+                        onClick = { onAttachmentClick(url) }
+                    )
+                }
             }
         }
     }
