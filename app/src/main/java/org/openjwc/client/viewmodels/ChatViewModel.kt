@@ -21,7 +21,6 @@ import kotlinx.coroutines.launch
 import org.openjwc.client.data.models.ChatMessage
 import org.openjwc.client.data.models.ChatMetadata
 import org.openjwc.client.data.models.Role
-import org.openjwc.client.data.repository.AuthRepository
 import org.openjwc.client.data.repository.ChatRepository
 import org.openjwc.client.data.repository.ChatStreamStatus
 import org.openjwc.client.log.Logger
@@ -36,8 +35,7 @@ sealed class ChatSessionState {
 }
 
 class ChatViewModel(
-    private val chatRepository: ChatRepository,
-    private val authRepository: AuthRepository
+    private val chatRepository: ChatRepository
 ) : ViewModel() {
     private val label = "ChatViewModel"
     private val _sessionStates = MutableStateFlow<Map<Long?, ChatSessionState>>(emptyMap())
@@ -172,8 +170,8 @@ class ChatViewModel(
             try {
                 var sessionId = currentSessionMetadata.value?.sessionId
                 if (sessionId == null) {
-                    sessionId = chatRepository.createChatSession(messageText.take(20))
-                    val newMetadata = ChatMetadata(sessionId = sessionId, title = messageText.take(20))
+                    sessionId = chatRepository.createChatSession(messageText.replace("\n", "").take(20))
+                    val newMetadata = ChatMetadata(sessionId = sessionId, title = messageText.replace("\n", "").take(20))
                     currentSessionMetadata.value = newMetadata
                 }
 
@@ -249,13 +247,12 @@ class ChatViewModel(
 }
 
 class ChatViewModelFactory(
-    private val chatRepository: ChatRepository,
-    private val authRepository: AuthRepository
+    private val chatRepository: ChatRepository
 ) : ViewModelProvider.Factory {
     override fun <T : ViewModel> create(modelClass: Class<T>): T {
         if (modelClass.isAssignableFrom(ChatViewModel::class.java)) {
             @Suppress("UNCHECKED_CAST")
-            return ChatViewModel(chatRepository, authRepository) as T
+            return ChatViewModel(chatRepository) as T
         }
         throw IllegalArgumentException("Unknown ViewModel class")
     }

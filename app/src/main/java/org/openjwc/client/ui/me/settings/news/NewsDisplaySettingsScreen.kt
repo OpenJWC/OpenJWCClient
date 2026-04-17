@@ -174,6 +174,7 @@ fun NewsDisplaySettingsScreen(
                     attachmentUrls = emptyList()
                 ),
                 onClick = {},
+                isFavorited = false,
                 isFresh = isValid && freshDaysInt != 0
             )
             InfoCard(
@@ -191,6 +192,7 @@ fun NewsDisplaySettingsScreen(
                     attachmentUrls = emptyList()
                 ),
                 onClick = {},
+                isFavorited = false,
                 isFresh = false
             )
         }

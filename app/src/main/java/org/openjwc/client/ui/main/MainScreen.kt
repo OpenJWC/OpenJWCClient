@@ -18,6 +18,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Menu
+import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.DrawerValue
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -185,6 +186,9 @@ private fun MainScaffoldContent(
                         },
                         actions = {
                             if (currentTab == MainTab.News) {
+                                IconButton(onClick = { navController.navigate(Screen.Favorite) }) {
+                                    Icon(Icons.Default.Star, contentDescription = "Favorite")
+                                }
                                 IconButton(onClick = { navController.navigate(Screen.UploadNews) }) {
                                     Icon(Icons.Default.Add, contentDescription = "Upload News")
                                 }

@@ -33,5 +33,7 @@ sealed interface Screen {
     @Serializable
     object Log: Screen
     @Serializable
+    object Favorite: Screen
+    @Serializable
     data class NewsDetail(val fetchedNotice: FetchedNotice) : Screen
 }

@@ -33,6 +33,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Label
 import androidx.compose.material.icons.filled.ArrowUpward
 import androidx.compose.material.icons.filled.ErrorOutline
+import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.outlined.Add
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -46,6 +47,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.LoadingIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.contentColorFor
@@ -77,6 +79,7 @@ fun NewsList(
     windowSizeClass: WindowSizeClass,
     listState: LazyGridState,
     newsItems: List<FetchedNotice>,
+    favoriteItems: List<FetchedNotice>,
     freshDays: Int?,
     isLoading: Boolean,
     isEnd: Boolean,
@@ -86,6 +89,8 @@ fun NewsList(
     selectedNotice: FetchedNotice?,
     onMenuDismiss: () -> Unit,
     onAddToAttachment: (FetchedNotice) -> Unit,
+    onDeleteFavorite: (FetchedNotice) -> Unit,
+    onAddToFavorite: (FetchedNotice) -> Unit,
 
     onRefresh: () -> Unit,
     onLoadMore: () -> Unit,
@@ -159,7 +164,8 @@ fun NewsList(
                             fetchedNotice = item,
                             onClick = onItemClick,
                             onLongClick = onItemLongClick,
-                            isFresh = isFresh
+                            isFresh = isFresh,
+                            isFavorited = favoriteItems.any { it.id == item.id }
                         )
 
                         DropdownMenu(
@@ -179,6 +185,35 @@ fun NewsList(
                                     onMenuDismiss()
                                 }
                             )
+                            if (favoriteItems.any { it.id == item.id }) {
+                                DropdownMenuItem(
+                                    text = { Text("取消收藏") },
+                                    leadingIcon = {
+                                        Icon(
+                                            Icons.Filled.Star,
+                                            contentDescription = null,
+                                        )
+                                    },
+                                    onClick = {
+                                        onDeleteFavorite(item)
+                                        onMenuDismiss()
+                                    }
+                                )
+                            } else {
+                                DropdownMenuItem(
+                                    text = { Text("收藏") },
+                                    leadingIcon = {
+                                        Icon(
+                                            Icons.Filled.Star,
+                                            contentDescription = null,
+                                        )
+                                    },
+                                    onClick = {
+                                        onAddToFavorite(item)
+                                        onMenuDismiss()
+                                    }
+                                )
+                            }
                         }
                     }
                 }
@@ -285,8 +320,10 @@ fun TestInfoCard() {
             attachmentUrls = listOf("https://www.bilibili.com")
         ),
         isFresh = true,
+        isFavorited = true,
         onClick = {},
         onLongClick = {},
+        showLabel = true,
     )
 }
 
@@ -295,8 +332,10 @@ fun InfoCard(
     modifier: Modifier = Modifier,
     fetchedNotice: FetchedNotice,
     isFresh: Boolean,
+    isFavorited: Boolean,
     onClick: (FetchedNotice) -> Unit,
     onLongClick: (FetchedNotice) -> Unit = {},
+    showLabel: Boolean = false,
 ) {
     val containerColor = if (isFresh) {
         MaterialTheme.colorScheme.secondaryContainer
@@ -329,7 +368,20 @@ fun InfoCard(
                 .fillMaxWidth()
                 .fillMaxHeight()
         ) {
-
+            if (showLabel) {
+                Surface(
+                    color = MaterialTheme.colorScheme.onSecondary,
+                    shape = MaterialTheme.shapes.extraSmall,
+                    modifier = Modifier.padding(bottom = 8.dp)
+                ) {
+                    Text(
+                        text = fetchedNotice.label,
+                        modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.onSecondaryContainer,
+                    )
+                }
+            }
             Row(
                 verticalAlignment = Alignment.Top
             ) {
@@ -362,11 +414,23 @@ fun InfoCard(
             Spacer(modifier = Modifier.weight(1f))
 
             if (fetchedNotice.date.isNotEmpty()) {
-                Box(
+                Row(
                     modifier = Modifier.fillMaxWidth(),
-                    contentAlignment = Alignment.BottomEnd
+                    verticalAlignment = Alignment.Bottom,
+                    horizontalArrangement = Arrangement.SpaceBetween
                 ) {
+                    if (isFavorited) {
+                        Icon(
+                            imageVector = Icons.Filled.Star, // 使用 Star 图标更符合“星标”说法
+                            contentDescription = "Favorited",
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant, // 经典的星星金色
+                            modifier = Modifier.size(18.dp)
+                        )
+                    } else {
+                        Spacer(modifier = Modifier.size(18.dp))
+                    }
                     Text(
+                        modifier = Modifier.align(Alignment.CenterVertically),
                         text = fetchedNotice.date,
                         style = MaterialTheme.typography.labelMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant

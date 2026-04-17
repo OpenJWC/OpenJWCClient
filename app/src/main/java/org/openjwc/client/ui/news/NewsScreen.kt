@@ -31,6 +31,7 @@ import androidx.navigation.NavController
 import kotlinx.coroutines.launch
 import org.openjwc.client.navigation.Screen
 import org.openjwc.client.net.models.FetchedNotice
+import org.openjwc.client.net.models.toNoticeEntity
 import org.openjwc.client.ui.main.MainTab
 import org.openjwc.client.viewmodels.ChatViewModel
 import org.openjwc.client.viewmodels.MainViewModel
@@ -158,7 +159,10 @@ fun NewsScreen(
                                 mainViewModel.updateTab(MainTab.Chat)
                             },
                             freshDays = newsViewModel.freshDays.collectAsStateWithLifecycle().value,
-                            onInitialLoad = { newsViewModel.loadCategory(currentLabel) }
+                            onInitialLoad = { newsViewModel.loadCategory(currentLabel) },
+                            favoriteItems = newsViewModel.favoriteNews.collectAsStateWithLifecycle().value,
+                            onDeleteFavorite = { newsViewModel.deleteFavorite(it.id) },
+                            onAddToFavorite = { newsViewModel.insertFavorite(it.toNoticeEntity()) }
                         )
                         val showBackToTop by remember { derivedStateOf { listState.firstVisibleItemIndex > 5 } }
                         BackToTopButton(

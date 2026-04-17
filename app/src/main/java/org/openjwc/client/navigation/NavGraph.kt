@@ -51,6 +51,7 @@ import org.openjwc.client.ui.me.settings.connection.HostScreen
 import org.openjwc.client.ui.me.settings.general.ThemeScreen
 import org.openjwc.client.ui.me.settings.log.LogScreen
 import org.openjwc.client.ui.me.settings.news.NewsDisplaySettingsScreen
+import org.openjwc.client.ui.news.FavoriteScreen
 import org.openjwc.client.ui.news.NewsDetailScreen
 import org.openjwc.client.ui.news.upload.UploadNewsScreen
 import org.openjwc.client.ui.policy.LicenseScreen
@@ -304,7 +305,22 @@ fun NavGraph(
                     }
                 )
             }
-
+            composable<Screen.Favorite> {
+                FavoriteScreen(
+                    onBack = { navController.popBackStack() },
+                    onItemClick = { navController.navigate(Screen.NewsDetail(it)) },
+                    onAddToAttachments = {
+                        mainViewModel.updateTab(MainTab.Chat)
+                        navController.popBackStack()
+                        chatViewModel.addAttachment(it)
+                    },
+                    onDeleteFavorite = { newsViewModel.deleteFavorite(it.id) },
+                    favorites = newsViewModel.favoriteNews.collectAsState().value,
+                    freshDays = settingsViewModel.settings.collectAsState().value.freshDays,
+                    windowSizeClass = windowSizeClass,
+                    onDeleteAllFavorites = { newsViewModel.deleteAllFavorites() }
+                )
+            }
             composable<Screen.UploadNews> {
                 val errorMessage = newsViewModel.uploadError.collectAsState().value
                 UploadNewsScreen(

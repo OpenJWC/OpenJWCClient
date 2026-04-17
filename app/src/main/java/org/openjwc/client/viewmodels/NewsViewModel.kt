@@ -13,6 +13,8 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import org.openjwc.client.data.datastore.UserSettings
+import org.openjwc.client.data.models.NoticeEntity
+import org.openjwc.client.data.models.toFetchedNotice
 import org.openjwc.client.data.repository.AuthRepository
 import org.openjwc.client.data.repository.NewsRepository
 import org.openjwc.client.data.repository.SettingsRepository
@@ -41,6 +43,18 @@ class NewsViewModel(
             scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(5000),
             initialValue = UserSettings().freshDays
+        )
+
+    val favoriteNews = newsRepository.allFavorites
+        .map { favorites ->
+            favorites.map {
+                it.toFetchedNotice()
+            }
+        }
+        .distinctUntilChanged().stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5000),
+            initialValue = emptyList()
         )
     var labels = MutableStateFlow<List<String>>(emptyList())
         private set
@@ -217,6 +231,29 @@ class NewsViewModel(
         uploadError.value = null
     }
 
+    fun deleteFavorite(noticeId: String) {
+        viewModelScope.launch {
+            newsRepository.deleteFavoriteNews(noticeId)
+        }
+    }
+
+    fun deleteAllFavorites() {
+        viewModelScope.launch {
+            newsRepository.deleteAllFavorites()
+        }
+    }
+
+    fun insertFavorite(notice: NoticeEntity) {
+        viewModelScope.launch {
+            newsRepository.insertFavoriteNews(notice)
+        }
+    }
+
+    fun insertFavorite(notices: List<NoticeEntity>) {
+        viewModelScope.launch {
+            newsRepository.insertFavoriteNews(notices)
+        }
+    }
 }
 
 

@@ -1,19 +1,17 @@
-package org.openjwc.client.net.models
+package org.openjwc.client.data.models
 
+import androidx.room.Entity
 import androidx.room.PrimaryKey
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
-import org.openjwc.client.data.models.NoticeEntity
+import org.openjwc.client.net.models.FetchedNotice
 
-@Serializable
-data class FetchNewsResponseData(
-    @SerialName("total_returned") val totalReturned: Int,
-    @SerialName("total_label") val totalLabel: Int,
-    @SerialName("notices") val fetchedNotices: List<FetchedNotice>
+@Entity(
+    tableName = "favorite_notices",
 )
-
 @Serializable
-data class FetchedNotice(
+data class NoticeEntity(
+    @SerialName("id")
     @PrimaryKey val id: String,
     val label: String,
     val title: String,
@@ -24,7 +22,7 @@ data class FetchedNotice(
     @SerialName("attachments") val attachmentUrls: List<String>?
 )
 
-fun FetchedNotice.toNoticeEntity() = NoticeEntity(
+fun NoticeEntity.toFetchedNotice() = FetchedNotice(
     id = id,
     label = label,
     title = title,
@@ -33,9 +31,4 @@ fun FetchedNotice.toNoticeEntity() = NoticeEntity(
     isPage = isPage,
     contentText = contentText,
     attachmentUrls = attachmentUrls
-)
-
-@Serializable
-data class FetchLabelsResponseData(
-    val labels: List<String>
 )

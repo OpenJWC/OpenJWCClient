@@ -1,12 +1,15 @@
 package org.openjwc.client.data.repository
 
 import kotlinx.coroutines.flow.first
+import org.openjwc.client.data.dao.NewsDao
 import org.openjwc.client.data.datastore.AuthDataSource
 import org.openjwc.client.data.datastore.SettingsDataSource
+import org.openjwc.client.data.models.NoticeEntity
 import org.openjwc.client.net.models.*
 import org.openjwc.client.net.news.*
 
 class NewsRepository(
+    private val newsDao: NewsDao,
     private val settingsDataSource: SettingsDataSource,
     private val authDataSource: AuthDataSource
 ) {
@@ -62,4 +65,11 @@ class NewsRepository(
             authSession.uuid,
         )
     }
+
+    val allFavorites = newsDao.getAllFavorites()
+    suspend fun deleteFavoriteNews(noticeId: String) = newsDao.deleteFavoriteById(noticeId)
+    suspend fun deleteAllFavorites() = newsDao.deleteAllFavorites()
+    suspend fun insertFavoriteNews(notice: NoticeEntity) = newsDao.insertFavorite(notice)
+    suspend fun insertFavoriteNews(notices: List<NoticeEntity>) = newsDao.insertFavorites(notices)
+    suspend fun isFavorited(noticeId: String) = newsDao.isFavorited(noticeId)
 }
