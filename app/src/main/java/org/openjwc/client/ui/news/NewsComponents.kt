@@ -5,19 +5,21 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.scaleIn
 import androidx.compose.animation.scaleOut
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyGridState
@@ -25,6 +27,7 @@ import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Label
@@ -45,6 +48,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.contentColorFor
 import androidx.compose.material3.windowsizeclass.WindowSizeClass
 import androidx.compose.material3.windowsizeclass.WindowWidthSizeClass
 import androidx.compose.runtime.Composable
@@ -54,9 +58,11 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import org.openjwc.client.log.Logger
 import org.openjwc.client.net.models.FetchedNotice
@@ -140,7 +146,7 @@ fun NewsList(
                 horizontalArrangement = Arrangement.spacedBy(16.dp),
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
-                items(items = newsItems, key = { it.id }) { item ->
+                items(items = newsItems/*, key = { it.id }*/) { item ->
                     val isFresh = remember(item.id, freshDays) {
                         isDateFresh(item.date, freshDays)
                     }
@@ -263,59 +269,109 @@ fun BackToTopButton(visible: Boolean, onClick: () -> Unit, modifier: Modifier) {
     }
 }
 
+@Preview(widthDp = 320, heightDp = 100)
+@Composable
+fun TestInfoCard() {
+    InfoCard(
+        modifier = Modifier,
+        fetchedNotice = FetchedNotice(
+            id = "123",
+            label = "测试",
+            title = "测试标题",
+            date = "2023-03-18",
+            detailUrl = "https://www.baidu.com",
+            isPage = true,
+            contentText = "测试正文",
+            attachmentUrls = listOf("https://www.bilibili.com")
+        ),
+        isFresh = true,
+        onClick = {},
+        onLongClick = {},
+    )
+}
+
 @Composable
 fun InfoCard(
     modifier: Modifier = Modifier,
     fetchedNotice: FetchedNotice,
+    isFresh: Boolean,
     onClick: (FetchedNotice) -> Unit,
     onLongClick: (FetchedNotice) -> Unit = {},
-    isFresh: Boolean
 ) {
+    val containerColor = if (isFresh) {
+        MaterialTheme.colorScheme.secondaryContainer
+    } else {
+        MaterialTheme.colorScheme.surfaceContainer
+    }
+
+    val contentColor = contentColorFor(containerColor)
+
     Card(
         modifier = modifier
+            .fillMaxWidth()
+            .clip(MaterialTheme.shapes.large)
             .combinedClickable(
                 onClick = { onClick(fetchedNotice) },
                 onLongClick = { onLongClick(fetchedNotice) }
             ),
-        elevation = CardDefaults.cardElevation(
-            defaultElevation = if (isFresh) 6.dp else 1.dp,
-        ),
-        border = if (isFresh) BorderStroke(
-            1.dp,
-            MaterialTheme.colorScheme.primary.copy(alpha = 0.5f)
-        ) else null,
+        shape = MaterialTheme.shapes.large,
         colors = CardDefaults.cardColors(
-            containerColor = if (isFresh)
-                MaterialTheme.colorScheme.primaryContainer
-            else
-                MaterialTheme.colorScheme.surfaceVariant
+            containerColor = containerColor,
+            contentColor = contentColor
+        ),
+        elevation = CardDefaults.cardElevation(
+            defaultElevation = if (isFresh) 2.dp else 0.dp
         )
     ) {
         Column(
             modifier = Modifier
-                .padding(16.dp)
-                .fillMaxSize(),
-            verticalArrangement = Arrangement.SpaceBetween
+                .padding(horizontal = 16.dp, vertical = 14.dp)
+                .fillMaxWidth()
+                .fillMaxHeight()
         ) {
-            Text(
-                text = fetchedNotice.title,
-                style = MaterialTheme.typography.titleMedium,
-                color = if (isFresh) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurfaceVariant,
-                fontWeight = if (isFresh) FontWeight.ExtraBold else FontWeight.Normal,
-                maxLines = 3,
-                overflow = TextOverflow.Ellipsis,
-            )
+
+            Row(
+                verticalAlignment = Alignment.Top
+            ) {
+                Text(
+                    text = fetchedNotice.title,
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = if (isFresh) FontWeight.SemiBold else FontWeight.Normal,
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis,
+                    modifier = Modifier.weight(1f)
+                )
+
+                if (isFresh) {
+                    Spacer(modifier = Modifier.width(8.dp))
+
+                    Text(
+                        text = "NEW",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.onSecondaryContainer,
+                        modifier = Modifier
+                            .background(
+                                MaterialTheme.colorScheme.onSecondary,
+                                shape = RoundedCornerShape(6.dp)
+                            )
+                            .padding(horizontal = 6.dp, vertical = 2.dp)
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.weight(1f))
 
             if (fetchedNotice.date.isNotEmpty()) {
-                Text(
-                    text = fetchedNotice.date,
-                    style = MaterialTheme.typography.labelMedium,
-                    color = if (isFresh) MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.8f) else MaterialTheme.colorScheme.onSurfaceVariant.copy(
-                        alpha = 0.8f
-                    ),
-                    modifier = Modifier.align(Alignment.End),
-                    maxLines = 1
-                )
+                Box(
+                    modifier = Modifier.fillMaxWidth(),
+                    contentAlignment = Alignment.BottomEnd
+                ) {
+                    Text(
+                        text = fetchedNotice.date,
+                        style = MaterialTheme.typography.labelMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
             }
         }
     }
@@ -373,8 +429,7 @@ fun EmptyLabelsPlaceholder(
                 textAlign = TextAlign.Center,
                 modifier = Modifier.padding(horizontal = 16.dp)
             )
-        }
-        else {
+        } else {
             Text(
                 text = "您尚未登录",
                 style = MaterialTheme.typography.bodyMedium,
@@ -395,14 +450,14 @@ fun EmptyLabelsPlaceholder(
         }
         Spacer(modifier = Modifier.height(32.dp))
 
-        if(isLoggedIn) {
-        FilledTonalButton(
-            onClick = onRefresh,
-            contentPadding = PaddingValues(horizontal = 24.dp, vertical = 12.dp)
-        ) {
-            Text("重新获取分类")
-        }}
-        else {
+        if (isLoggedIn) {
+            FilledTonalButton(
+                onClick = onRefresh,
+                contentPadding = PaddingValues(horizontal = 24.dp, vertical = 12.dp)
+            ) {
+                Text("重新获取分类")
+            }
+        } else {
             TextButton(onClick = onToLogin) {
                 Text("登录")
             }

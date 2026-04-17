@@ -215,10 +215,10 @@ fun AccountBox(
     modifier: Modifier = Modifier
 ) {
     Surface(
-        modifier = modifier.fillMaxWidth(),
-        shape = MaterialTheme.shapes.large, // 大圆角
-        color = MaterialTheme.colorScheme.surfaceContainerLow, // 浅色背景
-        tonalElevation = 2.dp
+        modifier = modifier.fillMaxWidth().animateContentSize(),
+        shape = MaterialTheme.shapes.large,
+        color = MaterialTheme.colorScheme.surfaceContainerLow,
+        tonalElevation = 2.dp,
     ) {
         Column(
             modifier = Modifier
@@ -243,7 +243,7 @@ fun AccountBox(
                     )
                 }
 
-                Column(modifier = Modifier.weight(1f)) {
+                Column(modifier = Modifier.weight(1f).animateContentSize()) {
                     if (authSession.isLoggedIn) {
                         // 已登录状态
                         Text(
@@ -274,7 +274,6 @@ fun AccountBox(
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // 按钮区域
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.End,
@@ -296,7 +295,6 @@ fun AccountBox(
                     Spacer(modifier = Modifier.width(8.dp))
                     Button(
                         onClick = onLogin,
-                        shape = MaterialTheme.shapes.medium
                     ) {
                         Text("登录")
                     }

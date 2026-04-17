@@ -1,8 +1,11 @@
 package org.openjwc.client.ui.chat
 
+import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.combinedClickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -87,7 +90,8 @@ fun MessageBubble(
                         .combinedClickable(
                         onClick = { /* 单击逻辑 */ },
                         onLongClick = { showMenu = true }
-                    ),
+                    )
+                        .animateContentSize(),
                     color = containerColor,
                     contentColor = contentColor,
                     shape = bubbleShape,
@@ -99,12 +103,12 @@ fun MessageBubble(
                             .widthIn(max = maxWidth)
                     ) {
                         if (message.attachmentTitles.isNotEmpty()) {
-                            androidx.compose.foundation.layout.FlowRow(
+                            FlowRow(
                                 modifier = Modifier.padding(bottom = 8.dp),
-                                horizontalArrangement = androidx.compose.foundation.layout.Arrangement.spacedBy(
+                                horizontalArrangement = Arrangement.spacedBy(
                                     4.dp
                                 ),
-                                verticalArrangement = androidx.compose.foundation.layout.Arrangement.spacedBy(
+                                verticalArrangement = Arrangement.spacedBy(
                                     4.dp
                                 )
                             ) {
