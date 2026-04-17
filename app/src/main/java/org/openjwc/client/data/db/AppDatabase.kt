@@ -44,9 +44,8 @@ abstract class AppDatabase : RoomDatabase() {
                 `isPage` INTEGER NOT NULL, 
                 `contentText` TEXT, 
                 `attachmentUrls` TEXT, 
-            PRIMARY KEY(`id`)
+                PRIMARY KEY(`id`)
             )
-        )
         """.trimIndent())
             }
         }
