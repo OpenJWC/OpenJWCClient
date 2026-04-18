@@ -204,7 +204,6 @@ fun AttachmentItem(
                 Text(
                     text = fileName,
                     style = MaterialTheme.typography.bodyLarge,
-                    maxLines = 1,
                     overflow = TextOverflow.Ellipsis
                 )
             },

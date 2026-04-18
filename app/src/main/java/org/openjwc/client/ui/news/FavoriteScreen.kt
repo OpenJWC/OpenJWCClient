@@ -12,13 +12,13 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
-import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.foundation.lazy.grid.itemsIndexed
 import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.outlined.Add
-import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material.icons.outlined.Star
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
@@ -132,7 +132,7 @@ fun FavoriteScreen(
                     verticalArrangement = Arrangement.spacedBy(16.dp)
                 ) {
                     // 建议加上 key 以获得更好的重组性能和动画
-                    items(items = favorites, key = { it.id }) { item ->
+                    itemsIndexed(items = favorites, key = { index, item -> "${item.id} $index" }) { index, item ->
                         val isFresh = remember(item.id, freshDays) {
                             isDateFresh(item.date, freshDays)
                         }
@@ -150,9 +150,8 @@ fun FavoriteScreen(
                                 showLabel = true
                             )
 
-                            // 只有当 selectedNotice 是当前 item 时才显示菜单
                             DropdownMenu(
-                                expanded = showMenu && selectedNotice?.id == item.id,
+                                expanded = showMenu && selectedNotice === item,
                                 onDismissRequest = onMenuDismiss
                             ) {
                                 DropdownMenuItem(
@@ -168,11 +167,11 @@ fun FavoriteScreen(
 
                                 DropdownMenuItem(
                                     text = {
-                                        Text("删除收藏", color = MaterialTheme.colorScheme.error)
+                                        Text("取消收藏", color = MaterialTheme.colorScheme.error)
                                     },
                                     leadingIcon = {
                                         Icon(
-                                            imageVector = Icons.Outlined.Delete,
+                                            imageVector = Icons.Default.Star,
                                             contentDescription = null,
                                             tint = MaterialTheme.colorScheme.error
                                         )

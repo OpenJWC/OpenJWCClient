@@ -40,7 +40,7 @@ class SettingsRepository(
     }
 
     suspend fun tryRefreshHitokoto(): NetworkResult<SuccessResponse<Hitokoto>> {
-        if (!authDataSource.authSession.first().isLoggedIn) return NetworkResult.Error("Not logged in")
+        if (!authDataSource.authSession.first().isLoggedIn) return NetworkResult.Failure(401, "Not logged in")
         try {
             val settings = getSettingsSnapshot()
             val apiService =

@@ -193,6 +193,9 @@ class ChatViewModel(
                             is ChatStreamStatus.Finished -> ChatSessionState.Idle
                             is ChatStreamStatus.Failure ->
                             {
+                                if (status.code == 401) {
+                                    navEvent.send(NavEvent.ToLogin())
+                                }
                                 uiEvent.send(UiEvent.ShowToast(status.msg))
                                 ChatSessionState.Error(status.msg)
                             }

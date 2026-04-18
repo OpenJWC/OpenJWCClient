@@ -24,7 +24,7 @@ import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyGridState
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
-import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.foundation.lazy.grid.itemsIndexed
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -35,6 +35,7 @@ import androidx.compose.material.icons.filled.ArrowUpward
 import androidx.compose.material.icons.filled.ErrorOutline
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.outlined.Add
+import androidx.compose.material.icons.outlined.Star
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularWavyProgressIndicator
@@ -151,7 +152,7 @@ fun NewsList(
                 horizontalArrangement = Arrangement.spacedBy(16.dp),
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
-                items(items = newsItems/*, key = { it.id }*/) { item ->
+                itemsIndexed(items = newsItems, key = { index: Int, item: FetchedNotice -> "${item.id}_$index" }) {index, item ->
                     val isFresh = remember(item.id, freshDays) {
                         isDateFresh(item.date, freshDays)
                     }
@@ -169,7 +170,7 @@ fun NewsList(
                         )
 
                         DropdownMenu(
-                            expanded = showMenu && selectedNotice?.id == item.id,
+                            expanded = showMenu && selectedNotice === item,
                             onDismissRequest = onMenuDismiss
                         ) {
                             DropdownMenuItem(
@@ -187,11 +188,14 @@ fun NewsList(
                             )
                             if (favoriteItems.any { it.id == item.id }) {
                                 DropdownMenuItem(
-                                    text = { Text("取消收藏") },
+                                    text = {
+                                        Text("删除收藏", color = MaterialTheme.colorScheme.error)
+                                    },
                                     leadingIcon = {
                                         Icon(
-                                            Icons.Filled.Star,
+                                            imageVector = Icons.Outlined.Star,
                                             contentDescription = null,
+                                            tint = MaterialTheme.colorScheme.error
                                         )
                                     },
                                     onClick = {
@@ -421,9 +425,9 @@ fun InfoCard(
                 ) {
                     if (isFavorited) {
                         Icon(
-                            imageVector = Icons.Filled.Star, // 使用 Star 图标更符合“星标”说法
+                            imageVector = Icons.Filled.Star,
                             contentDescription = "Favorited",
-                            tint = MaterialTheme.colorScheme.onSurfaceVariant, // 经典的星星金色
+                            tint = MaterialTheme.colorScheme.primary,
                             modifier = Modifier.size(18.dp)
                         )
                     } else {
@@ -522,7 +526,7 @@ fun EmptyLabelsPlaceholder(
                 Text("重新获取分类")
             }
         } else {
-            TextButton(onClick = onToLogin) {
+            FilledTonalButton(onClick = onToLogin, contentPadding = PaddingValues(horizontal = 24.dp, vertical = 12.dp)) {
                 Text("登录")
             }
         }

@@ -73,6 +73,9 @@ class MeViewModel(
     var uiEvent = Channel<UiEvent>(Channel.BUFFERED)
         private set
 
+    var navEvent =Channel<NavEvent>(Channel.BUFFERED)
+        private set
+
     fun refreshHitokotoLazily() {
         viewModelScope.launch {
             if (hitokoto.value.date != LocalDate.now().toString()) {
@@ -87,7 +90,10 @@ class MeViewModel(
             when (result) {
                 is NetworkResult.Failure -> {
                     uiEvent.send(UiEvent.ShowToast("(${result.code}) ${result.msg}"))
-                    if (result.code == 401) authRepository.clearSession()
+                    if (result.code == 401) {
+                        authRepository.clearSession()
+                        navEvent.send(NavEvent.ToLogin())
+                    }
                 }
 
                 is NetworkResult.Error -> uiEvent.send(UiEvent.ShowToast(result.msg))

@@ -46,6 +46,7 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
 import coil.compose.AsyncImage
@@ -135,7 +136,13 @@ private fun MainScaffoldContent(
         )
     }
     val drawerContent = @Composable {
-        ModalDrawerSheet{
+        ModalDrawerSheet {
+            Text(
+                text = "聊天记录",
+                style = MaterialTheme.typography.titleLarge,
+
+                modifier = Modifier.padding(24.dp)
+            )
             ChatHistoryList(
                 sessions = historySessions,
                 currentSessionId = metadata?.sessionId,

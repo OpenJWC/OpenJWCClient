@@ -12,11 +12,14 @@ import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.consumeWindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.items
@@ -325,19 +328,28 @@ private fun ChatMainContent(
             .consumeWindowInsets(contentPadding)
             .padding(horizontal = horizontalPadding)
     ) {
-        ChatList(
-            listState = listState,
+        Box(
             modifier = Modifier
                 .weight(1f)
                 .fillMaxWidth(),
-            chatMessages = messages,
-            sessionState = sessionState,
-            onCopy = {
-                chatViewModel.copyMessage(it, clipboardManager)
-            },
-            onShare = { /*TODO: viewModel.shareMessage(it)*/ },
-            onDelete = { chatViewModel.deleteMessage(it.messageId) }
-        )
+            contentAlignment = Alignment.Center
+        ) {
+            if (messages.isEmpty()) {
+                EmptyChatPlaceholder()
+            } else {
+                ChatList(
+                    listState = listState,
+                    modifier = Modifier.fillMaxSize(),
+                    chatMessages = messages,
+                    sessionState = sessionState,
+                    onCopy = {
+                        chatViewModel.copyMessage(it, clipboardManager)
+                    },
+                    onShare = { /*TODO: viewModel.shareMessage(it)*/ },
+                    onDelete = { chatViewModel.deleteMessage(it.messageId) }
+                )
+            }
+        }
 
         ChatInputBar(
             textValue = chatViewModel.inputText.collectAsState().value,
@@ -354,6 +366,26 @@ private fun ChatMainContent(
             isSending = sessionState !is ChatSessionState.Idle && sessionState !is ChatSessionState.Error,
             attachments = chatViewModel.attachments.collectAsStateWithLifecycle().value,
             onDeleteAttachment = { chatViewModel.deleteAttachment(it) },
+        )
+    }
+}
+@Composable
+fun EmptyChatPlaceholder() {
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center
+    ) {
+        Icon(
+            imageVector = Icons.Default.ChatBubbleOutline,
+            contentDescription = null,
+            modifier = Modifier.size(64.dp),
+            tint = MaterialTheme.colorScheme.outline.copy(alpha = 0.5f)
+        )
+        Spacer(modifier = Modifier.height(16.dp))
+        Text(
+            text = "开始新对话吧",
+            style = MaterialTheme.typography.bodyLarge,
+            color = MaterialTheme.colorScheme.outline
         )
     }
 }

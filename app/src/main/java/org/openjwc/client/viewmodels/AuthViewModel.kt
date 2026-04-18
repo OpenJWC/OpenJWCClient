@@ -68,7 +68,7 @@ class AuthViewModel(
             isRegistering.value = false
             if (registerResult.value is NetworkResult.Success) {
                 navEvent.send(NavEvent.ToBack())
-                uiEvent.send(UiEvent.ShowToast("注册成功"))
+                uiEvent.send(UiEvent.ShowToast("注册成功，请等待管理员审核"))
             }
         }
     }

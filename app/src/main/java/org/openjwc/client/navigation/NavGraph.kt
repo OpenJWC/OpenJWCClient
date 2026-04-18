@@ -208,6 +208,21 @@ fun NavGraph(
             }
         }
     }
+    LaunchedEffect(Unit) {
+        meViewModel.navEvent.receiveAsFlow().collect { event ->
+            when(event) {
+                is NavEvent.ToLogin ->  {
+                    navController.navigate(Screen.Login)
+                }
+                is NavEvent.ToRegister -> {
+                    navController.navigate(Screen.Register)
+                }
+                is NavEvent.ToBack -> {
+                    navController.popBackStack()
+                }
+            }
+        }
+    }
 
     if (showUpdateDialog && updateRelease != null) {
         UpdateDialog(
