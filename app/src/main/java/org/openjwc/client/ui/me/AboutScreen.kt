@@ -166,6 +166,7 @@ fun AboutScreen(
                         MenuItem.Action(
                             icon = Icons.AutoMirrored.Default.OpenInNew,
                             label = "GitHub",
+                            subtitle = "https://github.com/OpenJWC",
                             onClick = onToGitHub
                         ),
                     )
