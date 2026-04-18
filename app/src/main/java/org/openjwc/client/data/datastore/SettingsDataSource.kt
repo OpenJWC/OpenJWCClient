@@ -21,7 +21,7 @@ data class UserSettings(
     val themeStyle: DarkThemeStyle = DarkThemeStyle.Auto,
     val themeColor: ColorType = ColorType.Dynamic,
     val host: String = "101.132.106.186",
-    val port: Int = 8000,
+    val port: Int = 8001,
     val useHttp: Boolean = false,
     val freshDays: Int = 21,
     val backgroundPath: String? = null,
