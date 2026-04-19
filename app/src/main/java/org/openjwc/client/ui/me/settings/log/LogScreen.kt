@@ -166,6 +166,7 @@ fun LogItem(
 @Composable
 fun getLevelColor(level: Logger.Level): Color {
     return when (level) {
+        Logger.Level.NONE -> MaterialTheme.colorScheme.primaryFixedDim
         Logger.Level.ERROR -> MaterialTheme.colorScheme.error
         Logger.Level.WARNING -> MaterialTheme.colorScheme.tertiary
         Logger.Level.INFO -> MaterialTheme.colorScheme.primary

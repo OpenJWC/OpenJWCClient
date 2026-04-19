@@ -1,5 +1,6 @@
 package org.openjwc.client.net.auth
 
+import org.openjwc.client.log.Logger
 import org.openjwc.client.net.models.LoginRequestBody
 import org.openjwc.client.net.models.LoginSuccessResponse
 import org.openjwc.client.net.models.NetService
@@ -15,7 +16,7 @@ suspend fun NetService.login(
     passwordHash: String,
     deviceName: String
 ): NetworkResult<SuccessResponse<LoginSuccessResponse>> =
-    fetch {
+    fetch(level = Logger.Level.NONE) {
         postLogin(
             auth,
             deviceId,

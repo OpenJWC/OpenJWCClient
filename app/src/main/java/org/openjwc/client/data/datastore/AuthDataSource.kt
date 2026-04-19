@@ -48,7 +48,7 @@ class AuthDataSource(private val context: Context) {
             prefs[Keys.TOKEN] = token
             prefs[Keys.IS_LOGGED_IN] = true
         }
-        Logger.d("AuthDataSource", "saveSession: $username, $email, $token")
+        Logger.d("AuthDataSource", "saveSession: $username, $email")
     }
 
     suspend fun clearSession() {

@@ -8,6 +8,7 @@ import java.util.concurrent.atomic.AtomicLong
 object Logger {
     private val counter = AtomicLong(0L)
     enum class Level {
+        NONE,
         DEBUG,
         INFO,
         WARNING,
@@ -60,6 +61,7 @@ object Logger {
     }
     fun log(tag: String, message: String, level: Level) {
         when (level) {
+            Level.NONE -> {}
             Level.DEBUG -> d(tag, message)
             Level.ERROR -> e(tag, message)
             Level.INFO -> i(tag, message)
