@@ -29,10 +29,15 @@ import org.openjwc.client.net.models.FetchedNotice
 sealed class ChatSessionState {
     data object Idle : ChatSessionState()
     data object Loading : ChatSessionState()      // 刚发出请求，等待响应
-    data object Generating: ChatSessionState()     // 正在生成
+    data object Generating : ChatSessionState()     // 正在生成
     data object ToolCalling : ChatSessionState()  // AI 正在查课表或爬取网页
     data class Error(val msg: String) : ChatSessionState()
 }
+
+data class ChatSessionUiModel(
+    val metadata: ChatMetadata,
+    val state: ChatSessionState
+)
 
 class ChatViewModel(
     private val chatRepository: ChatRepository
@@ -48,6 +53,7 @@ class ChatViewModel(
     private fun updateSessionState(sessionId: Long?, state: ChatSessionState) {
         _sessionStates.value = _sessionStates.value + (sessionId to state)
     }
+
     var currentSessionMetadata = MutableStateFlow<ChatMetadata?>(null)
         private set
 
@@ -109,8 +115,21 @@ class ChatViewModel(
         }
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
-    val allSessions = chatRepository.getChatSessions()
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+    val allSessions: StateFlow<List<ChatSessionUiModel>> = combine(
+        chatRepository.getChatSessions(),
+        _sessionStates
+    ) { sessions, states ->
+        sessions.map { session ->
+            ChatSessionUiModel(
+                metadata = session.metadata,
+                state = states[session.metadata.sessionId] ?: ChatSessionState.Idle
+            )
+        }
+    }.stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5000),
+        initialValue = emptyList()
+    )
 
     fun loadSession(sessionId: Long) {
         viewModelScope.launch {
@@ -170,8 +189,12 @@ class ChatViewModel(
             try {
                 var sessionId = currentSessionMetadata.value?.sessionId
                 if (sessionId == null) {
-                    sessionId = chatRepository.createChatSession(messageText.replace("\n", "").take(20))
-                    val newMetadata = ChatMetadata(sessionId = sessionId, title = messageText.replace("\n", "").take(20))
+                    sessionId =
+                        chatRepository.createChatSession(messageText.replace("\n", "").take(20))
+                    val newMetadata = ChatMetadata(
+                        sessionId = sessionId,
+                        title = messageText.replace("\n", "").take(20)
+                    )
                     currentSessionMetadata.value = newMetadata
                 }
 
@@ -187,20 +210,22 @@ class ChatViewModel(
                         }
 
                         // 更新会话状态 (Loading/Generating/Idle)
-                        updateSessionState(sessionId, when(status) {
-                            is ChatStreamStatus.Loading -> ChatSessionState.Loading
-                            is ChatStreamStatus.Generating -> ChatSessionState.Generating
-                            is ChatStreamStatus.Finished -> ChatSessionState.Idle
-                            is ChatStreamStatus.Failure ->
-                            {
-                                if (status.code == 401) {
-                                    navEvent.send(NavEvent.ToLogin())
+                        updateSessionState(
+                            sessionId, when (status) {
+                                is ChatStreamStatus.Loading -> ChatSessionState.Loading
+                                is ChatStreamStatus.Generating -> ChatSessionState.Generating
+                                is ChatStreamStatus.Finished -> ChatSessionState.Idle
+                                is ChatStreamStatus.Failure -> {
+                                    if (status.code == 401) {
+                                        navEvent.send(NavEvent.ToLogin())
+                                    }
+                                    uiEvent.send(UiEvent.ShowToast(status.msg))
+                                    ChatSessionState.Error(status.msg)
                                 }
-                                uiEvent.send(UiEvent.ShowToast(status.msg))
-                                ChatSessionState.Error(status.msg)
+
+                                else -> ChatSessionState.Idle
                             }
-                            else -> ChatSessionState.Idle
-                        })
+                        )
                     }
             } catch (e: Exception) {
                 Logger.e(label, "sendMessage Error", e)

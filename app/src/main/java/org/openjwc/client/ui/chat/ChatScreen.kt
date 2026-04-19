@@ -2,6 +2,7 @@ package org.openjwc.client.ui.chat
 
 import android.widget.Toast
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.Crossfade
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.scaleIn
@@ -32,7 +33,9 @@ import androidx.compose.material.icons.filled.ArrowDownward
 import androidx.compose.material.icons.filled.ChatBubbleOutline
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.ErrorOutline
 import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.material3.CircularWavyProgressIndicator
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -54,17 +57,19 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.platform.LocalClipboard
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import kotlinx.coroutines.launch
 import org.openjwc.client.data.models.ChatMessage
 import org.openjwc.client.data.models.ChatMetadata
-import org.openjwc.client.data.models.ChatSession
 import org.openjwc.client.ui.main.MainTab
 import org.openjwc.client.viewmodels.ChatSessionState
+import org.openjwc.client.viewmodels.ChatSessionUiModel
 import org.openjwc.client.viewmodels.ChatViewModel
 import org.openjwc.client.viewmodels.MainViewModel
 
@@ -160,7 +165,6 @@ fun BackToBottomButton(visible: Boolean, onClick: () -> Unit, modifier: Modifier
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ChatScreen(
-
     windowSizeClass: WindowSizeClass,
     chatViewModel: ChatViewModel,
     mainViewModel: MainViewModel,
@@ -174,9 +178,40 @@ fun ChatScreen(
     )
 }
 
+@Preview
+@Composable
+fun TestChatHistoryList() {
+    val sessions =
+        listOf(
+            ChatSessionUiModel(
+                metadata = ChatMetadata(
+                    sessionId = 1,
+                    title = "Session 1"
+                ),
+                state = ChatSessionState.Idle
+            ),
+            ChatSessionUiModel(
+                metadata = ChatMetadata(
+                    sessionId = 2,
+                    title = "Session 2"
+                ),
+                state = ChatSessionState.Loading
+            )
+        )
+    ChatHistoryList(
+        sessions = sessions,
+        currentSessionId = 1,
+        onNewChat = {},
+        onSessionClick = {},
+        onDeleteSession = {},
+        onUpdateSessionMetadata = {},
+        modifier = Modifier
+    )
+}
+
 @Composable
 fun ChatHistoryList(
-    sessions: List<ChatSession>,
+    sessions: List<ChatSessionUiModel>,
     currentSessionId: Long?,
     onNewChat: () -> Unit,
     onSessionClick: (Long) -> Unit,
@@ -216,7 +251,7 @@ fun ChatHistoryList(
 
 @Composable
 fun ChatHistoryItem(
-    session: ChatSession,
+    session: ChatSessionUiModel,
     isSelected: Boolean,
     onSessionClick: (Long) -> Unit,
     onDeleteSession: (Long) -> Unit,
@@ -241,7 +276,35 @@ fun ChatHistoryItem(
             },
             selected = isSelected,
             onClick = { onSessionClick(session.metadata.sessionId) },
-            icon = { Icon(Icons.Default.ChatBubbleOutline, null) },
+            icon = {
+                Crossfade(targetState = session.state, label = "iconFade") { state ->
+                    when (state) {
+                        is ChatSessionState.Loading,
+                        is ChatSessionState.Generating,
+                        is ChatSessionState.ToolCalling -> {
+                            Box(contentAlignment = Alignment.Center) {
+                                CircularWavyProgressIndicator(
+                                    modifier = Modifier.size(24.dp),
+                                    color = if (isSelected)
+                                        MaterialTheme.colorScheme.onPrimaryContainer
+                                    else MaterialTheme.colorScheme.primary,
+                                    stroke = Stroke(8f)
+                                )
+                            }
+                        }
+                        is ChatSessionState.Error -> {
+                            Icon(
+                                Icons.Default.ErrorOutline,
+                                contentDescription = null,
+                                tint = MaterialTheme.colorScheme.error
+                            )
+                        }
+                        else -> {
+                            Icon(Icons.Default.ChatBubbleOutline, null)
+                        }
+                    }
+                }
+            },
             modifier = Modifier.weight(1f)
         )
 
