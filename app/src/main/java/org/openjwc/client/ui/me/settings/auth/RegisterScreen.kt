@@ -62,7 +62,7 @@ fun TestRegisterScreen() {
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun RegisterScreen(
-    isRegistering: Boolean, // 新增：注册状态
+    isRegistering: Boolean,
     registerError: String?,
     onRegister: (String, String, String) -> Unit,
     onBack: () -> Unit,

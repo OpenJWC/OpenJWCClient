@@ -72,7 +72,7 @@ fun NewsDisplaySettingsScreen(
         modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
         topBar = {
             LargeTopAppBar(
-                title = { Text("资讯显示设置") }, // 修改了标题使其更符合功能
+                title = { Text("资讯显示设置") },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "返回")
@@ -98,7 +98,6 @@ fun NewsDisplaySettingsScreen(
                 .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(24.dp)
         ) {
-            // 设置项卡片
             Surface(
                 tonalElevation = 2.dp,
                 shape = MaterialTheme.shapes.extraLarge,

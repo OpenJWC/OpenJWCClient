@@ -59,7 +59,7 @@ fun TestLoginScreen() {
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun LoginScreen(
-    isLoggingIn: Boolean, // 新增参数
+    isLoggingIn: Boolean,
     loginError: String?,
     onLogin: (String, String) -> Unit,
     onToRegisterScreen: () -> Unit,

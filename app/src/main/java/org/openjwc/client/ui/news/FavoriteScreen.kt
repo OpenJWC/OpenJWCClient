@@ -131,7 +131,6 @@ fun FavoriteScreen(
                     horizontalArrangement = Arrangement.spacedBy(16.dp),
                     verticalArrangement = Arrangement.spacedBy(16.dp)
                 ) {
-                    // 建议加上 key 以获得更好的重组性能和动画
                     itemsIndexed(items = favorites, key = { index, item -> "${item.id} $index" }) { index, item ->
                         val isFresh = remember(item.id, freshDays) {
                             isDateFresh(item.date, freshDays)

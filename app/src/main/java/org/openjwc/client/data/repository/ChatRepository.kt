@@ -89,7 +89,6 @@ class ChatRepository(
             return@flow
         }
 
-        // 1. 插入用户消息
         insertMessage(
             ChatMessage(
                 ownerSessionId = sessionId,
@@ -99,7 +98,6 @@ class ChatRepository(
             )
         )
 
-        // 2. 插入 AI 占位消息并获取 ID
         val aiMsgId = insertMessage(
             ChatMessage(
                 ownerSessionId = sessionId,
@@ -131,7 +129,6 @@ class ChatRepository(
             var currentFullText = ""
             var lastWriteTime = 0L
 
-            // 使用 coroutineScope 来支撑内部的异步 launch 写入
             coroutineScope {
                 apiService.sendMessageStream(
                     authSession.token,
@@ -141,11 +138,7 @@ class ChatRepository(
                     when (result) {
                         is ChatNetworkResult.Success -> {
                             currentFullText = result.content
-
-                            // 【UI 轨】立即发射，让 ViewModel 刷新内存数据
                             emit(Generating(currentFullText))
-
-                            // 【DB 轨】节流异步写入
                             val currentTime = System.currentTimeMillis()
                             if (currentTime - lastWriteTime > 500L) {
                                 lastWriteTime = currentTime
@@ -171,8 +164,6 @@ class ChatRepository(
                     }
                 }
             }
-
-            // 3. 最终校准：确保存入数据库的是 100% 完整的内容
             updateMessageText(aiMsgId, currentFullText)
             emit(ChatStreamStatus.Finished(currentFullText))
 

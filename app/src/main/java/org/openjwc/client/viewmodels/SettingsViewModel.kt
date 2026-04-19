@@ -191,7 +191,6 @@ class SettingsViewModel(
                     section.copy(
                         items = section.items.map { item ->
                             if (item is MenuItem.Toggle) {
-                                // 注入实时状态
                                 item.copy(isChecked = states[item.id] ?: item.isChecked)
                             } else item
                         }
