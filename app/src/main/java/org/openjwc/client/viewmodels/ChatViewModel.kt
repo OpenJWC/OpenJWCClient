@@ -237,6 +237,7 @@ class ChatViewModel(
     fun deleteSession(sessionId: Long) {
         viewModelScope.launch {
             chatRepository.deleteSession(sessionId)
+            _sessionStates.value -= sessionId
             if (currentSessionMetadata.value?.sessionId == sessionId) {
                 currentSessionMetadata.value = null
             }
