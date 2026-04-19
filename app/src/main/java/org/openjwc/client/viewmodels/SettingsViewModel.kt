@@ -62,12 +62,12 @@ class SettingsViewModel(
                         MenuItem.Route(
                             icon = Icons.Default.Dns,
                             route = Screen.Host,
-                            title = "网络设置",
+                            title = "网络配置",
                         ),
                         MenuItem.Route(
                             icon = Icons.Default.VpnKey,
                             route = Screen.Account,
-                            title = "账户设置",
+                            title = "账号管理",
                         )
                     )
                 ), SettingSection(

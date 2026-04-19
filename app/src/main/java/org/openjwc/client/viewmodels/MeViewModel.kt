@@ -40,7 +40,7 @@ class MeViewModel(
                     ),
                     MenuItem.Route(
                         icon = Icons.Default.Search,
-                        title = "查看投稿审核结果",
+                        title = "投稿审核结果",
                         route = Screen.Review,
                     )
                 )

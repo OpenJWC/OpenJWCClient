@@ -99,7 +99,10 @@ fun LoginScreen(
 
             OutlinedTextField(
                 value = username,
-                onValueChange = { username = it },
+                onValueChange = { input ->
+                    val filtered = input.filterAscii()
+                    if (filtered.length <= 50) username = filtered
+                },
                 label = { Text("账号") },
                 modifier = Modifier.fillMaxWidth(),
                 singleLine = true,
@@ -109,7 +112,10 @@ fun LoginScreen(
 
             OutlinedTextField(
                 value = password,
-                onValueChange = { password = it },
+                onValueChange = { input ->
+                    val filtered = input.filterAscii()
+                    if (filtered.length <= 100) password = filtered
+                },
                 label = { Text("密码") },
                 modifier = Modifier.fillMaxWidth(),
                 singleLine = true,

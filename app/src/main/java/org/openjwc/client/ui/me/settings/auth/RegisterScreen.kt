@@ -46,6 +46,8 @@ import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 
+fun String.filterAscii(): String = this.filter { it.code in 0..127 }
+
 @Preview
 @Composable
 fun TestRegisterScreen() {
@@ -116,7 +118,10 @@ fun RegisterScreen(
             // 用户名
             OutlinedTextField(
                 value = username,
-                onValueChange = { username = it },
+                onValueChange = { input ->
+                    val filtered = input.filterAscii()
+                    if (filtered.length <= 20) username = filtered
+                },
                 label = { Text("用户名") },
                 modifier = Modifier.fillMaxWidth(),
                 singleLine = true,
@@ -129,7 +134,10 @@ fun RegisterScreen(
             // 邮箱
             OutlinedTextField(
                 value = email,
-                onValueChange = { email = it },
+                onValueChange = { input ->
+                    val filtered = input.filterAscii()
+                    if (filtered.length <= 50) email = filtered
+                },
                 label = { Text("电子邮箱") },
                 modifier = Modifier.fillMaxWidth(),
                 enabled = !isRegistering, // 禁用
@@ -143,10 +151,13 @@ fun RegisterScreen(
             // 密码
             OutlinedTextField(
                 value = password,
-                onValueChange = { password = it },
+                onValueChange = { input ->
+                    val filtered = input.filterAscii()
+                    if (filtered.length <= 100) password = filtered
+                },
                 label = { Text("密码") },
                 modifier = Modifier.fillMaxWidth(),
-                enabled = !isRegistering, // 禁用
+                enabled = !isRegistering,
                 isError = passwordError,
                 singleLine = true,
                 supportingText = { if (passwordError) Text("密码需包含大小写字母、数字及特殊字符，且至少 8 位") },
@@ -163,7 +174,10 @@ fun RegisterScreen(
             // 确认密码
             OutlinedTextField(
                 value = confirmPassword,
-                onValueChange = { confirmPassword = it },
+                onValueChange = { input ->
+                    val filtered = input.filterAscii()
+                    if (filtered.length <= 100) confirmPassword = filtered
+                },
                 label = { Text("确认密码") },
                 modifier = Modifier.fillMaxWidth(),
                 singleLine = true,

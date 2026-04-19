@@ -314,8 +314,13 @@ fun NavGraph(
                     onBack = { navController.popBackStack() },
                     onToBrowser = { uri -> uriHandler.openUri(uri) },
                     onAddToAttachments = {
+                        val popped = navController.popBackStack<Screen.Main>(inclusive = false)
                         mainViewModel.updateTab(MainTab.Chat)
-                        navController.popBackStack()
+                        if (!popped) {
+                            navController.navigate(Screen.Main) {
+                                popUpTo<Screen.NewsDetail> { inclusive = true }
+                            }
+                        }
                         chatViewModel.addAttachment(args.fetchedNotice)
                     }
                 )
@@ -325,8 +330,13 @@ fun NavGraph(
                     onBack = { navController.popBackStack() },
                     onItemClick = { navController.navigate(Screen.NewsDetail(it)) },
                     onAddToAttachments = {
+                        val popped = navController.popBackStack<Screen.Main>(inclusive = false)
                         mainViewModel.updateTab(MainTab.Chat)
-                        navController.popBackStack()
+                        if (!popped) {
+                            navController.navigate(Screen.Main) {
+                                popUpTo<Screen.NewsDetail> { inclusive = true }
+                            }
+                        }
                         chatViewModel.addAttachment(it)
                     },
                     onDeleteFavorite = { newsViewModel.deleteFavorite(it.id) },

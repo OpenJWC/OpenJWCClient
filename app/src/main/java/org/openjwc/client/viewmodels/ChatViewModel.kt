@@ -68,7 +68,7 @@ class ChatViewModel(
         private set
 
     fun updateInputText(newText: String) {
-        inputText.value = newText
+        inputText.value = newText.take(10000)
     }
 
     fun addAttachment(attachment: FetchedNotice) {
