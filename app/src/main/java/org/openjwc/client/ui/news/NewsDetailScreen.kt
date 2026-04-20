@@ -52,7 +52,7 @@ fun TestNewsDetailScreen() {
             date = "2023-03-18",
             detailUrl = "https://www.baidu.com",
             isPage = true,
-            contentText = "测试正文",
+            contentText = "<h1>测试正文</h1>",
             attachmentUrls = listOf(
                 "https://www.bilibili.com", "https://www.baidu.com"
             ),

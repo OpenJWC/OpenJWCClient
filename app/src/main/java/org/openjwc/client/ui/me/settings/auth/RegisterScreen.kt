@@ -3,12 +3,16 @@ package org.openjwc.client.ui.me.settings.auth
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.consumeWindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.ime
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
@@ -29,6 +33,7 @@ import androidx.compose.material3.LargeTopAppBar
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.ScaffoldDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
@@ -58,7 +63,7 @@ fun TestRegisterScreen() {
         isRegistering = true
     )
 }
-
+private val passwordPattern = "^(?=.*[0-9])(?=.*[a-z])(?=.*[A-Z])(?=.*\\p{Punct})(?=\\S+$).{8,}$".toRegex()
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun RegisterScreen(
@@ -82,7 +87,6 @@ fun RegisterScreen(
     }
     val passwordError by remember {
         derivedStateOf {
-            val passwordPattern = "^(?=.*[0-9])(?=.*[a-z])(?=.*[A-Z])(?=.*[@#$%^&+=!])(?=\\S+$).{8,}$".toRegex()
             password.isNotEmpty() && !password.matches(passwordPattern)
         }
     }
@@ -92,6 +96,7 @@ fun RegisterScreen(
 
     Scaffold(
         modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
+        contentWindowInsets = ScaffoldDefaults.contentWindowInsets,
         topBar = {
             LargeTopAppBar(
                 title = { Text("创建账号") },
@@ -108,6 +113,8 @@ fun RegisterScreen(
         Column(
             modifier = Modifier
                 .padding(innerPadding)
+                .consumeWindowInsets(innerPadding)
+                .windowInsetsPadding(WindowInsets.ime)
                 .fillMaxSize()
                 .padding(horizontal = 24.dp)
                 .verticalScroll(rememberScrollState()),
@@ -115,7 +122,6 @@ fun RegisterScreen(
         ) {
             Spacer(modifier = Modifier.height(8.dp))
 
-            // 用户名
             OutlinedTextField(
                 value = username,
                 onValueChange = { input ->
@@ -131,7 +137,6 @@ fun RegisterScreen(
                 leadingIcon = { Icon(Icons.Default.Person, contentDescription = null) }
             )
 
-            // 邮箱
             OutlinedTextField(
                 value = email,
                 onValueChange = { input ->
@@ -148,7 +153,6 @@ fun RegisterScreen(
                 leadingIcon = { Icon(Icons.Default.Email, contentDescription = null) }
             )
 
-            // 密码
             OutlinedTextField(
                 value = password,
                 onValueChange = { input ->
@@ -171,7 +175,6 @@ fun RegisterScreen(
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password)
             )
 
-            // 确认密码
             OutlinedTextField(
                 value = confirmPassword,
                 onValueChange = { input ->
@@ -181,7 +184,7 @@ fun RegisterScreen(
                 label = { Text("确认密码") },
                 modifier = Modifier.fillMaxWidth(),
                 singleLine = true,
-                enabled = !isRegistering, // 禁用
+                enabled = !isRegistering,
                 isError = confirmPasswordError,
                 supportingText = { if (confirmPasswordError) Text("两次输入的密码不一致") },
                 visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),

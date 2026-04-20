@@ -460,12 +460,6 @@ fun NavGraph(
             composable<Screen.Register> {
                 val registerResult by authViewModel.registerResult.collectAsState()
                 val isRegistering by authViewModel.isRegistering.collectAsState()
-                LaunchedEffect(registerResult) {
-                    if (registerResult is NetworkResult.Success) {
-                        navController.popBackStack()
-//                        authViewModel.resetRegisterResult()
-                    }
-                }
                 RegisterScreen(
                     onBack = { if (navController.previousBackStackEntry != null) navController.popBackStack() },
                     onRegister = { username, password, email ->
