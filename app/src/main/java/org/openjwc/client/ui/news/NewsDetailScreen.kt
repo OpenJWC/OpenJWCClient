@@ -2,6 +2,7 @@ package org.openjwc.client.ui.news
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -30,6 +31,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.nestedscroll.nestedScroll
@@ -52,7 +54,7 @@ fun TestNewsDetailScreen() {
             date = "2023-03-18",
             detailUrl = "https://www.baidu.com",
             isPage = true,
-            contentText = "<h1>测试正文</h1>",
+            contentText = "测试文本",
             attachmentUrls = listOf(
                 "https://www.bilibili.com", "https://www.baidu.com"
             ),
@@ -66,7 +68,7 @@ fun TestNewsDetailScreen() {
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun NewsDetailScreen(
-    fetchedNotice: FetchedNotice,
+    fetchedNotice: FetchedNotice?,
     onBack: () -> Unit,
     onAddToAttachments: () -> Unit,
     onToBrowser: (String) -> Unit
@@ -87,7 +89,7 @@ fun NewsDetailScreen(
             LargeTopAppBar(
                 title = {
                     Text(
-                        text = fetchedNotice.title,
+                        text = fetchedNotice?.title ?: "资讯不存在",
                         overflow = TextOverflow.Ellipsis
                     )
                 },
@@ -98,18 +100,25 @@ fun NewsDetailScreen(
                 },
                 scrollBehavior = scrollBehavior,
                 actions = {
-                    IconButton(onClick = onAddToAttachments) {
-                        Icon(Icons.AutoMirrored.Outlined.NoteAdd, contentDescription = "添加至附件")
+                    if (fetchedNotice != null) {
+                        IconButton(onClick = onAddToAttachments) {
+                            Icon(
+                                Icons.AutoMirrored.Outlined.NoteAdd,
+                                contentDescription = "添加至附件"
+                            )
+                        }
                     }
                 }
             )
         },
         floatingActionButton = {
-            ExtendedFloatingActionButton(
-                onClick = { onToBrowser(fetchedNotice.detailUrl) },
-                icon = { Icon(Icons.AutoMirrored.Filled.OpenInNew, contentDescription = null) },
-                text = { Text("在浏览器中查看原文") },
-            )
+            if (fetchedNotice != null) {
+                ExtendedFloatingActionButton(
+                    onClick = { onToBrowser(fetchedNotice.detailUrl) },
+                    icon = { Icon(Icons.AutoMirrored.Filled.OpenInNew, contentDescription = null) },
+                    text = { Text("在浏览器中查看原文") },
+                )
+            }
         },
         modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection)
     ) { innerPadding ->
@@ -121,35 +130,46 @@ fun NewsDetailScreen(
                 .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                Text(
-                    text = "发布日期: ${fetchedNotice.date}",
-                    style = MaterialTheme.typography.labelMedium,
-                    color = MaterialTheme.colorScheme.outline
+            if (fetchedNotice == null) {
+                Box {
+                    Text(
+                        text = "资讯为空！你发现了彩蛋，按理来说这行字不该出现……",
+                        modifier = Modifier.align(Alignment.Center),
+                        style = MaterialTheme.typography.bodyLarge,
+                        color = MaterialTheme.colorScheme.outline
+                    )
+                }
+            } else {
+                Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                    Text(
+                        text = "发布日期: ${fetchedNotice.date}",
+                        style = MaterialTheme.typography.labelMedium,
+                        color = MaterialTheme.colorScheme.outline
+                    )
+                    Text(
+                        text = "原文链接: ${fetchedNotice.detailUrl}",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.primary,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                        modifier = Modifier.clickable { onToBrowser(fetchedNotice.detailUrl) }
+                    )
+                }
+
+                MarkdownText(
+                    markdown = if (fetchedNotice.contentText.isNullOrBlank()) "暂无详细内容，请在浏览器查看原文。" else fetchedNotice.contentText,
+                    isTextSelectable = true,
+                    linkColor = MaterialTheme.colorScheme.primary,
+                    imageLoader = customImageLoader
                 )
-                Text(
-                    text = "原文链接: ${fetchedNotice.detailUrl}",
-                    style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.primary,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                    modifier = Modifier.clickable { onToBrowser(fetchedNotice.detailUrl) }
+                Spacer(modifier = Modifier.padding(16.dp))
+
+                AttachmentList(
+                    fetchedNotice.attachmentUrls,
+                    onAttachmentClick = onToBrowser,
                 )
+                Spacer(modifier = Modifier.height(64.dp))
             }
-
-            MarkdownText(
-                markdown = if (fetchedNotice.contentText.isNullOrBlank()) "暂无详细内容，请在浏览器查看原文。" else fetchedNotice.contentText,
-                isTextSelectable = true,
-                linkColor = MaterialTheme.colorScheme.primary,
-                imageLoader = customImageLoader
-            )
-            Spacer(modifier = Modifier.padding(16.dp))
-
-            AttachmentList(
-                fetchedNotice.attachmentUrls,
-                onAttachmentClick = onToBrowser,
-            )
-            Spacer(modifier = Modifier.height(64.dp))
         }
     }
 }

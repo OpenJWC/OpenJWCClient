@@ -56,6 +56,10 @@ class NewsViewModel(
             started = SharingStarted.WhileSubscribed(5000),
             initialValue = emptyList()
         )
+
+    var currentNewsToDisplay = MutableStateFlow<FetchedNotice?>(null)
+        private set
+
     var labels = MutableStateFlow<List<String>>(emptyList())
         private set
 
@@ -256,6 +260,14 @@ class NewsViewModel(
         viewModelScope.launch {
             newsRepository.insertFavoriteNews(notices)
         }
+    }
+
+    fun setCurrentNewsToDisplay(fetchedNotice: FetchedNotice) {
+        currentNewsToDisplay.value = fetchedNotice
+    }
+
+    fun clearCurrentNewsToDisplay() {
+        currentNewsToDisplay.value = null
     }
 }
 

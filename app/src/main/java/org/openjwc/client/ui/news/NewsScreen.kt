@@ -145,7 +145,8 @@ fun NewsScreen(
                             onRefresh = { newsViewModel.loadCategory(currentLabel, isRefresh = true) },
                             onLoadMore = { newsViewModel.loadNextPage(currentLabel) },
                             onItemClick = { notice ->
-                                navController.navigate(Screen.NewsDetail(notice))
+                                newsViewModel.setCurrentNewsToDisplay(notice)
+                                navController.navigate(Screen.NewsDetail)
                             },
                             onItemLongClick = { notice ->
                                 selectedNoticeForMenu = notice

@@ -5,6 +5,7 @@ import org.openjwc.client.net.models.NetworkResult
 import org.openjwc.client.net.models.SuccessResponse
 import org.openjwc.client.net.models.fetch
 
+@Deprecated("use account instead")
 suspend fun NetService.deviceRegister(
     auth: String,
     deviceId: String

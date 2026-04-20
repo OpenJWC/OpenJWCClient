@@ -1,7 +1,6 @@
 package org.openjwc.client.navigation
 
 import kotlinx.serialization.Serializable
-import org.openjwc.client.net.models.FetchedNotice
 
 sealed interface Screen {
     @Serializable
@@ -35,5 +34,5 @@ sealed interface Screen {
     @Serializable
     object Favorite: Screen
     @Serializable
-    data class NewsDetail(val fetchedNotice: FetchedNotice) : Screen
+    object NewsDetail : Screen
 }

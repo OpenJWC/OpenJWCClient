@@ -1,7 +1,5 @@
 package org.openjwc.client.navigation
 
-import android.net.Uri
-import android.os.Bundle
 import android.widget.Toast
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.tween
@@ -26,16 +24,12 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.res.stringResource
-import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import androidx.navigation.toRoute
 import kotlinx.coroutines.flow.receiveAsFlow
-import kotlinx.serialization.json.Json
 import org.openjwc.client.R
 import org.openjwc.client.log.Logger
-import org.openjwc.client.net.models.FetchedNotice
 import org.openjwc.client.net.models.GitHubRelease
 import org.openjwc.client.net.models.NetworkResult
 import org.openjwc.client.ui.main.MainScreen
@@ -65,25 +59,6 @@ import org.openjwc.client.viewmodels.NavEvent
 import org.openjwc.client.viewmodels.NewsViewModel
 import org.openjwc.client.viewmodels.SettingsViewModel
 import org.openjwc.client.viewmodels.UiEvent
-import kotlin.reflect.typeOf
-
-val NoticeNavType = object : NavType<FetchedNotice>(isNullableAllowed = false) {
-    override fun get(bundle: Bundle, key: String): FetchedNotice? {
-        return bundle.getString(key)?.let { Json.decodeFromString(it) }
-    }
-
-    override fun parseValue(value: String): FetchedNotice {
-        return Json.decodeFromString(Uri.decode(value))
-    }
-
-    override fun serializeAsValue(value: FetchedNotice): String {
-        return Uri.encode(Json.encodeToString(value))
-    }
-
-    override fun put(bundle: Bundle, key: String, value: FetchedNotice) {
-        bundle.putString(key, Json.encodeToString(value))
-    }
-}
 
 @Composable
 fun NavGraph(
@@ -146,6 +121,7 @@ fun NavGraph(
                 is UiEvent.ShowToast -> {
                     Toast.makeText(context, event.message, Toast.LENGTH_SHORT).show()
                 }
+
                 else -> {}
             }
         }
@@ -157,6 +133,7 @@ fun NavGraph(
                 is UiEvent.ShowToast -> {
                     Toast.makeText(context, event.message, Toast.LENGTH_SHORT).show()
                 }
+
                 else -> {}
             }
         }
@@ -164,13 +141,15 @@ fun NavGraph(
 
     LaunchedEffect(Unit) {
         chatViewModel.navEvent.receiveAsFlow().collect { event ->
-            when(event) {
-                is NavEvent.ToLogin ->  {
+            when (event) {
+                is NavEvent.ToLogin -> {
                     navController.navigate(Screen.Login)
                 }
+
                 is NavEvent.ToRegister -> {
                     navController.navigate(Screen.Register)
                 }
+
                 is NavEvent.ToBack -> {
                     navController.popBackStack()
                 }
@@ -179,13 +158,15 @@ fun NavGraph(
     }
     LaunchedEffect(Unit) {
         newsViewModel.navEvent.receiveAsFlow().collect { event ->
-            when(event) {
-                is NavEvent.ToLogin ->  {
+            when (event) {
+                is NavEvent.ToLogin -> {
                     navController.navigate(Screen.Login)
                 }
+
                 is NavEvent.ToRegister -> {
                     navController.navigate(Screen.Register)
                 }
+
                 is NavEvent.ToBack -> {
                     navController.popBackStack()
                 }
@@ -195,13 +176,15 @@ fun NavGraph(
 
     LaunchedEffect(Unit) {
         authViewModel.navEvent.receiveAsFlow().collect { event ->
-            when(event) {
-                is NavEvent.ToLogin ->  {
+            when (event) {
+                is NavEvent.ToLogin -> {
                     navController.navigate(Screen.Login)
                 }
+
                 is NavEvent.ToRegister -> {
                     navController.navigate(Screen.Register)
                 }
+
                 is NavEvent.ToBack -> {
                     navController.popBackStack()
                 }
@@ -210,13 +193,15 @@ fun NavGraph(
     }
     LaunchedEffect(Unit) {
         meViewModel.navEvent.receiveAsFlow().collect { event ->
-            when(event) {
-                is NavEvent.ToLogin ->  {
+            when (event) {
+                is NavEvent.ToLogin -> {
                     navController.navigate(Screen.Login)
                 }
+
                 is NavEvent.ToRegister -> {
                     navController.navigate(Screen.Register)
                 }
+
                 is NavEvent.ToBack -> {
                     navController.popBackStack()
                 }
@@ -303,15 +288,14 @@ fun NavGraph(
                 )
             }
 
-            composable<Screen.NewsDetail>(
-                typeMap = mapOf(
-                    typeOf<FetchedNotice>() to NoticeNavType
-                )
-            ) { backStackEntry ->
-                val args = backStackEntry.toRoute<Screen.NewsDetail>()
+            composable<Screen.NewsDetail> {
+                val notice = newsViewModel.currentNewsToDisplay.collectAsState().value
                 NewsDetailScreen(
-                    fetchedNotice = args.fetchedNotice,
-                    onBack = { navController.popBackStack() },
+                    fetchedNotice = notice,
+                    onBack = {
+                        navController.popBackStack()
+                        newsViewModel.clearCurrentNewsToDisplay()
+                    },
                     onToBrowser = { uri -> uriHandler.openUri(uri) },
                     onAddToAttachments = {
                         val popped = navController.popBackStack<Screen.Main>(inclusive = false)
@@ -321,14 +305,19 @@ fun NavGraph(
                                 popUpTo<Screen.NewsDetail> { inclusive = true }
                             }
                         }
-                        chatViewModel.addAttachment(args.fetchedNotice)
+                        if(notice != null) {
+                            chatViewModel.addAttachment(notice)
+                        }
                     }
                 )
             }
             composable<Screen.Favorite> {
                 FavoriteScreen(
                     onBack = { navController.popBackStack() },
-                    onItemClick = { navController.navigate(Screen.NewsDetail(it)) },
+                    onItemClick = { notice ->
+                        newsViewModel.setCurrentNewsToDisplay(notice)
+                        navController.navigate(Screen.NewsDetail)
+                    },
                     onAddToAttachments = {
                         val popped = navController.popBackStack<Screen.Main>(inclusive = false)
                         mainViewModel.updateTab(MainTab.Chat)
