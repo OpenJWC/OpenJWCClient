@@ -27,6 +27,7 @@ data class UserSettings(
     val backgroundPath: String? = null,
     val backgroundAlpha: Float = 0.3f,
     val proxy: Proxy = Proxy.NoProxy(),
+    val languageCode: String? = null,
 )
 
 private val Context.settingsStore by preferencesDataStore(name = "user_settings")
@@ -45,6 +46,7 @@ class SettingsDataSource(private val context: Context) {
         val PROXY_TYPE = stringPreferencesKey("proxy_type")
         val PROXY_ADDRESS = stringPreferencesKey("proxy_address")
         val PROXY_PORT = intPreferencesKey("proxy_port")
+        val LANGUAGE_CODE = stringPreferencesKey("language_code")
     }
 
     val userSettings: Flow<UserSettings> = context.settingsStore.data.map { prefs ->
@@ -77,6 +79,8 @@ class SettingsDataSource(private val context: Context) {
 
                 else -> Proxy.NoProxy()
             },
+            languageCode = prefs[Keys.LANGUAGE_CODE]?.takeIf { it.isNotBlank() }
+                ?: default.languageCode,
         )
     }
     suspend fun <T> save(key: Preferences.Key<T>, value: T) {
@@ -112,6 +116,12 @@ class SettingsDataSource(private val context: Context) {
                     prefs[Keys.PROXY_PORT] = proxy.port
                 }
             }
+        }
+    }
+
+    suspend fun saveLanguageCode(code: String?) {
+        context.settingsStore.edit { prefs ->
+            prefs[Keys.LANGUAGE_CODE] = code ?: ""
         }
     }
 }

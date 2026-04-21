@@ -1,0 +1,274 @@
+<resources xmlns:tools="http://schemas.android.com/tools">
+    <string name="app_name">OpenJWC</string>
+    <string name="chat">Chat</string>
+    <string name="news">News</string>
+    <string name="me">Me</string>
+    <string name="openjwc_description">
+        The OpenJWC team was established to eliminate the final barrier to delivering academic information to students through software development technology. We hope to integrate academic information collection and distribution so that news previously waiting quietly on websites can truly enter the life of every SEUer.\n\n
+        We reject bloat and pursue "direct access" to information. In the OpenJWC Android client, the Material 3 design language gives the interface agility and purity. Unlike traditional list-piling, we introduced an innovative AI Chat interaction bar—an intelligent assistant that understands SEU. Behind it is a Rust crawler capturing campus dynamics in milliseconds, and a Python backend with a vector database building a smart brain. Whether you ask about "course selection requirements" or "lecture information", the system can locate key points in massive information through semantic search and tell them in natural language.\n\n
+        As a fully open-source project, we are not just delivering a tool, but inviting every SEU developer to participate and warm campus life with code.
+    </string>
+    <string name="policy_text">
+Welcome to OpenJWC (hereinafter referred to as \"this product\"). This agreement is a legal agreement between you and the OpenJWC developer regarding the use of this product. Please review all terms of this agreement carefully before installing, configuring, or using this product. Once you complete the client configuration or use related services, it means you have fully understood and voluntarily accepted all agreements of this agreement.\n\n
+# Article 1 Nature and Scope of Service\n\n
+This product is an auxiliary tool that provides academic information aggregation, RAG (Retrieval-Augmented Generation) academic Q&amp;A, and news contribution functions for users.\n\n
+This product adopts a privatized deployment architecture. The developer only provides software code and technical solutions and does not directly operate the server. The service you connect to is provided by a specific deployer (it could be you personally, a school club, or a third-party organization), and the developer is not responsible for the availability or legality of the services provided by the deployer.\n\n
+The name, icon, and copyright of the source code of this product belong to the developer. The user\'s use of this software does not mean that the developer has transferred any other rights except those specified in the license.\n\n
+# Article 2 Account and Service Use Standards\n\n
+When users configure server information in the client, they must ensure that the filled BaseURL and account information are accurate and valid.\n\n
+Users must not use this product for any illegal activities, including but not limited to crawling sensitive information involving personal privacy, spreading illegal and harmful information, attacking the academic system, etc.\n\n
+When contributing news, users should ensure the authenticity, legality, and non-infringement of the content. It is strictly forbidden to publish rumors, slander, inflammatory remarks, or unauthorized copyrighted content.\n\n
+Users should properly keep their access credentials. The user shall be responsible for account theft or data leakage caused by improper storage by the user.\n\n
+# Article 3 Service Disclaimer\n\n
+**Third-party Correlation**: OpenJWC has no official affiliation or cooperation with Southeast University Academic Affairs Office or other school institutions. All information obtained through this product is for reference only. For the final conclusion of academic matters, please refer to the information released by the school\'s official channels.\n\n
+**Service Availability**: Since the academic website may undergo structural adjustments or maintenance, this product cannot guarantee 100% service online rate. The developer shall not be liable for compensation for service interruptions or failure to obtain information caused by force majeure, network fluctuations, or changes in the school system.\n\n
+**AI Accuracy**: The AI Q&amp;A function is generated based on existing knowledge bases, and there may be factual deviations or understanding errors. Users must bear the risk for any academic decisions made based on AI replies, and it is recommended to cross-check key information.\n\n
+# Article 4 Boundary of Responsibility for Privatized Deployment\n\n
+This product is released as an open-source tool following the **MIT License**. The deployer shall bear full responsibility for any legal risks, data compliance issues, and security hazards generated during the use process by the deployer.\n\n
+The original developer does not participate in or interfere with the operation and maintenance of the private server. If you believe that the deployer\'s management behavior has damaged your legal rights during use, please negotiate directly with the administrator of the server or maintain your rights according to relevant legal channels.\n\n
+# Article 5 Agreement Amendment and Termination\n\n
+The developer has the right to amend this agreement based on changes in laws and regulations or product function upgrades. The updated agreement will be released within the product and take effect immediately. If you continue to use this product after the agreement changes, it is deemed to accept the revised terms.\n\n
+If a user violates the provisions of this agreement, the developer and deployer have the right to restrict or terminate their access rights without prior notice.\n\n
+# Article 6 Dispute Resolution\n\n
+The conclusion, execution, and interpretation of this agreement shall apply to the laws of the People\'s Republic of China.\n\n
+If a dispute occurs between the user and the original developer, it should be resolved through friendly negotiation; if the negotiation fails, either party may file a lawsuit in the people\'s court with jurisdiction in the developer\'s location.\n\n
+# Article 7 Contact and Feedback\n\n
+If you have any questions or suggestions about this agreement, you are welcome to submit feedback through the project\'s open-source platform. For specific problems such as server operation and data storage, please contact the privatized deployment administrator who provides the service for you.
+    </string>
+    <string name="license" tools:ignore="TypographyOther">
+MIT License\n
+\n
+Copyright (c) 2026 OpenJWC\n
+\n
+Permission is hereby granted, free of charge, to any person obtaining a copy\n
+of this software and associated documentation files (the \"Software\"), to deal\n
+in the Software without restriction, including without limitation the rights\n
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell\n
+copies of the Software, and to permit persons to whom the Software is\n
+furnished to do so, subject to the following conditions:\n
+\n
+The above copyright notice and this permission notice shall be included in all\n
+copies or substantial portions of the Software.\n
+\n
+THE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\n
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\n
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\n
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\n
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\n
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE\n
+SOFTWARE.\n
+    </string>
+    <string name="confirm">OK</string>
+    <string name="cancel">Cancel</string>
+    <string name="upload_news">Upload News</string>
+    <string name="back">Back</string>
+    <string name="uploading">Uploading…</string>
+    <string name="submit_upload">Submit</string>
+    <string name="basic_information">Basic Information</string>
+    <string name="title">Title</string>
+    <string name="label">Label</string>
+    <string name="date">Date</string>
+    <string name="detail_url">Detail URL</string>
+    <string name="invalid_url">Invalid URL format</string>
+    <string name="link_is_a_page">Detail link is a webpage</string>
+    <string name="link_is_a_page_desc">If off, it will be treated as an attachment or external link</string>
+    <string name="main_content">Main Content</string>
+    <string name="markdown_text">Markdown Text</string>
+    <string name="attachment_url_lists">Attachment URLs (%1$d)</string>
+    <string name="add_attachment_urls">Add Attachment URL</string>
+    <string name="no_attachment_urls">No attachment URLs (optional)</string>
+    <string name="thousand_chars_limited">Exceeds 1000 characters</string>
+    <string name="format_invalid">Invalid format</string>
+    <string name="delete_attachment_url">Delete Attachment URL</string>
+    <string name="update_available">Update Available</string>
+    <string name="download_update">Download Update</string>
+    <string name="theme">Theme</string>
+    <string name="color_theme">Color Theme</string>
+    <string name="color_scheme_based_on_material_you">Color scheme based on Material You</string>
+    <string name="dynamic_color">Dynamic Color</string>
+    <string name="auto_extracted_from_wallpaper">Automatically extracted from wallpaper (Android 12+ only)</string>
+    <string name="select_seed_color">Select Seed Color</string>
+    <string name="ui_decoration">UI Decoration</string>
+    <string name="customize_background">Customize Background</string>
+    <string name="background_selected">Custom background set</string>
+    <string name="background_not_selected">No background image</string>
+    <string name="clear_background">Clear Background</string>
+    <string name="change_background">Change Background</string>
+    <string name="background_alpha">Background Opacity</string>
+    <string name="display_mode">Display Mode</string>
+    <string name="light">Light</string>
+    <string name="dark">Dark</string>
+    <string name="follow_system">System</string>
+    <string name="settings">Settings</string>
+    <string name="general">General</string>
+    <string name="connection">Connection</string>
+    <string name="network_config">Network Config</string>
+    <string name="account_management">Account Management</string>
+    <string name="log">Log</string>
+    <string name="display_settings">Display Settings</string>
+    <string name="upload_results">Upload Status</string>
+    <string name="no_upload_records">No upload records</string>
+    <string name="pending">Pending</string>
+    <string name="approved">Approved</string>
+    <string name="rejected">Rejected</string>
+    <string name="unknown">Unknown</string>
+    <string name="status_string">Status: %1$s</string>
+    <string name="create_account">Create Account</string>
+    <string name="username">Username</string>
+    <string name="username_3_chars_required">Username must be at least 3 characters</string>
+    <string name="email">Email</string>
+    <string name="please_type_valid_email">Please enter a valid email address</string>
+    <string name="password">Password</string>
+    <string name="password_requirement">Password must be at least 8 characters and include uppercase, lowercase, numbers, and symbols</string>
+    <string name="confirm_password">Confirm Password</string>
+    <string name="password_not_same">Passwords do not match</string>
+    <string name="creating_account">Creating account…</string>
+    <string name="register_now">Register Now</string>
+    <string name="user_agreement_and_privacy_policy">User Agreement and Privacy Policy</string>
+    <string name="agree_and_continue">Agree and Continue</string>
+    <string name="decline_and_exit">Decline and Exit</string>
+    <string name="news_display_settings">News Display Settings</string>
+    <string name="save">Save</string>
+    <string name="highlight_fresh_news">Highlight Fresh News</string>
+    <string name="highlight_fresh_news_desc">Set how many days after publication news is considered \"fresh\". Fresh news will be highlighted in the list with a badge.</string>
+    <string name="fresh_threshold_days">Fresh Threshold (Days)</string>
+    <string name="fresh_threshold_example">e.g., 3</string>
+    <string name="invalid_positive_integer">Please enter a valid positive integer</string>
+    <string name="disable_highlight_hint">Set to 0 to disable highlighting</string>
+    <string name="clear">Clear</string>
+    <string name="preview_effect">Preview Effect</string>
+    <string name="preview_fresh_title">This is a fresh and hot news title</string>
+    <string name="preview_old_title">This is an old news title</string>
+    <string name="notice">Notice</string>
+    <string name="confirm_delete">Confirm Delete</string>
+    <string name="clear_all_favorites_confirm">Are you sure you want to clear all favorites? This action cannot be undone.</string>
+    <string name="delete_all">Delete All</string>
+    <string name="favorite_news">Favorite News</string>
+    <string name="delete_all_favorites">Delete All Favorites</string>
+    <string name="add_to_attachments">Add to Attachments</string>
+    <string name="remove_from_favorites">Unfavorite</string>
+    <string name="no_favorites">No favorites yet</string>
+    <string name="favorite_hint">Long press a news card to add it to your favorites</string>
+    <string name="load_failed_retry">Load failed, tap to retry</string>
+    <string name="all_content_loaded">— All content loaded —</string>
+    <string name="retry">Retry</string>
+    <string name="no_news_categories">No categories found</string>
+    <string name="get_labels_failed_hint">Unable to get news labels. Please check your connection or try again later.</string>
+    <string name="not_logged_in">You are not logged in</string>
+    <string name="refetch_categories">Refetch Categories</string>
+    <string name="login">Login</string>
+    <string name="favorite">Favorite</string>
+    <string name="delete_favorite">Delete Favorite</string>
+    <string name="back_to_top">Back to Top</string>
+    <string name="favorited">Favorited</string>
+    <string name="new_tag">NEW</string>
+    <string name="news_not_found">News not found</string>
+    <string name="view_in_browser">View Original in Browser</string>
+    <string name="news_empty_egg">News is empty! You found an easter egg… this shouldn\'t happen.</string>
+    <string name="publish_date">Published: %1$s</string>
+    <string name="original_link">Original Link: %1$s</string>
+    <string name="no_detail_view_original">No details available. Please view the original in your browser.</string>
+    <string name="attachment_list_count">Attachments (%1$d)</string>
+    <string name="attachment_placeholder">Attachment %1$d</string>
+    <string name="new_session">New Chat</string>
+    <string name="untitled_session">Untitled Chat</string>
+    <string name="more">More</string>
+    <string name="edit_session_name">Rename Chat</string>
+    <string name="delete_session">Delete Chat</string>
+    <string name="add_attachment_hint">Long press a news card to add attachments</string>
+    <string name="start_new_chat">Start a new conversation</string>
+    <string name="attach">Attach</string>
+    <string name="ask_something">Ask something…</string>
+    <string name="send">Send</string>
+    <string name="delete">Delete</string>
+    <string name="bottom">Bottom</string>
+
+    <string name="about">About</string>
+    <string name="app_icon_description">App Icon</string>
+    <string name="version_label">Version %1$s</string>
+    <string name="introduction">Introduction</string>
+    <string name="check_for_updates">Check for Updates</string>
+    <string name="github">GitHub</string>
+    <string name="open_source_licenses">Open Source Licenses</string>
+
+    <string name="confirm_unbind">Confirm Unbind</string>
+    <string name="unbind_device_confirm_msg">Are you sure you want to unbind device [%1$s]?</string>
+    <string name="device_list_login_hint">Log in to view and manage authorized devices.</string>
+    <string name="unnamed_user">Unnamed User</string>
+    <string name="unbound_email">Unbound Email</string>
+    <string name="device_label">Device: %1$s</string>
+    <string name="welcome_back">Welcome</string>
+    <string name="logout">Logout</string>
+    <string name="device_management">Device Management</string>
+    <string name="refresh">Refresh</string>
+    <string name="unbind_failed_with_code">Unbind failed (%1$d): %2$s</string>
+    <string name="unbind_failed">Unbind failed: %1$s</string>
+    <string name="no_bound_devices">No bound devices</string>
+    <string name="query_devices_failed">Failed to query devices: %1$s</string>
+    <string name="query_devices_failed_with_code">Failed to query devices (%1$d): %2$s</string>
+    <string name="local_device_id">Local Device ID: %1$s</string>
+    <string name="current_device">Current Device</string>
+    <string name="unbind">Unbind</string>
+    <string name="api_key_retry_hint">If you changed the API Key, please save settings before retrying</string>
+    <string name="unknown_device">Unknown Device</string>
+
+    <!-- MeScreen & Hitokoto -->
+    <string name="hitokoto_text_format">“ %1$s ”</string>
+    <string name="hitokoto_author_format">—— %1$s</string>
+
+    <!-- MeViewModel sections -->
+    <string name="contribution">Contribution</string>
+
+    <!-- HostScreen -->
+    <string name="server_config">Server Config</string>
+    <string name="host_address">Host Address</string>
+    <string name="host_empty_error">Server address cannot be empty</string>
+    <string name="port_number">Port</string>
+    <string name="port_range_error">Port should be between 0 and 65535</string>
+    <string name="proxy_settings">Proxy Settings</string>
+    <string name="no_proxy">None</string>
+    <string name="proxy_host">Proxy Host</string>
+    <string name="proxy_host_ipv4_error">Only IPv4 is supported for proxy host</string>
+    <string name="proxy_port">Proxy Port</string>
+    <string name="proxy_port_range_error">Port must be between 0 and 65535</string>
+    <string name="use_unsafe_http">Use unsafe HTTP connection</string>
+    <string name="force_https_desc">Force HTTPS when disabled</string>
+    <string name="host_config_hint">Hint: Ensure the device can access this address and the firewall is configured correctly.</string>
+
+    <!-- LoginScreen -->
+    <string name="account">Account</string>
+    <string name="logging_in">Logging in…</string>
+    <string name="no_account_register_now">No account? Register now</string>
+
+    <!-- MessageBubble -->
+    <string name="copy">Copy</string>
+
+    <!-- EditMetadataDialog -->
+    <string name="rename_session">Rename Chat</string>
+    <string name="please_input_new_title">Please enter a new title</string>
+
+    <!-- UploadNewsScreen -->
+    <string name="date_format_hint">yyyy-MM-dd</string>
+    <string name="url_placeholder">https://…</string>
+    <string name="debug">Debug</string>
+    <string name="using_unsafe_http">Using unsafe HTTP</string>
+    <string name="chat_history">Chat History</string>
+    <string name="menu">Menu</string>
+    <string name="refreshed_successfully">Refreshed successfully</string>
+    <string name="untitled">Untitled</string>
+    <string name="login_successfully">Login successful</string>
+    <string name="register_success_hint">Registration successful, please wait for admin approval</string>
+    <string name="logout_failed">Logout failed: %1$s</string>
+    <string name="logout_failed_with_code">Logout failed (%1$d): %2$s</string>
+    <string name="copy_success">Copied to clipboard</string>
+    <string name="already_latest_version">Already the latest version</string>
+    <string name="check_update_failed">Failed to check for updates</string>
+    <string name="upload_success">Upload successful</string>
+    <string name="load_error">Load error: %1$s</string>
+    <string name="load_error_with_code">Load error (%1$d): %2$s</string>
+
+    <string name="language">Language</string>
+    <string name="language_settings">Language Settings</string>
+    <string name="simplified_chinese">Simplified Chinese</string>
+    <string name="english">English</string>
+</resources>

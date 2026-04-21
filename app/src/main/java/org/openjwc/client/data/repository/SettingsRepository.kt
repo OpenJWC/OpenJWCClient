@@ -129,4 +129,6 @@ class SettingsRepository(
     }
 
     suspend fun updateProxy(proxy: Proxy) = settingsDataSource.saveProxy(proxy)
+
+    suspend fun updateLanguageCode(code: String?) = settingsDataSource.saveLanguageCode(code)
 }

@@ -2,11 +2,11 @@ package org.openjwc.client
 
 import android.os.Build
 import android.os.Bundle
-import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
 import androidx.annotation.RequiresApi
+import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -43,7 +43,7 @@ import org.openjwc.client.viewmodels.SettingsViewModelFactory
 import kotlin.getValue
 
 
-class MainActivity : ComponentActivity() {
+class MainActivity : AppCompatActivity() {
 
     private val database by lazy { AppDatabase.getDatabase(applicationContext) }
     private val authDataSource by lazy { AuthDataSource(applicationContext) }
@@ -55,8 +55,8 @@ class MainActivity : ComponentActivity() {
         authDataSource = authDataSource,
         context = applicationContext
     ) }
-    private val chatRepository by lazy { ChatRepository(database.chatDao(), settingsDataSource, authDataSource) } // 里面只有一个sendMessage去联网，为了方便就不让他拥有settingsRepository了
-    private val newsRepository by lazy { NewsRepository(database.newsDao(), settingsDataSource, authDataSource) } // 这里面联网的东西太多，传参有点麻烦
+    private val chatRepository by lazy { ChatRepository(database.chatDao(), settingsDataSource, authDataSource) }
+    private val newsRepository by lazy { NewsRepository(database.newsDao(), settingsDataSource, authDataSource) }
     private val authRepository by lazy { AuthRepository(authDataSource, settingsDataSource) }
 
     private val mainViewModel: MainViewModel by viewModels { MainViewModelFactory(settingsRepository) }
@@ -68,8 +68,7 @@ class MainActivity : ComponentActivity() {
     }
     private val chatViewModel: ChatViewModel by viewModels {
         ChatViewModelFactory(
-            chatRepository,
-            settingsRepository
+            chatRepository
         )
     }
     private val newsViewModel: NewsViewModel by viewModels { NewsViewModelFactory(settingsRepository, newsRepository, authRepository) }

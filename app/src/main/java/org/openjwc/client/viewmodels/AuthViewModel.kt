@@ -9,6 +9,7 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import org.openjwc.client.R
 import org.openjwc.client.data.datastore.AuthSession
 import org.openjwc.client.data.repository.AuthRepository
 import org.openjwc.client.log.Logger
@@ -55,7 +56,7 @@ class AuthViewModel(
             isLoggingIn.value = false
             if (loginResult.value is NetworkResult.Success) {
                 navEvent.send(NavEvent.ToBack())
-                UiEvent.ShowToast("登录成功")
+                uiEvent.send(UiEvent.ShowToast(UiText.StringResource(R.string.login_successfully)))
             }
         }
     }
@@ -68,7 +69,7 @@ class AuthViewModel(
             isRegistering.value = false
             if (registerResult.value is NetworkResult.Success) {
                 navEvent.send(NavEvent.ToBack())
-                uiEvent.send(UiEvent.ShowToast("注册成功，请等待管理员审核"))
+                uiEvent.send(UiEvent.ShowToast(UiText.StringResource(R.string.register_success_hint)))
             }
         }
     }
@@ -78,8 +79,25 @@ class AuthViewModel(
         viewModelScope.launch {
             val result = authRepository.logout()
             when (result) {
-                is NetworkResult.Failure -> uiEvent.send(UiEvent.ShowToast("注销失败(${result.code}): ${result.msg}"))
-                is NetworkResult.Error -> uiEvent.send(UiEvent.ShowToast("注销失败: ${result.msg}"))
+                is NetworkResult.Failure -> uiEvent.send(
+                    UiEvent.ShowToast(
+                        UiText.StringResource(
+                            R.string.logout_failed_with_code,
+                            result.code,
+                            result.msg
+                        )
+                    )
+                )
+
+                is NetworkResult.Error -> uiEvent.send(
+                    UiEvent.ShowToast(
+                        UiText.StringResource(
+                            R.string.logout_failed,
+                            result.msg
+                        )
+                    )
+                )
+
                 else -> {}
             }
         }

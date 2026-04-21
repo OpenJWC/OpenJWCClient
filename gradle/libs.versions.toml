@@ -35,6 +35,7 @@ kspVersion = "2.3.0"
 foundation = "1.10.5"
 datastore = "1.2.1"
 animationVersion = "1.10.6"
+appcompat = "1.7.1"
 
 [libraries]
 # Androidx 核心
@@ -84,6 +85,7 @@ androidx-room-compiler = { module = "androidx.room:room-compiler", version.ref =
 androidx-foundation = { group = "androidx.compose.foundation", name = "foundation", version.ref = "foundation" }
 androidx-datastore = { module = "androidx.datastore:datastore-preferences", version.ref = "datastore" }
 animation = { group = "androidx.compose.animation", name = "animation", version.ref = "animationVersion" }
+androidx-appcompat = { group = "androidx.appcompat", name = "appcompat", version.ref = "appcompat" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

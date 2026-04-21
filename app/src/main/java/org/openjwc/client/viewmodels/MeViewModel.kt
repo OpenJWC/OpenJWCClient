@@ -44,15 +44,15 @@ class MeViewModel(
             val result = repository.tryRefreshHitokoto()
             when (result) {
                 is NetworkResult.Failure -> {
-                    uiEvent.send(UiEvent.ShowToast("(${result.code}) ${result.msg}"))
+                    uiEvent.send(UiEvent.ShowToast(UiText.DynamicString("(${result.code}) ${result.msg}")))
                     if (result.code == 401) {
                         authRepository.clearSession()
                         navEvent.send(NavEvent.ToLogin())
                     }
                 }
 
-                is NetworkResult.Error -> uiEvent.send(UiEvent.ShowToast(result.msg))
-                is NetworkResult.Success -> uiEvent.send(UiEvent.ShowToast(successMessage)) // TODO: 也要迁移
+                is NetworkResult.Error -> uiEvent.send(UiEvent.ShowToast(UiText.DynamicString(result.msg)))
+                is NetworkResult.Success -> uiEvent.send(UiEvent.ShowToast(UiText.DynamicString(successMessage)))
             }
         }
     }

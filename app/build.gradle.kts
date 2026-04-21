@@ -63,6 +63,7 @@ kotlin {
 dependencies {
     implementation(libs.androidx.foundation)
     implementation(libs.animation)
+    implementation(libs.androidx.appcompat)
     ksp(libs.androidx.room.compiler)
 
     implementation(libs.androidx.core.ktx)

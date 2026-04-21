@@ -42,11 +42,13 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import org.openjwc.client.R
 
 @Preview
 @Composable
@@ -80,10 +82,10 @@ fun LoginScreen(
         modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
         topBar = {
             LargeTopAppBar(
-                title = { Text("登录") },
+                title = { Text(stringResource(R.string.login)) },
                 navigationIcon = {
                     IconButton(onClick = onBack, enabled = !isLoggingIn) { // 登录时禁用返回
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "返回")
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.back))
                     }
                 },
                 scrollBehavior = scrollBehavior
@@ -109,7 +111,7 @@ fun LoginScreen(
                     val filtered = input.filterAscii()
                     if (filtered.length <= 50) username = filtered
                 },
-                label = { Text("账号") },
+                label = { Text(stringResource(R.string.account)) },
                 modifier = Modifier.fillMaxWidth(),
                 singleLine = true,
                 enabled = !isLoggingIn,
@@ -122,7 +124,7 @@ fun LoginScreen(
                     val filtered = input.filterAscii()
                     if (filtered.length <= 100) password = filtered
                 },
-                label = { Text("密码") },
+                label = { Text(stringResource(R.string.password)) },
                 modifier = Modifier.fillMaxWidth(),
                 singleLine = true,
                 enabled = !isLoggingIn,
@@ -159,9 +161,9 @@ fun LoginScreen(
                         color = MaterialTheme.colorScheme.onPrimary,
                     )
                     Spacer(modifier = Modifier.width(12.dp))
-                    Text("正在登录...")
+                    Text(stringResource(R.string.logging_in))
                 } else {
-                    Text("登录", style = MaterialTheme.typography.titleMedium)
+                    Text(stringResource(R.string.login), style = MaterialTheme.typography.titleMedium)
                 }
             }
 
@@ -170,7 +172,7 @@ fun LoginScreen(
                 modifier = Modifier.fillMaxWidth(),
                 enabled = !isLoggingIn
             ) {
-                Text("还没有账号？立即注册")
+                Text(stringResource(R.string.no_account_register_now))
             }
         }
     }

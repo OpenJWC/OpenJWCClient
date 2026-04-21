@@ -12,6 +12,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.BugReport
 import androidx.compose.material.icons.filled.CalendarMonth
 import androidx.compose.material.icons.filled.Dns
+import androidx.compose.material.icons.filled.Language
 import androidx.compose.material.icons.filled.Palette
 import androidx.compose.material.icons.filled.VpnKey
 import androidx.compose.material3.MaterialTheme
@@ -51,6 +52,7 @@ import org.openjwc.client.ui.me.settings.auth.AccountScreen
 import org.openjwc.client.ui.me.settings.auth.LoginScreen
 import org.openjwc.client.ui.me.settings.auth.RegisterScreen
 import org.openjwc.client.ui.me.settings.connection.HostScreen
+import org.openjwc.client.ui.me.settings.general.LanguageScreen
 import org.openjwc.client.ui.me.settings.general.ThemeScreen
 import org.openjwc.client.ui.me.settings.log.LogScreen
 import org.openjwc.client.ui.me.settings.news.NewsDisplaySettingsScreen
@@ -102,7 +104,7 @@ fun NavGraph(
         chatViewModel.uiEvent.receiveAsFlow().collect { event ->
             when (event) {
                 is UiEvent.ShowToast -> {
-                    Toast.makeText(context, event.message, Toast.LENGTH_SHORT).show()
+                    Toast.makeText(context, event.uiText.asString(context), Toast.LENGTH_SHORT).show()
                 }
 
                 is UiEvent.ShowSnackBar -> {
@@ -116,7 +118,7 @@ fun NavGraph(
         mainViewModel.uiEvent.receiveAsFlow().collect { event ->
             when (event) {
                 is UiEvent.ShowToast -> {
-                    Toast.makeText(context, event.message, Toast.LENGTH_SHORT).show()
+                    Toast.makeText(context, event.uiText.asString(context), Toast.LENGTH_SHORT).show()
                 }
 
                 else -> {}
@@ -128,7 +130,7 @@ fun NavGraph(
         meViewModel.uiEvent.receiveAsFlow().collect { event ->
             when (event) {
                 is UiEvent.ShowToast -> {
-                    Toast.makeText(context, event.message, Toast.LENGTH_SHORT).show()
+                    Toast.makeText(context, event.uiText.asString(context), Toast.LENGTH_SHORT).show()
                 }
 
                 else -> {}
@@ -140,7 +142,7 @@ fun NavGraph(
         authViewModel.uiEvent.receiveAsFlow().collect { event ->
             when (event) {
                 is UiEvent.ShowToast -> {
-                    Toast.makeText(context, event.message, Toast.LENGTH_SHORT).show()
+                    Toast.makeText(context, event.uiText.asString(context), Toast.LENGTH_SHORT).show()
                 }
 
                 else -> {}
@@ -367,6 +369,7 @@ fun NavGraph(
                 val logText = stringResource(R.string.log)
                 val displaySettingsText = stringResource(R.string.display_settings)
                 val debugText = stringResource(R.string.debug)
+                val languageText = stringResource(R.string.language)
                 val menuTemplates = remember {
                     Menu(
                         route = Screen.Settings, title = settingsText, sections = listOf(
@@ -376,6 +379,11 @@ fun NavGraph(
                                         icon = Icons.Default.Palette,
                                         route = Screen.Theme,
                                         title = themeText,
+                                    ),
+                                    MenuItem.Route(
+                                        icon = Icons.Default.Language,
+                                        route = Screen.Language,
+                                        title = languageText,
                                     )
                                 )
                             ), SettingSection(
@@ -487,7 +495,14 @@ fun NavGraph(
                     authSession = authSession
                 )
             }
-
+            composable<Screen.Language> {
+                val settingsState by settingsViewModel.settings.collectAsState()
+                LanguageScreen(
+                    currentLanguageCode = settingsState.languageCode,
+                    onBack = { navController.popBackStack() },
+                    onLanguageSelect = { settingsViewModel.updateLanguage(it) }
+                )
+            }
             composable<Screen.Login> {
                 val loginResult by authViewModel.loginResult.collectAsState()
                 val isLoggingIn by authViewModel.isLoggingIn.collectAsState()

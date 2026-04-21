@@ -21,6 +21,7 @@ import org.openjwc.client.net.models.DevicesUnbindSuccessResponse
 import org.openjwc.client.net.models.NetworkResult
 import org.openjwc.client.net.models.Proxy
 import org.openjwc.client.net.models.SuccessResponse
+import org.openjwc.client.utils.changeAppLanguage
 
 private const val label = "SettingsViewModel"
 class SettingsViewModel(
@@ -51,6 +52,11 @@ class SettingsViewModel(
         viewModelScope.launch { settingsRepository.updateBackgroundAlpha(alpha) }
 
     fun updateProxy(proxy: Proxy) = viewModelScope.launch { settingsRepository.updateProxy(proxy) }
+
+    fun updateLanguage(code: String?) = viewModelScope.launch {
+        changeAppLanguage(code)
+        settingsRepository.updateLanguageCode(code)
+    }
 
     private var _deviceResult =
         MutableStateFlow<NetworkResult<SuccessResponse<DevicesQueryResponseData>>>(

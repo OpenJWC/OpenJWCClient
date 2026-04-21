@@ -13,6 +13,7 @@ import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import org.openjwc.client.BuildConfig
+import org.openjwc.client.R
 import org.openjwc.client.data.datastore.UserSettings
 import org.openjwc.client.data.repository.SettingsRepository
 import org.openjwc.client.log.Logger
@@ -114,12 +115,12 @@ class MainViewModel(
                         updateRelease.value = result.response
                         _updateEvent.send(result.response)
                     } else {
-                        if(showToast) uiEvent.send(UiEvent.ShowToast("当前版本已是最新"))
+                        if(showToast) uiEvent.send(UiEvent.ShowToast(UiText.StringResource(R.string.already_latest_version)))
                     }
                 }
                 else -> {
                     Logger.d(label, "检查更新失败")
-                    uiEvent.send(UiEvent.ShowToast("检查更新失败"))
+                    uiEvent.send(UiEvent.ShowToast(UiText.StringResource(R.string.check_update_failed)))
                 }
             }
         }

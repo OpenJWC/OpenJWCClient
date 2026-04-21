@@ -18,12 +18,12 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import org.openjwc.client.R
 import org.openjwc.client.data.models.ChatMessage
 import org.openjwc.client.data.models.ChatMetadata
 import org.openjwc.client.data.models.Role
 import org.openjwc.client.data.repository.ChatRepository
 import org.openjwc.client.data.repository.ChatStreamStatus
-import org.openjwc.client.data.repository.SettingsRepository
 import org.openjwc.client.log.Logger
 import org.openjwc.client.net.models.FetchedNotice
 
@@ -42,7 +42,6 @@ data class ChatSessionUiModel(
 
 class ChatViewModel(
     private val chatRepository: ChatRepository,
-    private val settingsRepository: SettingsRepository,
 ) : ViewModel() {
     private val label = "ChatViewModel"
     private val _sessionStates = MutableStateFlow<Map<Long?, ChatSessionState>>(emptyMap())
@@ -144,42 +143,6 @@ class ChatViewModel(
         currentSessionMetadata.value = null
     }
 
-    /*fun sendMessage() {
-        if (sendMessageState.value is SendMessageState.Sending || inputText.value.isBlank()) return
-
-        sendMessageState.value = SendMessageState.Sending
-        val messageText = inputText.value
-        val attachments = attachments.value
-        viewModelScope.launch {
-            clearAttachments()
-            updateInputText("")
-            try {
-                var sessionId = currentSessionMetadata.value?.sessionId
-                if (sessionId == null) {
-                    sessionId = chatRepository.createChatSession(messageText.take(20))
-                    currentSessionMetadata.value =
-                        ChatMetadata(sessionId = sessionId, title = messageText.take(20))
-                }
-
-                val result = chatRepository.sendMessage(
-                    sessionId,
-                    messageText,
-                    attachments,
-                    settingsRepository.getSettingsSnapshot()
-                )
-
-                if(result is ChatNetworkResult.Failure && result.code == 401) {
-                    navEvent.send(NavEvent.ToLogin())
-                }
-            } catch (e: Exception) {
-                Logger.e(label, "sendMessage Error", e)
-                uiEvent.send(UiEvent.ShowToast(e.localizedMessage ?: "Unknown Error"))
-            } finally {
-                Logger.d(label, "Setting state to Idle")
-                sendMessageState.value = SendMessageState.Idle
-            }
-        }
-    }*/
     fun sendMessage() {
         val messageText = inputText.value
         if (messageText.isBlank()) return
@@ -221,7 +184,7 @@ class ChatViewModel(
                                     if (status.code == 401) {
                                         navEvent.send(NavEvent.ToLogin())
                                     }
-                                    uiEvent.send(UiEvent.ShowToast(status.msg))
+                                    uiEvent.send(UiEvent.ShowToast(UiText.DynamicString(status.msg)))
                                     ChatSessionState.Error(status.msg)
                                 }
 
@@ -231,7 +194,13 @@ class ChatViewModel(
                     }
             } catch (e: Exception) {
                 Logger.e(label, "sendMessage Error", e)
-                uiEvent.send(UiEvent.ShowToast(e.localizedMessage ?: "Unknown Error"))
+                uiEvent.send(
+                    UiEvent.ShowToast(
+                        UiText.DynamicString(
+                            e.localizedMessage ?: "Unknown Error"
+                        )
+                    )
+                )
             }
         }
     }
@@ -251,7 +220,7 @@ class ChatViewModel(
         clipboardManager: Clipboard,
     ) {
         viewModelScope.launch {
-            uiEvent.send(UiEvent.ShowToast("复制成功"))
+            uiEvent.send(UiEvent.ShowToast(UiText.StringResource(R.string.copy_success)))
             clipboardManager.setClipEntry(
                 ClipEntry(
                     ClipData.newPlainText(
@@ -279,12 +248,11 @@ class ChatViewModel(
 
 class ChatViewModelFactory(
     private val chatRepository: ChatRepository,
-    private val settingsRepository: SettingsRepository,
 ) : ViewModelProvider.Factory {
     override fun <T : ViewModel> create(modelClass: Class<T>): T {
         if (modelClass.isAssignableFrom(ChatViewModel::class.java)) {
             @Suppress("UNCHECKED_CAST")
-            return ChatViewModel(chatRepository, settingsRepository) as T
+            return ChatViewModel(chatRepository) as T
         }
         throw IllegalArgumentException("Unknown ViewModel class")
     }

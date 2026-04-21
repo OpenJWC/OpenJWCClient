@@ -35,4 +35,6 @@ sealed interface Screen {
     object Favorite: Screen
     @Serializable
     object NewsDetail : Screen
+    @Serializable
+    object Language : Screen
 }

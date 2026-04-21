@@ -12,6 +12,7 @@ import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import org.openjwc.client.R
 import org.openjwc.client.data.datastore.UserSettings
 import org.openjwc.client.data.models.NoticeEntity
 import org.openjwc.client.data.models.toFetchedNotice
@@ -178,7 +179,7 @@ class NewsViewModel(
                 when (result) {
                     is NetworkResult.Success -> {
                         navEvent.send(NavEvent.ToBack())
-                        uiEvent.send(UiEvent.ShowToast("上传成功"))
+                        uiEvent.send(UiEvent.ShowToast(UiText.StringResource(R.string.upload_success)))
                     }
 
                     is NetworkResult.Failure -> {
