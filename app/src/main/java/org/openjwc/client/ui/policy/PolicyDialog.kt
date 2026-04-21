@@ -12,7 +12,9 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalWindowInfo
+import androidx.compose.ui.res.stringResource
 import dev.jeziellago.compose.markdowntext.MarkdownText
+import org.openjwc.client.R
 
 @Composable
 fun PolicyDialog(
@@ -27,7 +29,7 @@ fun PolicyDialog(
         onDismissRequest = onDismiss,
         title = {
             Text(
-                text = "用户协议与隐私政策",
+                text = stringResource(R.string.user_agreement_and_privacy_policy),
                 style = MaterialTheme.typography.headlineSmall
             )
         },
@@ -45,12 +47,12 @@ fun PolicyDialog(
         },
         confirmButton = {
             TextButton(onClick = onAgree) {
-                Text("同意并继续")
+                Text(stringResource(R.string.agree_and_continue))
             }
         },
         dismissButton = {
             TextButton(onClick = onDismiss) {
-                Text("拒绝并退出")
+                Text(stringResource(R.string.decline_and_exit))
             }
         }
     )

@@ -50,9 +50,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.nestedscroll.nestedScroll
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import org.openjwc.client.R
 import org.openjwc.client.data.datastore.AuthSession
 import org.openjwc.client.net.models.DeviceQuery
 import org.openjwc.client.net.models.DevicesQueryResponseData
@@ -125,17 +127,17 @@ fun AccountScreen(
     if (deviceToUnbind != null) {
         AlertDialog(
             onDismissRequest = { deviceToUnbind = null },
-            title = { Text("确认解绑") },
-            text = { Text("确定要解绑设备 [${deviceToUnbind?.deviceName ?: "Unknown Device"}] 吗？") },
+            title = { Text(stringResource(R.string.confirm_unbind)) },
+            text = { Text(stringResource(R.string.unbind_device_confirm_msg, deviceToUnbind?.deviceName ?: stringResource(R.string.unknown_device))) },
             confirmButton = {
                 TextButton(onClick = {
                     deviceToUnbind?.let { onUnbindDevice(it.deviceUUID) }
                     deviceToUnbind = null
                 }) {
-                    Text("确定", color = MaterialTheme.colorScheme.error)
+                    Text(stringResource(R.string.confirm), color = MaterialTheme.colorScheme.error)
                 }
             },
-            dismissButton = { TextButton(onClick = { deviceToUnbind = null }) { Text("取消") } }
+            dismissButton = { TextButton(onClick = { deviceToUnbind = null }) { Text(stringResource(R.string.cancel)) } }
         )
     }
 
@@ -144,10 +146,10 @@ fun AccountScreen(
         modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
         topBar = {
             LargeTopAppBar(
-                title = { Text("账号管理") },
+                title = { Text(stringResource(R.string.account_management)) },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "返回")
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.back))
                     }
                 },
                 scrollBehavior = scrollBehavior
@@ -182,7 +184,7 @@ fun AccountScreen(
                 )
             } else {
                 Text(
-                    text = "登录后即可查看和管理已授权的设备列表。",
+                    text = stringResource(R.string.device_list_login_hint),
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.outline,
                     modifier = Modifier.padding(top = 8.dp)
@@ -247,23 +249,23 @@ fun AccountBox(
                     if (authSession.isLoggedIn) {
                         // 已登录状态
                         Text(
-                            text = authSession.username ?: "未命名用户",
+                            text = authSession.username ?: stringResource(R.string.unnamed_user),
                             style = MaterialTheme.typography.titleLarge,
                             color = MaterialTheme.colorScheme.onSurface
                         )
                         Text(
-                            text = authSession.email ?: "未绑定邮箱",
+                            text = authSession.email ?: stringResource(R.string.unbound_email),
                             style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                         Text(
-                            text = "设备: ${authSession.deviceName}",
+                            text = stringResource(R.string.device_label, authSession.deviceName),
                             style = MaterialTheme.typography.labelSmall,
                             color = MaterialTheme.colorScheme.outline
                         )
                     } else {
                         Text(
-                            text = "欢迎使用",
+                            text = stringResource(R.string.welcome_back),
                             style = MaterialTheme.typography.titleLarge,
                             color = MaterialTheme.colorScheme.onSurface
                         )
@@ -286,17 +288,17 @@ fun AccountBox(
                     ) {
                         Icon(Icons.AutoMirrored.Filled.Logout, contentDescription = null, modifier = Modifier.size(18.dp))
                         Spacer(Modifier.width(8.dp))
-                        Text("退出登录")
+                        Text(stringResource(R.string.logout))
                     }
                 } else {
                     TextButton(onClick = onRegister) {
-                        Text("立即注册")
+                        Text(stringResource(R.string.register_now))
                     }
                     Spacer(modifier = Modifier.width(8.dp))
                     Button(
                         onClick = onLogin,
                     ) {
-                        Text("登录")
+                        Text(stringResource(R.string.login))
                     }
                 }
             }
@@ -321,7 +323,7 @@ fun DeviceList(
         verticalAlignment = Alignment.CenterVertically
     ) {
         Column(modifier = Modifier.animateContentSize()) {
-            Text("设备管理", style = MaterialTheme.typography.titleLarge)
+            Text(stringResource(R.string.device_management), style = MaterialTheme.typography.titleLarge)
             /*if (devicesResult is NetworkResult.Success) {
                 val data = devicesResult.response.data
                 Text(
@@ -337,7 +339,7 @@ fun DeviceList(
                 modifier = Modifier.size(18.dp)
             )
             Spacer(Modifier.width(8.dp))
-            Text("刷新")
+            Text(stringResource(R.string.refresh))
         }
     }
     Surface(
@@ -364,7 +366,7 @@ fun DeviceList(
                             is NetworkResult.Success -> {}
                             is NetworkResult.Failure -> {
                                 Text(
-                                    text = "解绑失败(${unbindResult.code}): ${unbindResult.msg}",
+                                    text = stringResource(R.string.unbind_failed_with_code, unbindResult.code, unbindResult.msg),
                                     style = MaterialTheme.typography.bodyMedium,
                                     color = MaterialTheme.colorScheme.error
                                 )
@@ -372,7 +374,7 @@ fun DeviceList(
 
                             is NetworkResult.Error -> {
                                 Text(
-                                    text = "解绑失败: ${unbindResult.msg}",
+                                    text = stringResource(R.string.unbind_failed, unbindResult.msg),
                                     style = MaterialTheme.typography.bodyMedium,
                                     color = MaterialTheme.colorScheme.error
                                 )
@@ -381,7 +383,7 @@ fun DeviceList(
 
                         if (devicesResult.response.data.deviceQueries.isEmpty()) {
                             Text(
-                                "暂无绑定设备",
+                                stringResource(R.string.no_bound_devices),
                                 style = MaterialTheme.typography.bodyMedium,
                                 modifier = Modifier
                                     .padding(16.dp)
@@ -401,14 +403,14 @@ fun DeviceList(
 
                     is NetworkResult.Error -> {
                         ErrorMessageView(
-                            message = "查询设备失败: ${devicesResult.msg}",
+                            message = stringResource(R.string.query_devices_failed, devicesResult.msg),
                             onRetry = onRefreshDevices
                         )
                     }
 
                     is NetworkResult.Failure -> {
                         ErrorMessageView(
-                            message = "查询设备失败(${devicesResult.code}): ${devicesResult.msg}",
+                            message = stringResource(R.string.query_devices_failed_with_code, devicesResult.code, devicesResult.msg),
                             onRetry = onRefreshDevices
                         )
                     }
@@ -417,7 +419,7 @@ fun DeviceList(
         }
     }
     Text(
-        text = "本机 ID: $thisDeviceId",
+        text = stringResource(R.string.local_device_id, thisDeviceId),
         style = MaterialTheme.typography.bodySmall,
         color = MaterialTheme.colorScheme.onSurfaceVariant,
         modifier = Modifier.padding(top = 24.dp)
@@ -459,7 +461,7 @@ fun DeviceItem(
             supportingContent = {
                 if (isCurrentDevice) {
                     Text(
-                        text = "当前登录的设备",
+                        text = stringResource(R.string.current_device),
                         style = MaterialTheme.typography.labelMedium,
                         color = MaterialTheme.colorScheme.primary
                     )
@@ -476,7 +478,7 @@ fun DeviceItem(
                 IconButton(onClick = onUnbindClick) {
                     Icon(
                         imageVector = Icons.Default.DeleteOutline,
-                        contentDescription = "解绑",
+                        contentDescription = stringResource(R.string.unbind),
                         tint = MaterialTheme.colorScheme.error
                     )
                 }
@@ -503,11 +505,11 @@ fun ErrorMessageView(
             color = MaterialTheme.colorScheme.error
         )
         Text(
-            text = "若改动 API Key，请先保存设置再点击重试",
+            text = stringResource(R.string.api_key_retry_hint),
             style = MaterialTheme.typography.bodySmall,
         )
         FilledTonalButton(onClick = onRetry) {
-            Text("重试")
+            Text(stringResource(R.string.retry))
         }
     }
 }

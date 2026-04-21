@@ -10,6 +10,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.WindowInsetsSides
 import androidx.compose.foundation.layout.fillMaxSize
@@ -52,6 +53,7 @@ import androidx.navigation.NavController
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import kotlinx.coroutines.launch
+import org.openjwc.client.R
 import org.openjwc.client.navigation.Screen
 import org.openjwc.client.ui.chat.ChatHistoryList
 import org.openjwc.client.ui.chat.ChatScreen
@@ -62,6 +64,7 @@ import org.openjwc.client.viewmodels.ChatViewModel
 import org.openjwc.client.viewmodels.MainViewModel
 import org.openjwc.client.viewmodels.MeViewModel
 import org.openjwc.client.viewmodels.NewsViewModel
+import org.openjwc.client.viewmodels.SettingsViewModel
 import java.io.File
 
 @Composable
@@ -72,6 +75,7 @@ fun MainScreen(
     chatViewModel: ChatViewModel,
     newsViewModel: NewsViewModel,
     meViewModel: MeViewModel,
+    settingsViewModel: SettingsViewModel,
     backgroundPath: String? = null,
     backgroundAlpha: Float = 1f
 ) {
@@ -99,7 +103,8 @@ fun MainScreen(
             mainViewModel,
             chatViewModel,
             newsViewModel,
-            meViewModel
+            meViewModel,
+            settingsViewModel
         )
     }
 }
@@ -113,12 +118,17 @@ private fun MainScaffoldContent(
     chatViewModel: ChatViewModel,
     newsViewModel: NewsViewModel,
     meViewModel: MeViewModel,
+    settingsViewModel: SettingsViewModel,
 ) {
     val currentTab by mainViewModel.currentTab.collectAsState()
-    val chatTitle = chatViewModel.currentSessionMetadata.collectAsState().value?.title ?: "无标题"
+    val chatTitle =
+        chatViewModel.currentSessionMetadata.collectAsState().value?.title ?: stringResource(
+            R.string.untitled
+        )
     val historySessions by chatViewModel.allSessions.collectAsStateWithLifecycle(emptyList())
     val metadata by chatViewModel.currentSessionMetadata.collectAsState()
     val useNavRail = windowSizeClass.widthSizeClass != WindowWidthSizeClass.Compact
+    val userSettings by settingsViewModel.settings.collectAsState()
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
     val scope = rememberCoroutineScope()
     var showEditMetadataDialog by remember { mutableStateOf(false) }
@@ -138,7 +148,7 @@ private fun MainScaffoldContent(
     val drawerContent = @Composable {
         ModalDrawerSheet {
             Text(
-                text = "聊天记录",
+                text = stringResource(R.string.chat_history),
                 style = MaterialTheme.typography.titleLarge,
 
                 modifier = Modifier.padding(24.dp)
@@ -179,9 +189,17 @@ private fun MainScaffoldContent(
                 topBar = {
                     TopAppBar(
                         title = {
-                            when (currentTab) {
-                                MainTab.Chat -> Text(text = chatTitle)
-                                else -> Text(stringResource(currentTab.titleRes))
+                            Column {
+                                when (currentTab) {
+                                    MainTab.Chat -> Text(text = chatTitle)
+                                    else -> Text(stringResource(currentTab.titleRes))
+                                }
+                                if (userSettings.useHttp) {
+                                    Text(
+                                        text = stringResource(R.string.using_unsafe_http),
+                                        style = MaterialTheme.typography.labelSmall
+                                    )
+                                }
                             }
                         },
                         navigationIcon = {

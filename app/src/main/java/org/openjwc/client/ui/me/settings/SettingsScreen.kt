@@ -1,6 +1,5 @@
 package org.openjwc.client.ui.me.settings
 
-import android.widget.Toast
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
@@ -18,17 +17,15 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
-import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import org.openjwc.client.R
 import org.openjwc.client.data.settings.Event
 import org.openjwc.client.data.settings.Menu
+import org.openjwc.client.data.settings.ToggleID
 import org.openjwc.client.navigation.Screen
-import org.openjwc.client.viewmodels.SettingsEvent
-import org.openjwc.client.viewmodels.SettingsViewModel
 
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -36,30 +33,10 @@ import org.openjwc.client.viewmodels.SettingsViewModel
 fun SettingsScreen(
     onRoute: (Screen) -> Unit,
     onBack: () -> Unit,
-    route: Screen, // 这个指向设置 viewModel 里面菜单的路径
-    viewModel: SettingsViewModel
-    // 这个 viewModel 用来监听里边 uiState 然后弹框，以及读取菜单用
+    onToggle: (ToggleID) -> Unit,
+    menu: Menu,
 ) {
-    val context = LocalContext.current
-    LaunchedEffect(Unit) {
-        viewModel.events.collect { event ->
-            when (event) {
-                is SettingsEvent.ShowToast -> {
-                    Toast.makeText(context, event.message, Toast.LENGTH_SHORT).show()
-                }
-
-                is SettingsEvent.ShowSnackBar -> {
-                    // TODO: 显示 SnackBar
-                }
-            }
-        }
-    }
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
-    val menu = viewModel.menus.collectAsState().value.find { it.route == route } ?: Menu(
-        route = Screen.Settings,
-        title = "空菜单",
-        sections = emptyList()
-    )
 
     Scaffold(
         containerColor = MaterialTheme.colorScheme.background,
@@ -69,7 +46,12 @@ fun SettingsScreen(
                 title = { Text(menu.title) },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "返回")
+                        Icon(
+                            Icons.AutoMirrored.Filled.ArrowBack,
+                            contentDescription = stringResource(
+                                R.string.back
+                            )
+                        )
                     }
                 },
                 scrollBehavior = scrollBehavior
@@ -101,7 +83,7 @@ fun SettingsScreen(
                             }
 
                             is Event.Toggle -> {
-                                viewModel.toggle(it.id)
+                                onToggle(it.id)
                             }
                         }
                     }

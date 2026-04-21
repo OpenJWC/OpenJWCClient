@@ -13,7 +13,9 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalWindowInfo
+import androidx.compose.ui.res.stringResource
 import dev.jeziellago.compose.markdowntext.MarkdownText
+import org.openjwc.client.R
 
 @Composable
 fun UpdateDialog(
@@ -28,7 +30,7 @@ fun UpdateDialog(
         onDismissRequest = onDismiss,
         title = {
             Text(
-                text = "有更新可用",
+                text = stringResource(R.string.update_available),
                 style = MaterialTheme.typography.headlineSmall
             )
         },
@@ -46,12 +48,12 @@ fun UpdateDialog(
         },
         confirmButton = {
             TextButton(onClick = onUpdate) {
-                Text("下载更新")
+                Text(stringResource(R.string.download_update))
             }
         },
         dismissButton = {
             TextButton(onClick = onDismiss) {
-                Text("取消")
+                Text(stringResource(R.string.cancel))
             }
         }
     )

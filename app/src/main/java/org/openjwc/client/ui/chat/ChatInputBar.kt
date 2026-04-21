@@ -36,9 +36,11 @@ import androidx.compose.ui.input.key.isCtrlPressed
 import androidx.compose.ui.input.key.key
 import androidx.compose.ui.input.key.onKeyEvent
 import androidx.compose.ui.input.key.type
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import org.openjwc.client.R
 import org.openjwc.client.net.models.FetchedNotice
 
 @OptIn(ExperimentalComposeUiApi::class)
@@ -116,7 +118,7 @@ fun ChatInputBar(
                             Box(contentAlignment = Alignment.CenterStart) {
                                 if (textValue.isEmpty()) {
                                     Text(
-                                        "问些什么",
+                                        stringResource(R.string.ask_something),
                                         style = MaterialTheme.typography.bodyLarge,
                                         color = MaterialTheme.colorScheme.onSurfaceVariant.copy(
                                             alpha = 0.7f

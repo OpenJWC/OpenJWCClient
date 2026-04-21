@@ -36,11 +36,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import coil.ImageLoader
 import dev.jeziellago.compose.markdowntext.MarkdownText
+import org.openjwc.client.R
 import org.openjwc.client.net.models.FetchedNotice
 
 @Preview
@@ -89,13 +91,13 @@ fun NewsDetailScreen(
             LargeTopAppBar(
                 title = {
                     Text(
-                        text = fetchedNotice?.title ?: "资讯不存在",
+                        text = fetchedNotice?.title ?: stringResource(R.string.news_not_found),
                         overflow = TextOverflow.Ellipsis
                     )
                 },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "返回")
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.back))
                     }
                 },
                 scrollBehavior = scrollBehavior,
@@ -104,7 +106,7 @@ fun NewsDetailScreen(
                         IconButton(onClick = onAddToAttachments) {
                             Icon(
                                 Icons.AutoMirrored.Outlined.NoteAdd,
-                                contentDescription = "添加至附件"
+                                contentDescription = stringResource(R.string.add_to_attachments)
                             )
                         }
                     }
@@ -116,7 +118,7 @@ fun NewsDetailScreen(
                 ExtendedFloatingActionButton(
                     onClick = { onToBrowser(fetchedNotice.detailUrl) },
                     icon = { Icon(Icons.AutoMirrored.Filled.OpenInNew, contentDescription = null) },
-                    text = { Text("在浏览器中查看原文") },
+                    text = { Text(stringResource(R.string.view_in_browser)) },
                 )
             }
         },
@@ -133,7 +135,7 @@ fun NewsDetailScreen(
             if (fetchedNotice == null) {
                 Box {
                     Text(
-                        text = "资讯为空！你发现了彩蛋，按理来说这行字不该出现……",
+                        text = stringResource(R.string.news_empty_egg),
                         modifier = Modifier.align(Alignment.Center),
                         style = MaterialTheme.typography.bodyLarge,
                         color = MaterialTheme.colorScheme.outline
@@ -142,12 +144,12 @@ fun NewsDetailScreen(
             } else {
                 Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
                     Text(
-                        text = "发布日期: ${fetchedNotice.date}",
+                        text = stringResource(R.string.publish_date, fetchedNotice.date),
                         style = MaterialTheme.typography.labelMedium,
                         color = MaterialTheme.colorScheme.outline
                     )
                     Text(
-                        text = "原文链接: ${fetchedNotice.detailUrl}",
+                        text = stringResource(R.string.original_link, fetchedNotice.detailUrl),
                         style = MaterialTheme.typography.labelSmall,
                         color = MaterialTheme.colorScheme.primary,
                         maxLines = 1,
@@ -157,7 +159,7 @@ fun NewsDetailScreen(
                 }
 
                 MarkdownText(
-                    markdown = if (fetchedNotice.contentText.isNullOrBlank()) "暂无详细内容，请在浏览器查看原文。" else fetchedNotice.contentText,
+                    markdown = if (fetchedNotice.contentText.isNullOrBlank()) stringResource(R.string.no_detail_view_original) else fetchedNotice.contentText,
                     isTextSelectable = true,
                     linkColor = MaterialTheme.colorScheme.primary,
                     imageLoader = customImageLoader
@@ -184,7 +186,7 @@ fun AttachmentList(
 
     Column(modifier = modifier.fillMaxWidth()) {
         Text(
-            text = "附件列表 (${urls.size})",
+            text = stringResource(R.string.attachment_list_count, urls.size),
             style = MaterialTheme.typography.titleMedium,
             modifier = Modifier.padding(bottom = 16.dp)
         )
@@ -211,7 +213,7 @@ fun AttachmentItem(
     index: Int,
     onClick: () -> Unit
 ) {
-    val fileName = url.substringAfterLast("/").ifBlank { "附件 ${index + 1}" }
+    val fileName = url.substringAfterLast("/").ifBlank { stringResource(R.string.attachment_placeholder, index + 1) }
 
     Surface(
         onClick = onClick,

@@ -37,9 +37,11 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import org.openjwc.client.R
 import org.openjwc.client.net.models.ReviewedNotice
 import org.openjwc.client.net.models.ReviewedNoticesData
 
@@ -84,10 +86,10 @@ fun ReviewedNoticesScreen(
         containerColor = MaterialTheme.colorScheme.background,
         topBar = {
             LargeTopAppBar(
-                title = { Text("投稿审核结果") },
+                title = { Text(stringResource(R.string.upload_results)) },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "返回")
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.back))
                     }
                 },
                 scrollBehavior = scrollBehavior
@@ -125,7 +127,7 @@ fun ReviewedNoticesScreen(
 
                 reviewedNoticesData.notices.isNullOrEmpty() -> {
                     Text(
-                        text = "暂无审核记录",
+                        text = stringResource(R.string.no_upload_records),
                         modifier = Modifier.align(Alignment.Center),
                         style = MaterialTheme.typography.bodyLarge,
                         color = MaterialTheme.colorScheme.outline
@@ -158,10 +160,10 @@ fun ReviewNoticeItem(notice: ReviewedNotice) {
         else -> MaterialTheme.colorScheme.outline
     }
     val statusText = when (notice.status) {
-        "pending" -> "待审核"
-        "approved" -> "已通过"
-        "rejected" -> "已驳回"
-        else -> "未知"
+        "pending" -> stringResource(R.string.pending)
+        "approved" -> stringResource(R.string.approved)
+        "rejected" -> stringResource(R.string.rejected)
+        else -> stringResource(R.string.unknown)
     }
 
     Card(
@@ -217,7 +219,7 @@ fun ReviewNoticeItem(notice: ReviewedNotice) {
                     )
                     Spacer(Modifier.width(8.dp))
                     Text(
-                        text = "状态：${statusText}",
+                        text = stringResource(R.string.status_string, statusText),
                         style = MaterialTheme.typography.labelLarge,
                         color = statusColor
                     )

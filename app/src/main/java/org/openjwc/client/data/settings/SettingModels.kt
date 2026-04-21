@@ -6,7 +6,7 @@ import org.openjwc.client.navigation.Screen
 sealed class MenuItem {
     data class Route(
         val icon: ImageVector,
-        val title: String,
+        val title: String? = null,
         val subtitle: String? = null,
         val route: Screen,
         val trailing: String? = null,
@@ -14,7 +14,7 @@ sealed class MenuItem {
 
     data class Action(
         val icon: ImageVector,
-        val label: String,
+        val label: String? = null,
         val subtitle: String? = null,
         val trailing: String? = null,
         val onClick: () -> Unit
@@ -23,14 +23,15 @@ sealed class MenuItem {
     data class Toggle(
         val id: ToggleID,
         val icon: ImageVector,
-        val label: String,
+        val label: String? = null,
         val isChecked: Boolean,
         val subtitle: String? = null,
     ) : MenuItem()
 }
 
 data class SettingSection(
-    val title: String? = null, val items: List<MenuItem>
+    val title: String? = null,
+    val items: List<MenuItem>
 )
 
 data class Menu(
@@ -46,4 +47,3 @@ sealed class Event {
     data class Route(val route: Screen) : Event()
     data class Action(val onAction: () -> Unit) : Event()
 }
-

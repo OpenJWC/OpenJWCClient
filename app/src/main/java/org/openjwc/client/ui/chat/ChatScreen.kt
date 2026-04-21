@@ -60,11 +60,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.platform.LocalClipboard
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import kotlinx.coroutines.launch
+import org.openjwc.client.R
 import org.openjwc.client.data.models.ChatMessage
 import org.openjwc.client.data.models.ChatMetadata
 import org.openjwc.client.ui.main.MainTab
@@ -157,7 +159,7 @@ fun BackToBottomButton(visible: Boolean, onClick: () -> Unit, modifier: Modifier
             containerColor = MaterialTheme.colorScheme.primary,
             shape = CircleShape
         ) {
-            Icon(Icons.Default.ArrowDownward, contentDescription = "Bottom")
+            Icon(Icons.Default.ArrowDownward, contentDescription = stringResource(R.string.bottom))
         }
     }
 }
@@ -226,7 +228,7 @@ fun ChatHistoryList(
     ) {
         item {
             NavigationDrawerItem(
-                label = { Text("新建会话") },
+                label = { Text(stringResource(R.string.new_session)) },
                 selected = currentSessionId == null,
                 onClick = onNewChat,
                 icon = { Icon(Icons.Default.Add, null) },
@@ -269,7 +271,7 @@ fun ChatHistoryItem(
         NavigationDrawerItem(
             label = {
                 Text(
-                    text = session.metadata.title.ifBlank { "无标题会话" },
+                    text = session.metadata.title.ifBlank { stringResource(R.string.untitled_session) },
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis
                 )
@@ -313,7 +315,7 @@ fun ChatHistoryItem(
                 IconButton(
                     onClick = { showMenu = true }
                 ) {
-                    Icon(Icons.Default.MoreVert, contentDescription = "更多")
+                    Icon(Icons.Default.MoreVert, contentDescription = stringResource(R.string.more))
                 }
 
                 DropdownMenu(
@@ -323,7 +325,7 @@ fun ChatHistoryItem(
                     DropdownMenuItem(
                         text = {
                             Text(
-                                "编辑会话名称",
+                                stringResource(R.string.edit_session_name),
                             )
                         },
                         leadingIcon = {
@@ -340,7 +342,7 @@ fun ChatHistoryItem(
                     DropdownMenuItem(
                         text = {
                             Text(
-                                "删除会话",
+                                stringResource(R.string.delete_session),
                                 color = MaterialTheme.colorScheme.error
                             )
                         },
@@ -376,6 +378,7 @@ private fun ChatMainContent(
     val listState = rememberLazyListState()
     val clipboardManager = LocalClipboard.current
     val context = LocalContext.current
+    val addAttachmentHint = stringResource(R.string.add_attachment_hint)
 
     val horizontalPadding = when (windowSizeClass.widthSizeClass) {
         WindowWidthSizeClass.Compact -> 12.dp
@@ -420,7 +423,7 @@ private fun ChatMainContent(
             onTextChange = { chatViewModel.updateInputText(it) },
             onAddAttachment = {
                 mainViewModel.updateTab(MainTab.News)
-                Toast.makeText(context, "请长按资讯卡片添加附件", Toast.LENGTH_SHORT).show()
+                Toast.makeText(context, addAttachmentHint, Toast.LENGTH_SHORT).show()
             },
             modifier = Modifier
                 .fillMaxWidth()
@@ -446,7 +449,7 @@ fun EmptyChatPlaceholder() {
         )
         Spacer(modifier = Modifier.height(16.dp))
         Text(
-            text = "开始新对话吧",
+            text = stringResource(R.string.start_new_chat),
             style = MaterialTheme.typography.bodyLarge,
             color = MaterialTheme.colorScheme.outline
         )

@@ -65,9 +65,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.nestedscroll.nestedScroll
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import org.openjwc.client.R
 import org.openjwc.client.net.models.UploadedNotice
 import org.openjwc.client.net.models.UploadedNoticeContent
 import java.time.Instant
@@ -145,12 +147,12 @@ fun UploadNewsScreen(
                     }
                     showDatePicker = false
                 }) {
-                    Text("确定")
+                    Text(stringResource(R.string.confirm))
                 }
             },
             dismissButton = {
                 TextButton(onClick = { showDatePicker = false }) {
-                    Text("取消")
+                    Text(stringResource(R.string.cancel))
                 }
             }
         ) {
@@ -166,10 +168,12 @@ fun UploadNewsScreen(
         containerColor = MaterialTheme.colorScheme.background,
         topBar = {
             LargeTopAppBar(
-                title = { Text("投稿资讯") },
+                title = { Text(stringResource(R.string.upload_news)) },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "返回")
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(
+                            R.string.back
+                        ))
                     }
                 },
                 scrollBehavior = scrollBehavior
@@ -204,7 +208,9 @@ fun UploadNewsScreen(
                         Icon(Icons.Default.CloudUpload, contentDescription = null)
                     }
                 },
-                text = { Text(if (isUploading) "上传中..." else "提交上传") },
+                text = { Text(if (isUploading) stringResource(R.string.uploading) else stringResource(
+                    R.string.submit_upload
+                )) },
                 containerColor = if (canSubmit) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surfaceVariant,
                 contentColor = if (canSubmit) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.outline
             )
@@ -246,7 +252,7 @@ fun UploadNewsScreen(
                 }
             }
             Text(
-                "基本信息",
+                stringResource(R.string.basic_information),
                 style = MaterialTheme.typography.labelLarge,
                 color = MaterialTheme.colorScheme.primary
             )
@@ -254,7 +260,7 @@ fun UploadNewsScreen(
             OutlinedTextField(
                 value = title,
                 onValueChange = { title = it },
-                label = { Text("标题") },
+                label = { Text(stringResource(R.string.title)) },
                 isError = !isTitleValid,
                 supportingText = {
                     Text(
@@ -276,7 +282,7 @@ fun UploadNewsScreen(
                 OutlinedTextField(
                     value = label,
                     onValueChange = { label = it },
-                    label = { Text("标签") },
+                    label = { Text(stringResource(R.string.label)) },
                     isError = !isLabelValid,
                     modifier = Modifier.weight(1f),
                     singleLine = true,
@@ -294,7 +300,7 @@ fun UploadNewsScreen(
                     OutlinedTextField(
                         value = date,
                         onValueChange = {},
-                        label = { Text("日期") },
+                        label = { Text(stringResource(R.string.date)) },
                         placeholder = { Text("yyyy-MM-dd") },
                         readOnly = true,
                         isError = !isDateValid || date.isBlank(),
@@ -310,7 +316,7 @@ fun UploadNewsScreen(
                     Box(
                         modifier = Modifier
                             .matchParentSize()
-                            .clickable{
+                            .clickable {
                                 showDatePicker = true
                             }
                     )
@@ -320,14 +326,14 @@ fun UploadNewsScreen(
             OutlinedTextField(
                 value = detailUrl,
                 onValueChange = { detailUrl = it },
-                label = { Text("详情链接 (URL)") },
+                label = { Text(stringResource(R.string.detail_url)) },
                 isError = !isDetailUrlValid,
                 modifier = Modifier.fillMaxWidth(),
                 singleLine = true,
                 supportingText = {
                     Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
                         if (!isUrlValid(detailUrl) && detailUrl.isNotBlank()) {
-                            Text("URL 格式非法")
+                            Text(stringResource(R.string.invalid_url))
                         } else {
                             Spacer(Modifier.width(1.dp))
                         }
@@ -346,8 +352,8 @@ fun UploadNewsScreen(
                 modifier = Modifier.fillMaxWidth()
             ) {
                 ListItem(
-                    headlineContent = { Text("详情链接为网页") },
-                    supportingContent = { Text("关闭则视为附件或外链") },
+                    headlineContent = { Text(stringResource(R.string.link_is_a_page)) },
+                    supportingContent = { Text(stringResource(R.string.link_is_a_page_desc)) },
                     trailingContent = {
                         Switch(
                             checked = isPage,
@@ -359,16 +365,18 @@ fun UploadNewsScreen(
             }
 
             Text(
-                "正文内容",
+                stringResource(R.string.main_content),
                 style = MaterialTheme.typography.labelLarge,
                 color = MaterialTheme.colorScheme.primary
             )
             OutlinedTextField(
                 value = contentText,
                 onValueChange = { contentText = it },
-                label = { Text("Markdown 文本") },
+                label = { Text(stringResource(R.string.markdown_text)) },
                 isError = !isContentValid,
-                modifier = Modifier.fillMaxWidth().height(200.dp),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(200.dp),
                 supportingText = {
                     val color = if (contentText.length > MAX_CONTENT) MaterialTheme.colorScheme.error else Color.Unspecified
                     Text(
@@ -386,7 +394,7 @@ fun UploadNewsScreen(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    "附件 URL 列表 (${attachmentUrls.size})",
+                    text = stringResource(R.string.attachment_url_lists, attachmentUrls.size),
                     style = MaterialTheme.typography.labelLarge,
                     color = MaterialTheme.colorScheme.primary
                 )
@@ -400,7 +408,7 @@ fun UploadNewsScreen(
                         modifier = Modifier.size(18.dp)
                     )
                     Spacer(Modifier.width(4.dp))
-                    Text("添加附件 URL")
+                    Text(stringResource(R.string.add_attachment_urls))
                 }
             }
 
@@ -415,7 +423,7 @@ fun UploadNewsScreen(
 
             if (attachmentUrls.isEmpty()) {
                 Text(
-                    "暂无附件 URL (可选)",
+                    text = stringResource(R.string.no_attachment_urls),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.outline,
                     modifier = Modifier.padding(vertical = 8.dp)
@@ -455,15 +463,15 @@ fun AttachmentInputRow(
             },
             isError = isError,
             supportingText = {
-                if (url.length > 1000) Text("超过1000字符")
-                else if (isError && url.isNotBlank()) Text("格式非法")
+                if (url.length > 1000) Text(stringResource(R.string.thousand_chars_limited))
+                else if (isError && url.isNotBlank()) Text(stringResource(R.string.format_invalid))
             },
         )
         IconButton(
             onClick = onDelete,
             colors = IconButtonDefaults.iconButtonColors(contentColor = MaterialTheme.colorScheme.error)
         ) {
-            Icon(Icons.Default.Delete, contentDescription = "删除附件 URL")
+            Icon(Icons.Default.Delete, contentDescription = stringResource(R.string.delete_attachment_url))
         }
     }
 }

@@ -262,12 +262,8 @@ class NewsViewModel(
         }
     }
 
-    fun setCurrentNewsToDisplay(fetchedNotice: FetchedNotice) {
+    fun setCurrentNewsToDisplay(fetchedNotice: FetchedNotice?) {
         currentNewsToDisplay.value = fetchedNotice
-    }
-
-    fun clearCurrentNewsToDisplay() {
-        currentNewsToDisplay.value = null
     }
 }
 

@@ -62,11 +62,13 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import org.openjwc.client.R
 import org.openjwc.client.log.Logger
 import org.openjwc.client.net.models.FetchedNotice
 import java.time.LocalDate
@@ -174,7 +176,7 @@ fun NewsList(
                             onDismissRequest = onMenuDismiss
                         ) {
                             DropdownMenuItem(
-                                text = { Text("添加到附件") },
+                                text = { Text(stringResource(R.string.add_to_attachments)) },
                                 leadingIcon = {
                                     Icon(
                                         Icons.Outlined.Add,
@@ -189,7 +191,7 @@ fun NewsList(
                             if (favoriteItems.any { it.id == item.id }) {
                                 DropdownMenuItem(
                                     text = {
-                                        Text("删除收藏", color = MaterialTheme.colorScheme.error)
+                                        Text(stringResource(R.string.delete_favorite), color = MaterialTheme.colorScheme.error)
                                     },
                                     leadingIcon = {
                                         Icon(
@@ -205,7 +207,7 @@ fun NewsList(
                                 )
                             } else {
                                 DropdownMenuItem(
-                                    text = { Text("收藏") },
+                                    text = { Text(stringResource(R.string.favorite)) },
                                     leadingIcon = {
                                         Icon(
                                             Icons.Filled.Star,
@@ -245,12 +247,12 @@ fun ListFooter(isLoading: Boolean, isEnd: Boolean, error: String?, onRetry: () -
     ) {
         when {
             error != null -> {
-                TextButton(onClick = onRetry) { Text("加载失败，点击重试") }
+                TextButton(onClick = onRetry) { Text(stringResource(R.string.load_failed_retry)) }
             }
 
             isEnd -> {
                 Text(
-                    "— 已加载全部内容 —",
+                    stringResource(R.string.all_content_loaded),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.outline
                 )
@@ -286,7 +288,7 @@ fun EmptyErrorState(errorMessage: String, onRetry: () -> Unit) {
         FilledTonalButton(
             onClick = onRetry,
             modifier = Modifier.padding(top = 16.dp)
-        ) { Text("重试") }
+        ) { Text(stringResource(R.string.retry)) }
     }
 }
 
@@ -303,7 +305,7 @@ fun BackToTopButton(visible: Boolean, onClick: () -> Unit, modifier: Modifier) {
             containerColor = MaterialTheme.colorScheme.primary,
             shape = CircleShape
         ) {
-            Icon(Icons.Default.ArrowUpward, contentDescription = "Top")
+            Icon(Icons.Default.ArrowUpward, contentDescription = stringResource(R.string.back_to_top))
         }
     }
 }
@@ -402,7 +404,7 @@ fun InfoCard(
                     Spacer(modifier = Modifier.width(8.dp))
 
                     Text(
-                        text = "NEW",
+                        text = stringResource(R.string.new_tag),
                         style = MaterialTheme.typography.labelSmall,
                         color = MaterialTheme.colorScheme.onSecondaryContainer,
                         modifier = Modifier
@@ -426,7 +428,7 @@ fun InfoCard(
                     if (isFavorited) {
                         Icon(
                             imageVector = Icons.Filled.Star,
-                            contentDescription = "Favorited",
+                            contentDescription = stringResource(R.string.favorited),
                             tint = MaterialTheme.colorScheme.primary,
                             modifier = Modifier.size(18.dp)
                         )
@@ -481,7 +483,7 @@ fun EmptyLabelsPlaceholder(
         Spacer(modifier = Modifier.height(24.dp))
 
         Text(
-            text = "未发现资讯分类",
+            text = stringResource(R.string.no_news_categories),
             style = MaterialTheme.typography.headlineSmall,
             color = MaterialTheme.colorScheme.onSurface,
             fontWeight = FontWeight.Bold
@@ -491,7 +493,7 @@ fun EmptyLabelsPlaceholder(
 
         if (isLoggedIn) {
             Text(
-                text = "暂时无法获取到新闻标签，请检查网络连接或稍后重试",
+                text = stringResource(R.string.get_labels_failed_hint),
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 textAlign = TextAlign.Center,
@@ -499,7 +501,7 @@ fun EmptyLabelsPlaceholder(
             )
         } else {
             Text(
-                text = "您尚未登录",
+                text = stringResource(R.string.not_logged_in),
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 textAlign = TextAlign.Center,
@@ -523,11 +525,11 @@ fun EmptyLabelsPlaceholder(
                 onClick = onRefresh,
                 contentPadding = PaddingValues(horizontal = 24.dp, vertical = 12.dp)
             ) {
-                Text("重新获取分类")
+                Text(stringResource(R.string.refetch_categories))
             }
         } else {
             FilledTonalButton(onClick = onToLogin, contentPadding = PaddingValues(horizontal = 24.dp, vertical = 12.dp)) {
-                Text("登录")
+                Text(stringResource(R.string.login))
             }
         }
     }

@@ -52,10 +52,12 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import org.openjwc.client.R
 import org.openjwc.client.net.models.Proxy
 
 @Preview
@@ -156,17 +158,17 @@ fun HostScreen(
         modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
         topBar = {
             LargeTopAppBar(
-                title = { Text("网络配置") },
+                title = { Text(stringResource(R.string.network_config)) },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "返回")
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.back))
                     }
                 },
                 actions = {
                     TextButton(
                         onClick = { if (canSave) onConfirm(host, portInt, useHttp, currentProxy) },
                         enabled = canSave
-                    ) { Text("保存") }
+                    ) { Text(stringResource(R.string.save)) }
                 },
                 scrollBehavior = scrollBehavior
             )
@@ -188,7 +190,7 @@ fun HostScreen(
             ) {
                 Column(modifier = Modifier.padding(16.dp)) {
                     Text(
-                        "服务器配置",
+                        stringResource(R.string.server_config),
                         style = MaterialTheme.typography.labelLarge,
                         color = MaterialTheme.colorScheme.primary
                     )
@@ -196,12 +198,12 @@ fun HostScreen(
                     OutlinedTextField(
                         value = host,
                         onValueChange = { host = it.trim() },
-                        label = { Text("主机地址") },
+                        label = { Text(stringResource(R.string.host_address)) },
                         modifier = Modifier.fillMaxWidth(),
                         isError = !isHostValid,
                         supportingText = {
                             if (!isHostValid) {
-                                Text("服务器地址不能为空")
+                                Text(stringResource(R.string.host_empty_error))
                             }
                         },
                         singleLine = true
@@ -210,12 +212,12 @@ fun HostScreen(
                     OutlinedTextField(
                         value = portString,
                         onValueChange = { if (it.all { c -> c.isDigit() }) portString = it },
-                        label = { Text("端口号") },
+                        label = { Text(stringResource(R.string.port_number)) },
                         modifier = Modifier.fillMaxWidth(),
                         isError = !isPortValid,
                         supportingText = {
                             if (!isPortValid) {
-                                Text("端口应在 0-65535 之间")
+                                Text(stringResource(R.string.port_range_error))
                             }
                         },
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
@@ -235,7 +237,7 @@ fun HostScreen(
                         .padding(16.dp)
                 ) {
                     Text(
-                        "代理设置",
+                        stringResource(R.string.proxy_settings),
                         style = MaterialTheme.typography.labelLarge,
                         color = MaterialTheme.colorScheme.primary
                     )
@@ -246,7 +248,7 @@ fun HostScreen(
                         modifier = Modifier.fillMaxWidth()
                     ) {
                         val options = listOf(
-                            Triple(0, "无", Icons.Default.LinkOff),
+                            Triple(0, stringResource(R.string.no_proxy), Icons.Default.LinkOff),
                             Triple(1, "HTTP", Icons.Default.Http),
                             Triple(2, "SOCKS", Icons.Default.SettingsInputComponent)
                         )
@@ -299,10 +301,10 @@ fun HostScreen(
                             OutlinedTextField(
                                 value = proxyHost,
                                 onValueChange = { proxyHost = it.trim() },
-                                label = { Text("代理主机") },
+                                label = { Text(stringResource(R.string.proxy_host)) },
                                 modifier = Modifier.fillMaxWidth(),
                                 isError = isProxyHostError,
-                                supportingText = { if (isProxyHostError) Text("代理地址目前只支持 IPv4 格式") },
+                                supportingText = { if (isProxyHostError) Text(stringResource(R.string.proxy_host_ipv4_error)) },
                                 singleLine = true,
                                 keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next)
                             )
@@ -312,10 +314,10 @@ fun HostScreen(
                                 onValueChange = {
                                     if (it.all { c -> c.isDigit() }) proxyPortString = it
                                 },
-                                label = { Text("代理端口") },
+                                label = { Text(stringResource(R.string.proxy_port)) },
                                 modifier = Modifier.fillMaxWidth(),
                                 isError = isProxyPortError,
-                                supportingText = { if (isProxyPortError) Text("端口需在 0-65535 之间") },
+                                supportingText = { if (isProxyPortError) Text(stringResource(R.string.proxy_port_range_error)) },
                                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
                             )
                         }
@@ -337,9 +339,9 @@ fun HostScreen(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Column(modifier = Modifier.weight(1f)) {
-                        Text("使用不安全的 HTTP 连接", style = MaterialTheme.typography.bodyLarge)
+                        Text(stringResource(R.string.use_unsafe_http), style = MaterialTheme.typography.bodyLarge)
                         Text(
-                            "关闭后将强制使用 HTTPS",
+                            stringResource(R.string.force_https_desc),
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -349,7 +351,7 @@ fun HostScreen(
             }
 
             Text(
-                text = "提示：请确保设备能够访问到该地址，且防火墙正确配置。",
+                text = stringResource(R.string.host_config_hint),
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.padding(top = 24.dp)

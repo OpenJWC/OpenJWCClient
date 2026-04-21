@@ -45,11 +45,13 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import org.openjwc.client.R
 
 fun String.filterAscii(): String = this.filter { it.code in 0..127 }
 
@@ -99,11 +101,11 @@ fun RegisterScreen(
         contentWindowInsets = ScaffoldDefaults.contentWindowInsets,
         topBar = {
             LargeTopAppBar(
-                title = { Text("创建账号") },
+                title = { Text(stringResource(R.string.create_account)) },
                 navigationIcon = {
                     // 注册时禁用返回
                     IconButton(onClick = onBack, enabled = !isRegistering) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "返回")
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.back))
                     }
                 },
                 scrollBehavior = scrollBehavior
@@ -128,12 +130,12 @@ fun RegisterScreen(
                     val filtered = input.filterAscii()
                     if (filtered.length <= 20) username = filtered
                 },
-                label = { Text("用户名") },
+                label = { Text(stringResource(R.string.username)) },
                 modifier = Modifier.fillMaxWidth(),
                 singleLine = true,
                 enabled = !isRegistering, // 禁用
                 isError = usernameError,
-                supportingText = { if (usernameError) Text("用户名至少需要3个字符") },
+                supportingText = { if (usernameError) Text(stringResource(R.string.username_3_chars_required)) },
                 leadingIcon = { Icon(Icons.Default.Person, contentDescription = null) }
             )
 
@@ -143,12 +145,12 @@ fun RegisterScreen(
                     val filtered = input.filterAscii()
                     if (filtered.length <= 50) email = filtered
                 },
-                label = { Text("电子邮箱") },
+                label = { Text(stringResource(R.string.email)) },
                 modifier = Modifier.fillMaxWidth(),
                 enabled = !isRegistering, // 禁用
                 singleLine = true,
                 isError = emailError,
-                supportingText = { if (emailError) Text("请输入有效的邮箱地址") },
+                supportingText = { if (emailError) Text(stringResource(R.string.please_type_valid_email)) },
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
                 leadingIcon = { Icon(Icons.Default.Email, contentDescription = null) }
             )
@@ -159,12 +161,12 @@ fun RegisterScreen(
                     val filtered = input.filterAscii()
                     if (filtered.length <= 100) password = filtered
                 },
-                label = { Text("密码") },
+                label = { Text(stringResource(R.string.password)) },
                 modifier = Modifier.fillMaxWidth(),
                 enabled = !isRegistering,
                 isError = passwordError,
                 singleLine = true,
-                supportingText = { if (passwordError) Text("密码需包含大小写字母、数字及特殊字符，且至少 8 位") },
+                supportingText = { if (passwordError) Text(stringResource(R.string.password_requirement)) },
                 visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
                 leadingIcon = { Icon(Icons.Default.Lock, contentDescription = null) },
                 trailingIcon = {
@@ -181,12 +183,12 @@ fun RegisterScreen(
                     val filtered = input.filterAscii()
                     if (filtered.length <= 100) confirmPassword = filtered
                 },
-                label = { Text("确认密码") },
+                label = { Text(stringResource(R.string.confirm_password)) },
                 modifier = Modifier.fillMaxWidth(),
                 singleLine = true,
                 enabled = !isRegistering,
                 isError = confirmPasswordError,
-                supportingText = { if (confirmPasswordError) Text("两次输入的密码不一致") },
+                supportingText = { if (confirmPasswordError) Text(stringResource(R.string.password_not_same)) },
                 visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
                 leadingIcon = { Icon(Icons.Default.LockReset, contentDescription = null) },
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password)
@@ -216,9 +218,9 @@ fun RegisterScreen(
                         color = MaterialTheme.colorScheme.onPrimary,
                     )
                     Spacer(modifier = Modifier.width(12.dp))
-                    Text("正在创建账号...")
+                    Text(stringResource(R.string.creating_account))
                 } else {
-                    Text("立即注册")
+                    Text(stringResource(R.string.register_now))
                 }
             }
         }

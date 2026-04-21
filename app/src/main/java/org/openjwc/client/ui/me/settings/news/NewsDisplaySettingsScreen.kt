@@ -31,9 +31,11 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import org.openjwc.client.R
 import org.openjwc.client.net.models.FetchedNotice
 import org.openjwc.client.ui.news.InfoCard
 import java.time.LocalDate
@@ -72,10 +74,10 @@ fun NewsDisplaySettingsScreen(
         modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
         topBar = {
             LargeTopAppBar(
-                title = { Text("资讯显示设置") },
+                title = { Text(stringResource(R.string.news_display_settings)) },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "返回")
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.back))
                     }
                 },
                 actions = {
@@ -83,7 +85,7 @@ fun NewsDisplaySettingsScreen(
                         onClick = { if (canSave) onSave(freshDaysInt) },
                         enabled = canSave
                     ) {
-                        Text("保存")
+                        Text(stringResource(R.string.save))
                     }
                 },
                 scrollBehavior = scrollBehavior
@@ -108,13 +110,13 @@ fun NewsDisplaySettingsScreen(
                     verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
                     Text(
-                        text = "高亮新鲜资讯",
+                        text = stringResource(R.string.highlight_fresh_news),
                         style = MaterialTheme.typography.labelLarge,
                         color = MaterialTheme.colorScheme.primary
                     )
 
                     Text(
-                        text = "设置资讯发布后多少天内显示为“新鲜”状态。新鲜资讯在列表中会以高亮颜色显示并带有标识。",
+                        text = stringResource(R.string.highlight_fresh_news_desc),
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -126,23 +128,23 @@ fun NewsDisplaySettingsScreen(
                                 freshDaysString = it
                             }
                         },
-                        label = { Text("新鲜期限 (天)") },
-                        placeholder = { Text("例如: 3") },
+                        label = { Text(stringResource(R.string.fresh_threshold_days)) },
+                        placeholder = { Text(stringResource(R.string.fresh_threshold_example)) },
                         modifier = Modifier.fillMaxWidth(),
                         singleLine = true,
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                         isError = !isValid && freshDaysString.isNotEmpty(),
                         supportingText = {
                             if (!isValid && freshDaysString.isNotEmpty()) {
-                                Text("请输入有效的正整数")
+                                Text(stringResource(R.string.invalid_positive_integer))
                             } else {
-                                Text("设置为 0 则禁用高亮")
+                                Text(stringResource(R.string.disable_highlight_hint))
                             }
                         },
                         trailingIcon = {
                             if (freshDaysString.isNotEmpty()) {
                                 IconButton(onClick = { freshDaysString = "" }) {
-                                    Icon(Icons.Default.Clear, contentDescription = "清除")
+                                    Icon(Icons.Default.Clear, contentDescription = stringResource(R.string.clear))
                                 }
                             }
                         }
@@ -152,7 +154,7 @@ fun NewsDisplaySettingsScreen(
 
             // 预览效果区
             Text(
-                text = "预览效果",
+                text = stringResource(R.string.preview_effect),
                 style = MaterialTheme.typography.labelLarge,
                 color = MaterialTheme.colorScheme.primary,
                 modifier = Modifier.padding(start = 4.dp)
@@ -164,9 +166,9 @@ fun NewsDisplaySettingsScreen(
                     .height(130.dp),
                 fetchedNotice = FetchedNotice(
                     id = "preview",
-                    title = "这是一条最新最热资讯标题",
+                    title = stringResource(R.string.preview_fresh_title),
                     date = LocalDate.now().toString(),
-                    label = "通知",
+                    label = stringResource(R.string.notice),
                     detailUrl = "",
                     isPage = true,
                     contentText = "",
@@ -182,9 +184,9 @@ fun NewsDisplaySettingsScreen(
                     .height(130.dp),
                 fetchedNotice = FetchedNotice(
                     id = "preview",
-                    title = "这是一条最旧最冷资讯标题",
+                    title = stringResource(R.string.preview_old_title),
                     date = LocalDate.now().toString(),
-                    label = "通知",
+                    label = stringResource(R.string.notice),
                     detailUrl = "",
                     isPage = true,
                     contentText = "",

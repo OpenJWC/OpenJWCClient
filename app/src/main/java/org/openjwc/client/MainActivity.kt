@@ -68,7 +68,8 @@ class MainActivity : ComponentActivity() {
     }
     private val chatViewModel: ChatViewModel by viewModels {
         ChatViewModelFactory(
-            chatRepository
+            chatRepository,
+            settingsRepository
         )
     }
     private val newsViewModel: NewsViewModel by viewModels { NewsViewModelFactory(settingsRepository, newsRepository, authRepository) }

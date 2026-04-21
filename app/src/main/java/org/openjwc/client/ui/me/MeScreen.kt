@@ -17,12 +17,17 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Refresh
+import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -37,14 +42,18 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
+import org.openjwc.client.R
 import org.openjwc.client.data.settings.Event
+import org.openjwc.client.data.settings.MenuItem
 import org.openjwc.client.data.settings.SettingSection
+import org.openjwc.client.navigation.Screen
 import org.openjwc.client.ui.me.settings.MenuSectionCard
 import org.openjwc.client.viewmodels.MeViewModel
 
@@ -55,9 +64,42 @@ fun MeScreen(
     viewModel: MeViewModel,
     navController: NavController,
 ) {
-    val sections by viewModel.sections.collectAsStateWithLifecycle()
+    val sections =
+        listOf(
+            SettingSection(
+                title = stringResource(R.string.contribution),
+                items = listOf(
+                    MenuItem.Route(
+                        icon = Icons.Default.Add,
+                        title = stringResource(R.string.upload_news),
+                        route = Screen.UploadNews,
+                    ),
+                    MenuItem.Route(
+                        icon = Icons.Default.Search,
+                        title = stringResource(R.string.upload_results),
+                        route = Screen.Review,
+                    )
+                )
+            ),
+            SettingSection(
+                title = null,
+                items = listOf(
+                    MenuItem.Route(
+                        icon = Icons.Default.Settings,
+                        route = Screen.Settings,
+                        title = stringResource(R.string.settings),
+                    ),
+                    MenuItem.Route(
+                        icon = Icons.Default.Info,
+                        title = stringResource(R.string.about),
+                        route = Screen.About
+                    ),
+                )
+            )
+        )
     val isExpanded = windowSizeClass.widthSizeClass == WindowWidthSizeClass.Expanded
     val hitokoto = viewModel.hitokoto.collectAsStateWithLifecycle().value
+    val successText = stringResource(R.string.refreshed_successfully)
     LaunchedEffect(Unit) {
         viewModel.refreshHitokotoLazily()
     }
@@ -78,7 +120,7 @@ fun MeScreen(
                         text = hitokoto.text,
                         author = hitokoto.author,
                         onRefresh = {
-                            viewModel.refreshHitokoto()
+                            viewModel.refreshHitokoto(successText)
                         }
                     )
                 }
@@ -102,7 +144,7 @@ fun MeScreen(
                         text = hitokoto.text,
                         author = hitokoto.author,
                         onRefresh = {
-                            viewModel.refreshHitokoto()
+                            viewModel.refreshHitokoto(successText)
                         },
                         modifier = Modifier.padding(vertical = 64.dp, horizontal = 16.dp)
                     )
@@ -161,7 +203,7 @@ fun HitokotoView(
     ) {
         Text(
             modifier = Modifier.fillMaxWidth(),
-            text = "“ $text ”",
+            text = stringResource(R.string.hitokoto_text_format, text),
             fontWeight = FontWeight.Bold,
             style = MaterialTheme.typography.headlineMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -170,7 +212,7 @@ fun HitokotoView(
         Spacer(modifier = Modifier.padding(16.dp))
         author?.let {
             Text(
-                text = "—— $it",
+                text = stringResource(R.string.hitokoto_author_format, it),
                 style = MaterialTheme.typography.labelLarge,
                 color = MaterialTheme.colorScheme.outline,
                 textAlign = TextAlign.End,
@@ -193,9 +235,13 @@ fun HitokotoView(
                     },
                     modifier = Modifier.fillMaxWidth()
                 ) {
-                    Icon(Icons.Default.Refresh, contentDescription = null)
+                    Icon(
+                        Icons.Default.Refresh,
+                        contentDescription = null,
+                        modifier = Modifier.size(18.dp)
+                    )
                     Spacer(Modifier.width(8.dp))
-                    Text("刷新")
+                    Text(stringResource(R.string.refresh))
                 }
             }
         }
@@ -204,7 +250,7 @@ fun HitokotoView(
 
 @Preview
 @Composable
-fun TestHitokotoView(){
+fun TestHitokotoView() {
     HitokotoView(
         text = "逸一时，误一世！",
         author = "田所浩二",

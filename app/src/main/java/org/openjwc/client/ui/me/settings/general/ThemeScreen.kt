@@ -65,9 +65,11 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
+import org.openjwc.client.R
 import org.openjwc.client.ui.theme.ColorType
 import org.openjwc.client.ui.theme.DarkThemeStyle
 import org.openjwc.client.ui.theme.seedColors
@@ -116,10 +118,10 @@ fun ThemeScreen(
         modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
         topBar = {
             LargeTopAppBar(
-                title = { Text("主题") },
+                title = { Text(stringResource(R.string.theme)) },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "返回")
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.back))
                     }
                 },
                 scrollBehavior = scrollBehavior
@@ -147,17 +149,17 @@ fun ThemeScreen(
                     ListItem(
                         headlineContent = {
                             Text(
-                                "颜色主题",
+                                stringResource(R.string.color_theme),
                                 style = MaterialTheme.typography.labelLarge,
                                 color = MaterialTheme.colorScheme.primary
                             )
                         },
-                        supportingContent = { Text("基于 Material You 的色彩方案") }
+                        supportingContent = { Text(stringResource(R.string.color_scheme_based_on_material_you)) }
                     )
 
                     ListItem(
-                        headlineContent = { Text("动态色彩") },
-                        supportingContent = { Text("根据壁纸颜色自动提取 (仅支持 Android 12 及以上) ") },
+                        headlineContent = { Text(stringResource(R.string.dynamic_color)) },
+                        supportingContent = { Text(stringResource(R.string.auto_extracted_from_wallpaper)) },
                         trailingContent = {
                             Switch(
                                 checked = selectedColorType is ColorType.Dynamic,
@@ -179,7 +181,7 @@ fun ThemeScreen(
                     ) {
                         Column {
                             Text(
-                                text = "选择种子颜色",
+                                text = stringResource(R.string.select_seed_color),
                                 style = MaterialTheme.typography.labelMedium,
                                 color = MaterialTheme.colorScheme.primary,
                                 modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
@@ -212,17 +214,21 @@ fun ThemeScreen(
                 shape = MaterialTheme.shapes.extraLarge,
                 modifier = Modifier.fillMaxWidth()
             ) {
-                Column(modifier = Modifier.padding(vertical = 8.dp).animateContentSize()) {
+                Column(modifier = Modifier
+                    .padding(vertical = 8.dp)
+                    .animateContentSize()) {
                     Text(
-                        "界面装饰",
+                        stringResource(R.string.ui_decoration),
                         style = MaterialTheme.typography.labelLarge,
                         color = MaterialTheme.colorScheme.primary,
                         modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp)
                     )
                     ListItem(
-                        headlineContent = { Text("自定义背景图") },
+                        headlineContent = { Text(stringResource(R.string.customize_background)) },
                         supportingContent = {
-                            Text(if (currentBackgroundPath != null) "已设置自定义背景" else "未设置背景图")
+                            Text(if (currentBackgroundPath != null) stringResource(R.string.background_selected) else stringResource(
+                                R.string.background_not_selected
+                            ))
                         },
                         leadingContent = {
                             Box(
@@ -250,7 +256,7 @@ fun ThemeScreen(
                                     IconButton(onClick = onClearBackground) {
                                         Icon(
                                             Icons.Default.DeleteSweep,
-                                            contentDescription = "清除背景",
+                                            contentDescription = stringResource(R.string.clear_background),
                                             tint = MaterialTheme.colorScheme.error
                                         )
                                     }
@@ -258,7 +264,7 @@ fun ThemeScreen(
                                 IconButton(onClick = {
                                     pickMedia.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly))
                                 }) {
-                                    Icon(Icons.Default.Edit, contentDescription = "更换背景")
+                                    Icon(Icons.Default.Edit, contentDescription = stringResource(R.string.change_background))
                                 }
                             }
                         },
@@ -271,7 +277,7 @@ fun ThemeScreen(
 
                     if (currentBackgroundPath != null) {
                         ListItem(
-                            headlineContent = { Text("背景不透明度") },
+                            headlineContent = { Text(stringResource(R.string.background_alpha)) },
                             supportingContent = {
                                 Row(
                                     verticalAlignment = Alignment.CenterVertically,
@@ -363,16 +369,19 @@ fun ThemeStyleSelectorCard(
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
             Text(
-                text = "显示模式",
+                text = stringResource(R.string.display_mode),
                 style = MaterialTheme.typography.labelLarge,
                 color = MaterialTheme.colorScheme.primary,
                 modifier = Modifier.padding(start = 4.dp, bottom = 12.dp)
             )
             SingleChoiceSegmentedButtonRow(modifier = Modifier.fillMaxWidth()) {
                 val options = listOf(
-                    Triple(DarkThemeStyle.Light, "浅色", Icons.Default.LightMode),
-                    Triple(DarkThemeStyle.Dark, "深色", Icons.Default.DarkMode),
-                    Triple(DarkThemeStyle.Auto, "系统", Icons.Default.AutoMode)
+                    Triple(DarkThemeStyle.Light,
+                        stringResource(R.string.light), Icons.Default.LightMode),
+                    Triple(DarkThemeStyle.Dark,
+                        stringResource(R.string.dark), Icons.Default.DarkMode),
+                    Triple(DarkThemeStyle.Auto,
+                        stringResource(R.string.follow_system), Icons.Default.AutoMode)
                 )
                 options.forEachIndexed { index, (style, label, icon) ->
                     val isSelected = selectedStyle == style

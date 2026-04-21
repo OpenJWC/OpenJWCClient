@@ -8,6 +8,12 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.BugReport
+import androidx.compose.material.icons.filled.CalendarMonth
+import androidx.compose.material.icons.filled.Dns
+import androidx.compose.material.icons.filled.Palette
+import androidx.compose.material.icons.filled.VpnKey
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.windowsizeclass.WindowSizeClass
@@ -29,6 +35,9 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import kotlinx.coroutines.flow.receiveAsFlow
 import org.openjwc.client.R
+import org.openjwc.client.data.settings.Menu
+import org.openjwc.client.data.settings.MenuItem
+import org.openjwc.client.data.settings.SettingSection
 import org.openjwc.client.log.Logger
 import org.openjwc.client.net.models.GitHubRelease
 import org.openjwc.client.net.models.NetworkResult
@@ -284,7 +293,8 @@ fun NavGraph(
                     newsViewModel = newsViewModel,
                     meViewModel = meViewModel,
                     backgroundPath = backgroundPath,
-                    backgroundAlpha = backgroundAlpha
+                    backgroundAlpha = backgroundAlpha,
+                    settingsViewModel = settingsViewModel
                 )
             }
 
@@ -294,7 +304,6 @@ fun NavGraph(
                     fetchedNotice = notice,
                     onBack = {
                         navController.popBackStack()
-                        newsViewModel.clearCurrentNewsToDisplay()
                     },
                     onToBrowser = { uri -> uriHandler.openUri(uri) },
                     onAddToAttachments = {
@@ -305,7 +314,7 @@ fun NavGraph(
                                 popUpTo<Screen.NewsDetail> { inclusive = true }
                             }
                         }
-                        if(notice != null) {
+                        if (notice != null) {
                             chatViewModel.addAttachment(notice)
                         }
                     }
@@ -348,6 +357,61 @@ fun NavGraph(
                 )
             }
             composable<Screen.Settings> {
+                val settingsText = stringResource(R.string.settings)
+                val generalText = stringResource(R.string.general)
+                val connectionText = stringResource(R.string.connection)
+                val themeText = stringResource(R.string.theme)
+                val newsText = stringResource(R.string.news)
+                val hostText = stringResource(R.string.network_config)
+                val accountText = stringResource(R.string.account_management)
+                val logText = stringResource(R.string.log)
+                val displaySettingsText = stringResource(R.string.display_settings)
+                val debugText = stringResource(R.string.debug)
+                val menuTemplates = remember {
+                    Menu(
+                        route = Screen.Settings, title = settingsText, sections = listOf(
+                            SettingSection(
+                                title = generalText, items = listOf(
+                                    MenuItem.Route(
+                                        icon = Icons.Default.Palette,
+                                        route = Screen.Theme,
+                                        title = themeText,
+                                    )
+                                )
+                            ), SettingSection(
+                                title = connectionText, items = listOf(
+                                    MenuItem.Route(
+                                        icon = Icons.Default.Dns,
+                                        route = Screen.Host,
+                                        title = hostText,
+                                    ),
+                                    MenuItem.Route(
+                                        icon = Icons.Default.VpnKey,
+                                        route = Screen.Account,
+                                        title = accountText,
+                                    )
+                                )
+                            ), SettingSection(
+                                title = newsText, items = listOf(
+                                    MenuItem.Route(
+                                        icon = Icons.Default.CalendarMonth,
+                                        route = Screen.NewsSettings,
+                                        title = displaySettingsText,
+                                    )
+                                )
+                            ), SettingSection(
+                                title = debugText, items = listOf(
+                                    MenuItem.Route(
+                                        icon = Icons.Default.BugReport,
+                                        route = Screen.Log,
+                                        title = logText,
+                                    )
+                                )
+                            )
+                        )
+
+                    )
+                }
                 SettingsScreen(
                     onRoute = {
                         navController.navigate(it)
@@ -356,8 +420,10 @@ fun NavGraph(
                         if (navController.previousBackStackEntry != null)
                             navController.popBackStack()
                     },
-                    route = Screen.Settings,
-                    viewModel = settingsViewModel
+                    menu = menuTemplates,
+                    onToggle = {
+                        settingsViewModel.toggle(it)
+                    }
                 )
             }
             composable<Screen.About> {

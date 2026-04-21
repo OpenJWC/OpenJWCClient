@@ -83,10 +83,10 @@ fun AboutScreen(
         containerColor = MaterialTheme.colorScheme.background,
         topBar = {
             LargeTopAppBar(
-                title = { Text("关于") },
+                title = { Text(stringResource(R.string.about)) },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "返回")
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.back))
                     }
                 },
                 scrollBehavior = scrollBehavior
@@ -109,7 +109,7 @@ fun AboutScreen(
             ) {
                 Image(
                     painter = painterResource(R.mipmap.ic_launcher_foreground),
-                    contentDescription = "App Icon",
+                    contentDescription = stringResource(R.string.app_icon_description),
                     modifier = Modifier.fillMaxSize(),
                     contentScale = ContentScale.Crop
                 )
@@ -118,12 +118,12 @@ fun AboutScreen(
             Spacer(modifier = Modifier.height(24.dp))
 
             Text(
-                text = "OpenJWC",
+                text = stringResource(R.string.app_name),
                 style = MaterialTheme.typography.headlineMedium,
                 fontWeight = FontWeight.Bold
             )
             Text(
-                text = "Version ${BuildConfig.VERSION_NAME}",
+                text = stringResource(R.string.version_label, BuildConfig.VERSION_NAME),
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.outline
             )
@@ -138,7 +138,7 @@ fun AboutScreen(
             ) {
                 Column(modifier = Modifier.padding(16.dp)) {
                     Text(
-                        text = "简介",
+                        text = stringResource(R.string.introduction),
                         style = MaterialTheme.typography.titleMedium,
                         color = MaterialTheme.colorScheme.primary
                     )
@@ -157,7 +157,7 @@ fun AboutScreen(
                     title = null, items = listOf(
                         MenuItem.Action(
                             icon = Icons.Default.Sync,
-                            label = "检查更新",
+                            label = stringResource(R.string.check_for_updates),
                             onClick = {
                                 onCheckForUpdate()
                                 showUpdateDialog = true
@@ -165,7 +165,7 @@ fun AboutScreen(
                         ),
                         MenuItem.Action(
                             icon = Icons.AutoMirrored.Default.OpenInNew,
-                            label = "GitHub",
+                            label = stringResource(R.string.github),
                             subtitle = "https://github.com/OpenJWC",
                             onClick = onToGitHub
                         ),
@@ -185,12 +185,12 @@ fun AboutScreen(
                     title = null, items = listOf(
                         MenuItem.Route(
                             icon = Icons.Outlined.Policy,
-                            title = "用户协议与隐私政策",
+                            title = stringResource(R.string.user_agreement_and_privacy_policy),
                             route = Screen.Policy
                         ),
                         MenuItem.Route(
                             icon = Icons.Outlined.Gavel,
-                            title = "开源许可证",
+                            title = stringResource(R.string.open_source_licenses),
                             route = Screen.License
                         )
                     )

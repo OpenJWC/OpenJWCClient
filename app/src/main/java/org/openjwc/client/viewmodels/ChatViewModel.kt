@@ -23,6 +23,7 @@ import org.openjwc.client.data.models.ChatMetadata
 import org.openjwc.client.data.models.Role
 import org.openjwc.client.data.repository.ChatRepository
 import org.openjwc.client.data.repository.ChatStreamStatus
+import org.openjwc.client.data.repository.SettingsRepository
 import org.openjwc.client.log.Logger
 import org.openjwc.client.net.models.FetchedNotice
 
@@ -40,7 +41,8 @@ data class ChatSessionUiModel(
 )
 
 class ChatViewModel(
-    private val chatRepository: ChatRepository
+    private val chatRepository: ChatRepository,
+    private val settingsRepository: SettingsRepository,
 ) : ViewModel() {
     private val label = "ChatViewModel"
     private val _sessionStates = MutableStateFlow<Map<Long?, ChatSessionState>>(emptyMap())
@@ -276,12 +278,13 @@ class ChatViewModel(
 }
 
 class ChatViewModelFactory(
-    private val chatRepository: ChatRepository
+    private val chatRepository: ChatRepository,
+    private val settingsRepository: SettingsRepository,
 ) : ViewModelProvider.Factory {
     override fun <T : ViewModel> create(modelClass: Class<T>): T {
         if (modelClass.isAssignableFrom(ChatViewModel::class.java)) {
             @Suppress("UNCHECKED_CAST")
-            return ChatViewModel(chatRepository) as T
+            return ChatViewModel(chatRepository, settingsRepository) as T
         }
         throw IllegalArgumentException("Unknown ViewModel class")
     }

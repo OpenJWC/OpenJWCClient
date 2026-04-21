@@ -1,34 +1,21 @@
 package org.openjwc.client.viewmodels
 
 import android.net.Uri
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.BugReport
-import androidx.compose.material.icons.filled.CalendarMonth
-import androidx.compose.material.icons.filled.Dns
-import androidx.compose.material.icons.filled.Palette
-import androidx.compose.material.icons.filled.VpnKey
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
-import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import org.openjwc.client.data.datastore.UserSettings
 import org.openjwc.client.data.repository.AuthRepository
 import org.openjwc.client.data.repository.SettingsRepository
-import org.openjwc.client.data.settings.Menu
-import org.openjwc.client.data.settings.MenuItem
-import org.openjwc.client.data.settings.SettingSection
 import org.openjwc.client.data.settings.ToggleID
 import org.openjwc.client.log.Logger
-import org.openjwc.client.navigation.Screen
 import org.openjwc.client.net.models.DevicesQueryResponseData
 import org.openjwc.client.net.models.DevicesUnbindSuccessResponse
 import org.openjwc.client.net.models.NetworkResult
@@ -36,60 +23,10 @@ import org.openjwc.client.net.models.Proxy
 import org.openjwc.client.net.models.SuccessResponse
 
 private const val label = "SettingsViewModel"
-
-sealed class SettingsEvent {
-    data class ShowToast(val message: String) : SettingsEvent()
-    data class ShowSnackBar(val message: String) : SettingsEvent()
-}
-
 class SettingsViewModel(
     private val settingsRepository: SettingsRepository,
     private val authRepository: AuthRepository,
 ) : ViewModel() {
-    private val menuTemplates = listOf(
-        Menu(
-            route = Screen.Settings, title = "设置", sections = listOf(
-                SettingSection(
-                    title = "通用", items = listOf(
-                        MenuItem.Route(
-                            icon = Icons.Default.Palette,
-                            route = Screen.Theme,
-                            title = "主题",
-                        )
-                    )
-                ), SettingSection(
-                    title = "连接", items = listOf(
-                        MenuItem.Route(
-                            icon = Icons.Default.Dns,
-                            route = Screen.Host,
-                            title = "网络配置",
-                        ),
-                        MenuItem.Route(
-                            icon = Icons.Default.VpnKey,
-                            route = Screen.Account,
-                            title = "账号管理",
-                        )
-                    )
-                ), SettingSection(
-                    title = "资讯", items = listOf(
-                        MenuItem.Route(
-                            icon = Icons.Default.CalendarMonth,
-                            route = Screen.NewsSettings,
-                            title = "显示设置",
-                        )
-                    )
-                ), SettingSection(
-                    title = "调试", items = listOf(
-                        MenuItem.Route(
-                            icon = Icons.Default.BugReport,
-                            route = Screen.Log,
-                            title = "日志",
-                        )
-                    )
-                )
-            )
-        )
-    )
 
     val settings: StateFlow<UserSettings> = settingsRepository.userSettings
         .stateIn(
@@ -97,9 +34,6 @@ class SettingsViewModel(
             started = SharingStarted.WhileSubscribed(5000),
             initialValue = UserSettings()
         )
-
-    private val _eventChannel = Channel<SettingsEvent>(Channel.BUFFERED)
-    val events = _eventChannel.receiveAsFlow()
 
     fun updateHost(host: String) = viewModelScope.launch { settingsRepository.updateHost(host) }
     fun updatePort(port: Int) = viewModelScope.launch { settingsRepository.updatePort(port) }
@@ -156,12 +90,12 @@ class SettingsViewModel(
     fun unbindAndRefresh(deviceId: String) {
         viewModelScope.launch {
             _isLoadingDeviceResult.value = true
-            Logger.d(label, "执行解绑...")
+            Logger.d(label, "unbinding...")
             val unbindResult = authRepository.deviceUnbind(deviceId)
             Logger.d(label, "Unbind result: $unbindResult")
             _deviceUnbindNetworkResult.value = unbindResult
             if (unbindResult is NetworkResult.Success) {
-                Logger.d(label, "解绑成功，开始刷新列表...")
+                Logger.d(label, "unbound successfully, refreshing list...")
                 devicesQuery()
                 _isLoadingDeviceResult.value = false
             } else if (unbindResult is NetworkResult.Failure && unbindResult.code == 401) {
@@ -181,27 +115,6 @@ class SettingsViewModel(
         mapOf(
             ToggleID.TEST_TOGGLE to false
         )
-    )
-
-
-    val menus = _toggleState.map { states ->
-        menuTemplates.map { menu ->
-            menu.copy(
-                sections = menu.sections.map { section ->
-                    section.copy(
-                        items = section.items.map { item ->
-                            if (item is MenuItem.Toggle) {
-                                item.copy(isChecked = states[item.id] ?: item.isChecked)
-                            } else item
-                        }
-                    )
-                }
-            )
-        }
-    }.stateIn(
-        scope = viewModelScope,
-        started = SharingStarted.WhileSubscribed(5000),
-        initialValue = emptyList()
     )
 
     fun toggle(id: ToggleID) {

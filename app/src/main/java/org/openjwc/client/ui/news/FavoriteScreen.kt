@@ -40,8 +40,10 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import org.openjwc.client.R
 import org.openjwc.client.net.models.FetchedNotice
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -72,8 +74,8 @@ fun FavoriteScreen(
     if (showDeleteAllDialog) {
         androidx.compose.material3.AlertDialog(
             onDismissRequest = { showDeleteAllDialog = false },
-            title = { Text("确认删除") },
-            text = { Text("确定要清空所有收藏的资讯吗？此操作不可撤销。") },
+            title = { Text(stringResource(R.string.confirm_delete)) },
+            text = { Text(stringResource(R.string.clear_all_favorites_confirm)) },
             confirmButton = {
                 androidx.compose.material3.TextButton(
                     onClick = {
@@ -81,12 +83,12 @@ fun FavoriteScreen(
                         showDeleteAllDialog = false
                     }
                 ) {
-                    Text("全部删除", color = MaterialTheme.colorScheme.error)
+                    Text(stringResource(R.string.delete_all), color = MaterialTheme.colorScheme.error)
                 }
             },
             dismissButton = {
                 androidx.compose.material3.TextButton(onClick = { showDeleteAllDialog = false }) {
-                    Text("取消")
+                    Text(stringResource(R.string.cancel))
                 }
             }
         )
@@ -96,10 +98,10 @@ fun FavoriteScreen(
         containerColor = MaterialTheme.colorScheme.background,
         topBar = {
             LargeTopAppBar(
-                title = { Text("收藏的资讯") },
+                title = { Text(stringResource(R.string.favorite_news)) },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "返回")
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.back))
                     }
                 },
                 actions = {
@@ -108,7 +110,7 @@ fun FavoriteScreen(
                         IconButton(onClick = { showDeleteAllDialog = true }) {
                             Icon(
                                 Icons.Default.Delete,
-                                contentDescription = "删除所有收藏",
+                                contentDescription = stringResource(R.string.delete_all_favorites),
                                 tint = MaterialTheme.colorScheme.error
                             )
                         }
@@ -154,7 +156,7 @@ fun FavoriteScreen(
                                 onDismissRequest = onMenuDismiss
                             ) {
                                 DropdownMenuItem(
-                                    text = { Text("添加到附件") },
+                                    text = { Text(stringResource(R.string.add_to_attachments)) },
                                     leadingIcon = {
                                         Icon(Icons.Outlined.Add, contentDescription = null)
                                     },
@@ -166,7 +168,7 @@ fun FavoriteScreen(
 
                                 DropdownMenuItem(
                                     text = {
-                                        Text("取消收藏", color = MaterialTheme.colorScheme.error)
+                                        Text(stringResource(R.string.remove_from_favorites), color = MaterialTheme.colorScheme.error)
                                     },
                                     leadingIcon = {
                                         Icon(
@@ -208,7 +210,7 @@ fun EmptyFavoritesPlaceholder() {
         Spacer(modifier = Modifier.height(16.dp))
 
         Text(
-            text = "暂无收藏内容",
+            text = stringResource(R.string.no_favorites),
             style = MaterialTheme.typography.titleLarge,
             fontWeight = FontWeight.Bold,
             color = MaterialTheme.colorScheme.onSurface
@@ -217,7 +219,7 @@ fun EmptyFavoritesPlaceholder() {
         Spacer(modifier = Modifier.height(8.dp))
 
         Text(
-            text = "在资讯列表长按即可将感兴趣的内容收藏到这里",
+            text = stringResource(R.string.favorite_hint),
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             textAlign = androidx.compose.ui.text.style.TextAlign.Center
