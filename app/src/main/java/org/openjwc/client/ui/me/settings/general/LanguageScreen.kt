@@ -73,7 +73,10 @@ fun LanguageScreen(
                             val isSelected = currentLanguageCode == code
                             ListItem(
                                 headlineContent = {
-                                    Text(language.asString())
+                                    Text(language.translatedName.asString())
+                                },
+                                supportingContent = {
+                                    Text(text = language.originalName, style = MaterialTheme.typography.bodyMedium)
                                 },
                                 trailingContent = {
                                     if (isSelected) {

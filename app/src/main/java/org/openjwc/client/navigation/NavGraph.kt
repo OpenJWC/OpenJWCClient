@@ -62,6 +62,7 @@ import org.openjwc.client.ui.news.upload.UploadNewsScreen
 import org.openjwc.client.ui.policy.LicenseScreen
 import org.openjwc.client.ui.policy.PolicyScreen
 import org.openjwc.client.ui.theme.seedColors
+import org.openjwc.client.utils.languages
 import org.openjwc.client.viewmodels.AuthViewModel
 import org.openjwc.client.viewmodels.ChatViewModel
 import org.openjwc.client.viewmodels.MainViewModel
@@ -370,6 +371,8 @@ fun NavGraph(
                 val displaySettingsText = stringResource(R.string.display_settings)
                 val debugText = stringResource(R.string.debug)
                 val languageText = stringResource(R.string.language)
+                val currentLanguage = languages[settingsViewModel.settings.collectAsState().value.languageCode]
+                val languageName = currentLanguage?.translatedName?.asString()
                 val menuTemplates = remember {
                     Menu(
                         route = Screen.Settings, title = settingsText, sections = listOf(
@@ -384,6 +387,7 @@ fun NavGraph(
                                         icon = Icons.Default.Language,
                                         route = Screen.Language,
                                         title = languageText,
+                                        trailing = languageName
                                     )
                                 )
                             ), SettingSection(
