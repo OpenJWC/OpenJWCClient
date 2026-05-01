@@ -37,4 +37,6 @@ sealed interface Screen {
     object NewsDetail : Screen
     @Serializable
     object Language : Screen
+    @Serializable
+    object Load: Screen
 }

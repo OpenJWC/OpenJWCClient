@@ -1,5 +1,6 @@
 package org.openjwc.client.viewmodels
 
+import android.util.Log
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
@@ -20,6 +21,7 @@ import org.openjwc.client.data.models.Course
 import org.openjwc.client.data.models.TableMetadata
 import org.openjwc.client.data.repository.CourseRepository
 import org.openjwc.client.data.repository.SettingsRepository
+import org.openjwc.client.log.Logger
 import org.openjwc.client.ui.timetable.view.state.TimetableUiState
 import java.time.LocalTime
 
@@ -38,26 +40,25 @@ class TimetableViewModel(
     private val settingsRepository: SettingsRepository
 ) : ViewModel() {
 
-    // --- 1. UI 弹窗与交互状态 ---
+    private val TAG = "TimetableViewModel"
+
     private val _uiState = MutableStateFlow(TimetableUiState())
     val uiState: StateFlow<TimetableUiState> = _uiState.asStateFlow()
 
-    // --- 2. 数据库同步数据流 ---
     val allTables = courseRepository.allTables
-    
+
     val currentTable = courseRepository.currentTable.stateIn(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(5000),
         initialValue = null
     )
-    
+
     val currentTableCourses = courseRepository.currentCourses.stateIn(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(5000),
         initialValue = emptyList()
     )
 
-    // 计算当前课表中已被使用的最大节次
     val currentMaxPeriodInUse = currentTableCourses.map { courses ->
         courses.maxOfOrNull { it.startPeriod + it.duration - 1 } ?: 0
     }.stateIn(
@@ -66,7 +67,6 @@ class TimetableViewModel(
         initialValue = 0
     )
 
-    // --- 3. 周次管理 ---
     private val _currentWeek = MutableStateFlow(1)
     val currentWeek: StateFlow<Int> = _currentWeek.asStateFlow()
 
@@ -74,11 +74,10 @@ class TimetableViewModel(
     var isInternalWeekUpdate by mutableStateOf(false)
         private set
 
-    // --- 4. 实时时间线/节次高亮 ---
     private val _activePeriodIndex = MutableStateFlow(-1)
     val activePeriodIndex = _activePeriodIndex.asStateFlow()
 
-    // --- 5. 显示偏好设置 ---
+    // TODO
     val displayPrefs: StateFlow<TimetableDisplayPrefs> = settingsRepository.userSettings
         .map { settings ->
             TimetableDisplayPrefs(
@@ -99,7 +98,6 @@ class TimetableViewModel(
     private var timerJob: Job? = null
 
     init {
-        // 自动计算并同步当前真实周次
         viewModelScope.launch {
             currentTable.collect { table ->
                 table?.semesterConfig?.let { config ->
@@ -129,7 +127,6 @@ class TimetableViewModel(
         }
     }
 
-    // --- 业务方法 ---
 
     fun setWeek(week: Int, fromPager: Boolean = false) {
         _currentWeek.value = week
@@ -191,10 +188,74 @@ class TimetableViewModel(
         }
     }
 
-    // --- UI 状态转换方法 ---
 
     fun updateUiState(reducer: (TimetableUiState) -> TimetableUiState) {
         _uiState.value = reducer(_uiState.value)
+    }
+
+    fun updateUiState(state: TimetableUiState) {
+        _uiState.value = state
+    }
+
+    data class PendingImport(val metadata: TableMetadata, val courses: List<Course>)
+
+    var pendingImport by mutableStateOf<PendingImport?>(null); private set
+    var importErrorMessage by mutableStateOf<String?>(null); private set
+
+    fun handleImportedJson(jsonString: String) = viewModelScope.launch {
+        try {
+            importErrorMessage = null
+            isImporting = true
+            val (metadata, courses) = courseRepository.parseExternalJson(jsonString)
+            pendingImport = PendingImport(metadata, courses)
+        } catch (e: Exception) {
+            Log.e(TAG, "Failed to parse imported json", e)
+            importErrorMessage = e.message ?: "解析失败"
+        } finally {
+            isImporting = false
+        }
+    }
+
+    fun confirmImport(finalMetadata: TableMetadata) {
+        val importData = pendingImport ?: return
+        viewModelScope.launch {
+            try {
+                // 1. 保存课表并获取数据库生成的真实 ID
+                val newTableId = courseRepository.saveTable(finalMetadata)
+
+                // 2. 将所有课程关联到这个真实的 tableId
+                val coursesToSave = importData.courses.map { course ->
+                    course.copy(tableId = newTableId)
+                }
+
+                // 3. 批量保存关联了正确 ID 的课程
+                courseRepository.saveCourses(coursesToSave)
+
+                // 4. 切换当前课表为新生成的 ID
+                courseRepository.setCurrentTable(newTableId)
+
+                // 5. 更新 UI 状态
+                _currentWeek.value = 1
+                isInternalWeekUpdate = true
+                pendingImport = null
+
+            } catch (e: Exception) {
+                Log.e(TAG, "Failed to save table", e)
+                importErrorMessage = "保存失败: ${e.message}"
+            }
+
+            finally {
+                Logger.d(TAG, "当前已有的课表：${courseRepository.currentTable}")
+            }
+        }
+    }
+
+    fun cancelImport() {
+        pendingImport = null
+    }
+
+    fun clearImportError() {
+        importErrorMessage = null
     }
 }
 

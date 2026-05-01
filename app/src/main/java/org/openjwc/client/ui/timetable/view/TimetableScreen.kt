@@ -16,6 +16,7 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
+import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -25,25 +26,22 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import org.openjwc.client.R
 import org.openjwc.client.ui.timetable.edit.EmptyGuidePlaceholder
+import org.openjwc.client.ui.timetable.edit.tables.TableConfigDialog
 import org.openjwc.client.ui.timetable.view.components.TimetableOverlayHost
 import org.openjwc.client.ui.timetable.view.components.TimetableTopAppBar
 import org.openjwc.client.ui.timetable.view.grid.TimetableGrid
-import org.openjwc.client.ui.timetable.view.state.TimetableUiState
 import org.openjwc.client.viewmodels.TimetableViewModel
 
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TimetableScreen(
-    windowSizeClass: WindowSizeClass, // Added parameter
+    windowSizeClass: WindowSizeClass,
     viewModel: TimetableViewModel,
     onImportRequest: () -> Unit,
     contentPadding: PaddingValues
@@ -60,7 +58,7 @@ fun TimetableScreen(
     val showPeriodTime = displayPrefs.showPeriodTime
     val showNonCurrentWeek = displayPrefs.showNonCurrentWeek
 
-    var uiState by remember { mutableStateOf(TimetableUiState()) }
+    val uiState = viewModel.uiState.collectAsState().value
 
     val totalWeeks = tableMetadata?.semesterConfig?.weeks ?: 1
     val pagerState = rememberPagerState(
@@ -98,7 +96,7 @@ fun TimetableScreen(
                     TimetableTopAppBar(
                         timetableName = metadata.tableName,
                         currentWeek = currentWeek,
-                        onTitleClick = { uiState = uiState.copy(showTableSelectSheet = true) },
+                        onTitleClick = { viewModel.updateUiState { it.copy(showTableConfigDialog = true) } },
                         canPrev = currentWeek > 1,
                         canNext = currentWeek < metadata.semesterConfig.weeks,
                         onPrev = { viewModel.prevWeek() },
@@ -107,8 +105,10 @@ fun TimetableScreen(
                 } ?: TopAppBar(title = { Text(stringResource(R.string.timetable)) })
 
                 if (isImporting) {
-                    androidx.compose.material3.LinearProgressIndicator(
-                        modifier = Modifier.fillMaxWidth().height(3.dp),
+                    LinearProgressIndicator(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(3.dp),
                         color = MaterialTheme.colorScheme.primary,
                         trackColor = MaterialTheme.colorScheme.surfaceVariant
                     )
@@ -117,20 +117,27 @@ fun TimetableScreen(
         },
         floatingActionButton = {
             if (!isImporting) {
-                FloatingActionButton(onClick = { uiState = uiState.copy(showActionSheet = true) }) {
-                    Icon(Icons.Default.Add, contentDescription = stringResource(R.string.operating_menu))
+                FloatingActionButton(onClick = { viewModel.updateUiState { it.copy(showActionSheet = true) } }) {
+                    Icon(
+                        Icons.Default.Add,
+                        contentDescription = stringResource(R.string.operating_menu)
+                    )
                 }
             }
         },
         bottomBar = { Spacer(Modifier.height(contentPadding.calculateBottomPadding())) }
     ) { scaffoldPadding ->
-        Box(modifier = Modifier.padding(scaffoldPadding).fillMaxSize()) {
+        Box(
+            modifier = Modifier
+                .padding(scaffoldPadding)
+                .fillMaxSize()
+        ) {
             val currentTable = tableMetadata
 
             if (currentTable == null) {
                 EmptyGuidePlaceholder(
                     onImport = onImportRequest,
-                    onCreate = { uiState = uiState.copy(showTableConfigDialog = true) }
+                    onCreate = { viewModel.updateUiState { it.copy(showTableConfigDialog = true) } }
                 )
             } else {
                 HorizontalPager(
@@ -148,29 +155,51 @@ fun TimetableScreen(
                         currentWeek = pageIndex + 1,
                         activePeriodIndex = if (pageIndex + 1 == currentWeek) activePeriodIndex else -1,
                         onCourseClick = { course ->
-                            uiState = uiState.copy(clickedCourse = course, showDetailSheet = true)
+                            viewModel.updateUiState {
+                                it.copy(
+                                    clickedCourse = course,
+                                    showDetailSheet = true
+                                )
+                            }
                         },
                         onEmptySlotClick = { day, period ->
-                            uiState = uiState.copy(
-                                showEditDialog = true,
-                                editingCourseId = 0L,
-                                initialDay = day,
-                                initialStartPeriod = period
-                            )
+                            viewModel.updateUiState {
+                                it.copy(
+                                    showEditDialog = true,
+                                    editingCourseId = 0L,
+                                    initialDay = day,
+                                    initialStartPeriod = period
+                                )
+                            }
                         }
                     )
                 }
             }
+            viewModel.pendingImport?.let { data ->
+                TableConfigDialog(
+                    initialMetadata = data.metadata,
+                    maxPeriodInUse = data.courses.maxOfOrNull { it.startPeriod + it.duration - 1 } ?: 0,
+                    onDismiss = { viewModel.cancelImport() },
+                    onConfirm = { finalMetadata -> viewModel.confirmImport(finalMetadata) }
+                )
+            }
 
             TimetableOverlayHost(
-                windowSizeClass = windowSizeClass, // Passed windowSizeClass
+                windowSizeClass = windowSizeClass,
                 state = uiState,
-                onStateChange = { uiState = it },
-                viewModel = viewModel,
+                onStateChange = { viewModel.updateUiState(it) },
                 onImportRequest = onImportRequest,
                 currentWeek = currentWeek,
                 currentTableCourses = currentTableCourses,
-                allTables = allTables
+                allTables = allTables,
+                currentTable = currentTable,
+                maxPeriodInUse = viewModel.currentMaxPeriodInUse.collectAsState().value,
+                onSaveCourse = viewModel::saveCourse,
+                onDeleteCourse = viewModel::removeCourse,
+                onCreateTable = viewModel::createTable,
+                onUpdateTable = viewModel::updateTable,
+                onDeleteTable = viewModel::deleteTable,
+                onSwitchTable = viewModel::switchTable
             )
         }
     }

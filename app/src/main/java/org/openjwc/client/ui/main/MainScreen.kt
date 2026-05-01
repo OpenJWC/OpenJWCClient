@@ -290,7 +290,9 @@ private fun MainTabContent(
             MainTab.Timetable -> TimetableScreen(
                 windowSizeClass,
                 timetableViewModel,
-                onImportRequest = { },
+                onImportRequest = {
+                    navController.navigate(Screen.Load)
+                },
                 contentPadding
             )
 

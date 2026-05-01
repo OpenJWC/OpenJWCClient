@@ -62,6 +62,7 @@ import org.openjwc.client.ui.news.upload.UploadNewsScreen
 import org.openjwc.client.ui.policy.LicenseScreen
 import org.openjwc.client.ui.policy.PolicyScreen
 import org.openjwc.client.ui.theme.seedColors
+import org.openjwc.client.ui.timetable.load.ImportWebViewScreen
 import org.openjwc.client.utils.languages
 import org.openjwc.client.viewmodels.AuthViewModel
 import org.openjwc.client.viewmodels.ChatViewModel
@@ -303,7 +304,15 @@ fun NavGraph(
                     timetableViewModel = timetableViewModel
                 )
             }
-
+            composable<Screen.Load> {
+                ImportWebViewScreen(
+                    onDismiss = { navController.popBackStack() },
+                    onDataAcquired = {
+                        timetableViewModel.handleImportedJson(it)
+                        navController.popBackStack()
+                    }
+                )
+            }
             composable<Screen.NewsDetail> {
                 val notice = newsViewModel.currentNewsToDisplay.collectAsState().value
                 NewsDetailScreen(

@@ -58,7 +58,9 @@ class EditCourseViewModel(
     fun onNameChange(newName: String) {
         name = newName
         if (!hasManuallyChangedColor && newName.isNotBlank()) {
-            colorIndex = Math.abs(newName.hashCode()) % courseBackgroundColors.size
+            if (courseBackgroundColors.isNotEmpty()) {
+                colorIndex = (newName.hashCode() and 0x7FFFFFFF) % courseBackgroundColors.size
+            }
         }
     }
 

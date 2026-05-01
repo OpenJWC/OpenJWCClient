@@ -5,9 +5,6 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.material3.windowsizeclass.WindowSizeClass
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
-import androidx.compose.ui.platform.LocalContext
 import org.openjwc.client.data.models.Course
 import org.openjwc.client.data.models.TableMetadata
 import org.openjwc.client.ui.timetable.edit.TimetableAction
@@ -19,23 +16,26 @@ import org.openjwc.client.ui.timetable.edit.tables.TableConfigDialog
 import org.openjwc.client.ui.timetable.view.sheets.CourseDetailSheet
 import org.openjwc.client.ui.timetable.view.sheets.TableSelectSheet
 import org.openjwc.client.ui.timetable.view.state.TimetableUiState
-import org.openjwc.client.viewmodels.TimetableViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TimetableOverlayHost(
-    windowSizeClass: WindowSizeClass, // Added parameter
+    windowSizeClass: WindowSizeClass,
     state: TimetableUiState,
     onStateChange: (TimetableUiState) -> Unit,
-    viewModel: TimetableViewModel,
-    onImportRequest: () -> Unit,
+    currentTable: TableMetadata?,
+    maxPeriodInUse: Int,
     currentWeek: Int,
     currentTableCourses: List<Course>,
-    allTables: List<TableMetadata>
+    allTables: List<TableMetadata>,
+    onImportRequest: () -> Unit,
+    onSaveCourse: (Course) -> Unit,
+    onDeleteCourse: (Long) -> Unit,
+    onCreateTable: (TableMetadata) -> Unit,
+    onUpdateTable: (TableMetadata) -> Unit,
+    onDeleteTable: (Long) -> Unit,
+    onSwitchTable: (Long) -> Unit
 ) {
-    val currentTable by viewModel.currentTable.collectAsState()
-    val maxPeriodInUse by viewModel.currentMaxPeriodInUse.collectAsState()
-
     // A. FAB 操作菜单
     if (state.showActionSheet) {
         TimetableActionSheet(
@@ -50,7 +50,7 @@ fun TimetableOverlayHost(
                             onStateChange(baseState.copy(showTableConfigDialog = true))
                         } else {
                             onStateChange(baseState.copy(
-                                editingCourseId = 0L, 
+                                editingCourseId = 0L,
                                 showEditDialog = true,
                                 initialDay = null,
                                 initialStartPeriod = null
@@ -63,7 +63,7 @@ fun TimetableOverlayHost(
                     TimetableAction.EditConfig -> {
                         onStateChange(baseState.copy(tableToEdit = currentTable, showTableConfigDialog = true))
                     }
-                    else -> {} 
+                    else -> {}
                 }
             },
             onDismissRequest = { onStateChange(state.copy(showActionSheet = false)) },
@@ -75,7 +75,7 @@ fun TimetableOverlayHost(
     if (state.showDetailSheet && state.clickedCourse != null) {
         val detailSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
         CourseDetailSheet(
-            windowSizeClass = windowSizeClass, // Passed windowSizeClass
+            windowSizeClass = windowSizeClass,
             course = state.clickedCourse,
             onDismissRequest = { onStateChange(state.copy(showDetailSheet = false)) },
             onEdit = {
@@ -106,7 +106,7 @@ fun TimetableOverlayHost(
                 initialStartPeriod = state.initialStartPeriod,
                 onDismiss = { onStateChange(state.copy(showEditDialog = false)) },
                 onSave = { updatedCourse ->
-                    viewModel.saveCourse(updatedCourse)
+                    onSaveCourse(updatedCourse)
                     onStateChange(state.copy(showEditDialog = false))
                 }
             )
@@ -120,8 +120,8 @@ fun TimetableOverlayHost(
             onDismiss = { onStateChange(state.copy(showTableConfigDialog = false, tableToEdit = null)) },
             maxPeriodInUse = maxPeriodInUse,
             onConfirm = { metadata ->
-                if (state.tableToEdit == null) viewModel.createTable(metadata)
-                else viewModel.updateTable(metadata)
+                if (state.tableToEdit == null) onCreateTable(metadata)
+                else onUpdateTable(metadata)
                 onStateChange(state.copy(showTableConfigDialog = false, tableToEdit = null))
             }
         )
@@ -133,7 +133,7 @@ fun TimetableOverlayHost(
             tables = allTables,
             currentTableId = currentTable?.id ?: -1L,
             onTableSelect = { table ->
-                viewModel.switchTable(table.id)
+                onSwitchTable(table.id)
                 onStateChange(state.copy(showTableSelectSheet = false))
             },
             onCreateNew = { onStateChange(state.copy(showTableConfigDialog = true, showTableSelectSheet = false)) },
@@ -149,7 +149,7 @@ fun TimetableOverlayHost(
                 tableName = table.tableName,
                 onDismiss = { onStateChange(state.copy(showDeleteTableDialog = false)) },
                 onConfirm = {
-                    viewModel.deleteTable(table.id)
+                    onDeleteTable(table.id)
                     onStateChange(state.copy(showDeleteTableDialog = false))
                 }
             )
@@ -163,7 +163,7 @@ fun TimetableOverlayHost(
                 courseName = course.name,
                 onDismiss = { onStateChange(state.copy(showDeleteCourseDialog = false)) },
                 onConfirm = {
-                    viewModel.removeCourse(course.id)
+                    onDeleteCourse(course.id)
                     onStateChange(state.copy(showDeleteCourseDialog = false))
                 }
             )
