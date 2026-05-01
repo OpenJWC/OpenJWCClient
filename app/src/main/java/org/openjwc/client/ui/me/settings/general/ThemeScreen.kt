@@ -12,20 +12,17 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
@@ -70,6 +67,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
 import org.openjwc.client.R
+import org.openjwc.client.ui.theme.ColorItem
 import org.openjwc.client.ui.theme.ColorType
 import org.openjwc.client.ui.theme.DarkThemeStyle
 import org.openjwc.client.ui.theme.seedColors
@@ -314,47 +312,7 @@ fun ThemeScreen(
         }
     }
 }
-@Composable
-private fun ColorItem(
-    color: Color,
-    isSelected: Boolean,
-    onClick: () -> Unit
-) {
-    Box(
-        contentAlignment = Alignment.Center,
-        modifier = Modifier
-            .size(64.dp)
-            .padding(4.dp)
-            .aspectRatio(1f)
-            .then(
-                if (isSelected) Modifier.border(
-                    3.dp,
-                    MaterialTheme.colorScheme.primary,
-                    CircleShape
-                ) else Modifier
-            )
-            .padding(4.dp)
-            .clip(CircleShape)
-            .clickable { onClick() }
-    ) {
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .clip(CircleShape)
-                .background(color),
-            contentAlignment = Alignment.Center
-        ) {
-            if (isSelected) {
-                Icon(
-                    Icons.Default.Check,
-                    contentDescription = null,
-                    tint = if (isDarkColor(color)) Color.White else Color.Black,
-                    modifier = Modifier.size(24.dp)
-                )
-            }
-        }
-    }
-}
+
 
 @Composable
 fun ThemeStyleSelectorCard(
@@ -407,9 +365,4 @@ fun ThemeStyleSelectorCard(
             }
         }
     }
-}
-
-private fun isDarkColor(color: Color): Boolean {
-    val luminance = 0.299 * color.red + 0.587 * color.green + 0.114 * color.blue
-    return luminance < 0.5
 }

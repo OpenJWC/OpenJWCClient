@@ -50,9 +50,9 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
 import org.openjwc.client.R
-import org.openjwc.client.data.settings.Event
-import org.openjwc.client.data.settings.MenuItem
-import org.openjwc.client.data.settings.SettingSection
+import org.openjwc.client.data.models.Event
+import org.openjwc.client.data.models.MenuItem
+import org.openjwc.client.data.models.SettingSection
 import org.openjwc.client.navigation.Screen
 import org.openjwc.client.ui.me.settings.MenuSectionCard
 import org.openjwc.client.viewmodels.MeViewModel

@@ -6,6 +6,7 @@ import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.floatPreferencesKey
 import androidx.datastore.preferences.core.intPreferencesKey
+import androidx.datastore.preferences.core.longPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
 import kotlinx.coroutines.flow.Flow
@@ -28,6 +29,7 @@ data class UserSettings(
     val backgroundAlpha: Float = 0.3f,
     val proxy: Proxy = Proxy.NoProxy(),
     val languageCode: String? = null,
+    val currentTableId: Long? = null
 )
 
 private val Context.settingsStore by preferencesDataStore(name = "user_settings")
@@ -47,6 +49,7 @@ class SettingsDataSource(private val context: Context) {
         val PROXY_ADDRESS = stringPreferencesKey("proxy_address")
         val PROXY_PORT = intPreferencesKey("proxy_port")
         val LANGUAGE_CODE = stringPreferencesKey("language_code")
+        val CURRENT_TABLE_ID = longPreferencesKey("current_table_id")
     }
 
     val userSettings: Flow<UserSettings> = context.settingsStore.data.map { prefs ->
@@ -81,6 +84,7 @@ class SettingsDataSource(private val context: Context) {
             },
             languageCode = prefs[Keys.LANGUAGE_CODE]?.takeIf { it.isNotBlank() }
                 ?: default.languageCode,
+            currentTableId = prefs[Keys.CURRENT_TABLE_ID].takeIf { it != 0L } ?: default.currentTableId
         )
     }
     suspend fun <T> save(key: Preferences.Key<T>, value: T) {

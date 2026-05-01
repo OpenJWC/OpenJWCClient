@@ -60,11 +60,13 @@ import org.openjwc.client.ui.chat.ChatScreen
 import org.openjwc.client.ui.chat.EditMetadataDialog
 import org.openjwc.client.ui.me.MeScreen
 import org.openjwc.client.ui.news.NewsScreen
+import org.openjwc.client.ui.timetable.view.TimetableScreen
 import org.openjwc.client.viewmodels.ChatViewModel
 import org.openjwc.client.viewmodels.MainViewModel
 import org.openjwc.client.viewmodels.MeViewModel
 import org.openjwc.client.viewmodels.NewsViewModel
 import org.openjwc.client.viewmodels.SettingsViewModel
+import org.openjwc.client.viewmodels.TimetableViewModel
 import java.io.File
 
 @Composable
@@ -76,6 +78,7 @@ fun MainScreen(
     newsViewModel: NewsViewModel,
     meViewModel: MeViewModel,
     settingsViewModel: SettingsViewModel,
+    timetableViewModel: TimetableViewModel,
     backgroundPath: String? = null,
     backgroundAlpha: Float = 1f
 ) {
@@ -104,7 +107,8 @@ fun MainScreen(
             chatViewModel,
             newsViewModel,
             meViewModel,
-            settingsViewModel
+            settingsViewModel,
+            timetableViewModel
         )
     }
 }
@@ -119,6 +123,7 @@ private fun MainScaffoldContent(
     newsViewModel: NewsViewModel,
     meViewModel: MeViewModel,
     settingsViewModel: SettingsViewModel,
+    timetableViewModel: TimetableViewModel
 ) {
     val currentTab by mainViewModel.currentTab.collectAsState()
     val chatTitle =
@@ -232,6 +237,7 @@ private fun MainScaffoldContent(
                     chatViewModel = chatViewModel,
                     newsViewModel = newsViewModel,
                     meViewModel = meViewModel,
+                    timetableViewModel = timetableViewModel,
                     currentTab = currentTab,
                     navController = navController,
                     contentPadding = contentPadding,
@@ -248,6 +254,7 @@ private fun MainTabContent(
     chatViewModel: ChatViewModel,
     newsViewModel: NewsViewModel,
     meViewModel: MeViewModel,
+    timetableViewModel: TimetableViewModel,
     currentTab: MainTab,
     navController: NavController,
     contentPadding: PaddingValues,
@@ -278,6 +285,13 @@ private fun MainTabContent(
                 mainViewModel,
                 chatViewModel,
                 navController
+            )
+
+            MainTab.Timetable -> TimetableScreen(
+                windowSizeClass,
+                timetableViewModel,
+                onImportRequest = { },
+                contentPadding
             )
 
             MainTab.Me -> MeScreen(

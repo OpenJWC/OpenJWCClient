@@ -6,24 +6,32 @@ import androidx.room.Room
 import androidx.room.RoomDatabase
 import androidx.room.TypeConverters
 import org.openjwc.client.data.dao.ChatDao
+import org.openjwc.client.data.dao.CourseDao
 import org.openjwc.client.data.dao.NewsDao
+import org.openjwc.client.data.dao.TableDao
 import org.openjwc.client.data.models.ChatMessage
 import org.openjwc.client.data.models.ChatMetadata
+import org.openjwc.client.data.models.Course
 import org.openjwc.client.data.models.NoticeEntity
+import org.openjwc.client.data.models.TableMetadata
 
 @Database(
     entities = [
         ChatMetadata::class,
         ChatMessage::class,
-        NoticeEntity::class
+        NoticeEntity::class,
+        Course::class,
+        TableMetadata::class
     ],
     version = 4,
-    exportSchema = true
+    exportSchema = false
 )
 @TypeConverters(Converters::class)
 abstract class AppDatabase : RoomDatabase() {
     abstract fun chatDao(): ChatDao
     abstract fun newsDao(): NewsDao
+    abstract fun courseDao(): CourseDao
+    abstract fun tableDao(): TableDao
 
     companion object {
         private var INSTANCE: AppDatabase? = null
@@ -50,7 +58,6 @@ abstract class AppDatabase : RoomDatabase() {
             }
         }
 
-        // TODO: val MIGRATION_3_4
         fun getDatabase(context: Context): AppDatabase {
             return INSTANCE ?: synchronized(this) {
                 val instance = Room.databaseBuilder(

@@ -45,9 +45,9 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import org.openjwc.client.BuildConfig
 import org.openjwc.client.R
-import org.openjwc.client.data.settings.Event
-import org.openjwc.client.data.settings.MenuItem
-import org.openjwc.client.data.settings.SettingSection
+import org.openjwc.client.data.models.Event
+import org.openjwc.client.data.models.MenuItem
+import org.openjwc.client.data.models.SettingSection
 import org.openjwc.client.navigation.Screen
 import org.openjwc.client.net.models.GitHubRelease
 import org.openjwc.client.ui.main.UpdateDialog

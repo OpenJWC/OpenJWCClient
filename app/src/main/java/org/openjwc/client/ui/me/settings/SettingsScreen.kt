@@ -22,9 +22,9 @@ import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import org.openjwc.client.R
-import org.openjwc.client.data.settings.Event
-import org.openjwc.client.data.settings.Menu
-import org.openjwc.client.data.settings.ToggleID
+import org.openjwc.client.data.models.Event
+import org.openjwc.client.data.models.Menu
+import org.openjwc.client.data.models.ToggleID
 import org.openjwc.client.navigation.Screen
 
 

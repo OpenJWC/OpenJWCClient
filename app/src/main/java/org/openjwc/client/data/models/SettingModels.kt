@@ -1,4 +1,4 @@
-package org.openjwc.client.data.settings
+package org.openjwc.client.data.models
 
 import androidx.compose.ui.graphics.vector.ImageVector
 import org.openjwc.client.navigation.Screen

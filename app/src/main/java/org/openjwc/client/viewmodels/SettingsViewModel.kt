@@ -14,7 +14,7 @@ import kotlinx.coroutines.launch
 import org.openjwc.client.data.datastore.UserSettings
 import org.openjwc.client.data.repository.AuthRepository
 import org.openjwc.client.data.repository.SettingsRepository
-import org.openjwc.client.data.settings.ToggleID
+import org.openjwc.client.data.models.ToggleID
 import org.openjwc.client.log.Logger
 import org.openjwc.client.net.models.DevicesQueryResponseData
 import org.openjwc.client.net.models.DevicesUnbindSuccessResponse

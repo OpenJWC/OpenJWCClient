@@ -36,9 +36,9 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import kotlinx.coroutines.flow.receiveAsFlow
 import org.openjwc.client.R
-import org.openjwc.client.data.settings.Menu
-import org.openjwc.client.data.settings.MenuItem
-import org.openjwc.client.data.settings.SettingSection
+import org.openjwc.client.data.models.Menu
+import org.openjwc.client.data.models.MenuItem
+import org.openjwc.client.data.models.SettingSection
 import org.openjwc.client.log.Logger
 import org.openjwc.client.net.models.GitHubRelease
 import org.openjwc.client.net.models.NetworkResult
@@ -70,6 +70,7 @@ import org.openjwc.client.viewmodels.MeViewModel
 import org.openjwc.client.viewmodels.NavEvent
 import org.openjwc.client.viewmodels.NewsViewModel
 import org.openjwc.client.viewmodels.SettingsViewModel
+import org.openjwc.client.viewmodels.TimetableViewModel
 import org.openjwc.client.viewmodels.UiEvent
 
 @Composable
@@ -81,6 +82,7 @@ fun NavGraph(
     newsViewModel: NewsViewModel,
     meViewModel: MeViewModel,
     authViewModel: AuthViewModel,
+    timetableViewModel: TimetableViewModel,
     backgroundPath: String? = null,
     backgroundAlpha: Float = 1f
 ) {
@@ -297,7 +299,8 @@ fun NavGraph(
                     meViewModel = meViewModel,
                     backgroundPath = backgroundPath,
                     backgroundAlpha = backgroundAlpha,
-                    settingsViewModel = settingsViewModel
+                    settingsViewModel = settingsViewModel,
+                    timetableViewModel = timetableViewModel
                 )
             }
 

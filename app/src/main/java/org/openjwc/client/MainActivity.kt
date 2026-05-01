@@ -25,6 +25,7 @@ import org.openjwc.client.data.repository.NewsRepository
 import org.openjwc.client.data.repository.SettingsRepository
 import org.openjwc.client.data.datastore.SettingsDataSource
 import org.openjwc.client.data.repository.AuthRepository
+import org.openjwc.client.data.repository.CourseRepository
 import org.openjwc.client.navigation.NavGraph
 import org.openjwc.client.ui.policy.PolicyDialog
 import org.openjwc.client.ui.theme.OpenJWCClientTheme
@@ -40,6 +41,8 @@ import org.openjwc.client.viewmodels.NewsViewModel
 import org.openjwc.client.viewmodels.NewsViewModelFactory
 import org.openjwc.client.viewmodels.SettingsViewModel
 import org.openjwc.client.viewmodels.SettingsViewModelFactory
+import org.openjwc.client.viewmodels.TimetableViewModel
+import org.openjwc.client.viewmodels.TimetableViewModelFactory
 import kotlin.getValue
 
 
@@ -58,7 +61,7 @@ class MainActivity : AppCompatActivity() {
     private val chatRepository by lazy { ChatRepository(database.chatDao(), settingsDataSource, authDataSource) }
     private val newsRepository by lazy { NewsRepository(database.newsDao(), settingsDataSource, authDataSource) }
     private val authRepository by lazy { AuthRepository(authDataSource, settingsDataSource) }
-
+    private val courseRepository by lazy { CourseRepository(database.courseDao(), database.tableDao()) }
     private val mainViewModel: MainViewModel by viewModels { MainViewModelFactory(settingsRepository) }
     private val settingsViewModel: SettingsViewModel by viewModels {
         SettingsViewModelFactory(
@@ -75,6 +78,8 @@ class MainActivity : AppCompatActivity() {
     private val meViewModel: MeViewModel by viewModels { MeViewModelFactory(settingsRepository, authRepository) }
 
     private val authViewModel: AuthViewModel by viewModels { AuthViewModelFactory(authRepository) }
+
+    private val timetableViewModel: TimetableViewModel by viewModels { TimetableViewModelFactory(courseRepository, settingsRepository) }
 
     @RequiresApi(Build.VERSION_CODES.TIRAMISU)
     @OptIn(ExperimentalMaterial3WindowSizeClassApi::class)
@@ -118,6 +123,7 @@ class MainActivity : AppCompatActivity() {
                             newsViewModel,
                             meViewModel,
                             authViewModel,
+                            timetableViewModel,
                             state.backgroundPath,
                             state.backgroundAlpha
                         )

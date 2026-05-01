@@ -28,10 +28,10 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import org.openjwc.client.R
-import org.openjwc.client.data.settings.Event
-import org.openjwc.client.data.settings.MenuItem
-import org.openjwc.client.data.settings.SettingSection
-import org.openjwc.client.data.settings.ToggleID
+import org.openjwc.client.data.models.Event
+import org.openjwc.client.data.models.MenuItem
+import org.openjwc.client.data.models.SettingSection
+import org.openjwc.client.data.models.ToggleID
 import org.openjwc.client.navigation.Screen
 
 @Composable

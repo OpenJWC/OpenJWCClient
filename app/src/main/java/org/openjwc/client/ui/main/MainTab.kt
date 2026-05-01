@@ -14,8 +14,9 @@ sealed class MainTab(
 ) {
     object Chat : MainTab(R.string.chat, Icons.AutoMirrored.Filled.Chat)
     object News : MainTab(R.string.news, Icons.Filled.Info)
+    object Timetable: MainTab(R.string.timetable, Icons.Filled.Info)
     object Me : MainTab(R.string.me, Icons.Filled.Person)
     companion object {
-        val items get() = listOf(MainTab.Chat, MainTab.News, MainTab.Me)
+        val items get() = listOf(Chat, News, Timetable, Me)
     }
 }
