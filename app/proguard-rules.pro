@@ -54,3 +54,7 @@
 
 -keep class org.openjwc.client.net.models.** { *; }
 -keep @kotlinx.serialization.Serializable class * { *; }
+
+-keepclassmembers class org.openjwc.client.ui.timetable.load.WebAppInterface {
+    @android.webkit.JavascriptInterface <methods>;
+}

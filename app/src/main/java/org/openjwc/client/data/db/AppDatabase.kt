@@ -5,6 +5,8 @@ import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
 import androidx.room.TypeConverters
+import androidx.room.migration.Migration
+import androidx.sqlite.db.SupportSQLiteDatabase
 import org.openjwc.client.data.dao.ChatDao
 import org.openjwc.client.data.dao.CourseDao
 import org.openjwc.client.data.dao.NewsDao
@@ -23,7 +25,7 @@ import org.openjwc.client.data.models.TableMetadata
         Course::class,
         TableMetadata::class
     ],
-    version = 4,
+    version = 5,
     exportSchema = false
 )
 @TypeConverters(Converters::class)
@@ -35,26 +37,63 @@ abstract class AppDatabase : RoomDatabase() {
 
     companion object {
         private var INSTANCE: AppDatabase? = null
-        val MIGRATION_2_3 = object : androidx.room.migration.Migration(2, 3) {
-            override fun migrate(db: androidx.sqlite.db.SupportSQLiteDatabase) {
-                db.execSQL("DROP TABLE IF EXISTS settings") // version 3 的设置已经放在了 dataStore 里
+
+        val MIGRATION_2_3 = object : Migration(2, 3) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("DROP TABLE IF EXISTS settings")
             }
         }
-        val MIGRATION_3_4 = object : androidx.room.migration.Migration(3, 4) {
-            override fun migrate(db: androidx.sqlite.db.SupportSQLiteDatabase) {
+
+        val MIGRATION_3_4 = object : Migration(3, 4) {
+            override fun migrate(db: SupportSQLiteDatabase) {
                 db.execSQL("""
-            CREATE TABLE IF NOT EXISTS `favorite_notices` (
-                `id` TEXT NOT NULL, 
-                `label` TEXT NOT NULL, 
-                `title` TEXT NOT NULL, 
-                `date` TEXT NOT NULL, 
-                `detailUrl` TEXT NOT NULL, 
-                `isPage` INTEGER NOT NULL, 
-                `contentText` TEXT, 
-                `attachmentUrls` TEXT, 
-                PRIMARY KEY(`id`)
-            )
-        """.trimIndent())
+                    CREATE TABLE IF NOT EXISTS `favorite_notices` (
+                        `id` TEXT NOT NULL, 
+                        `label` TEXT NOT NULL, 
+                        `title` TEXT NOT NULL, 
+                        `date` TEXT NOT NULL, 
+                        `detailUrl` TEXT NOT NULL, 
+                        `isPage` INTEGER NOT NULL, 
+                        `contentText` TEXT, 
+                        `attachmentUrls` TEXT, 
+                        PRIMARY KEY(`id`)
+                    )
+                """.trimIndent())
+            }
+        }
+
+        // 2. 定义从 4 到 5 的迁移脚本
+        val MIGRATION_4_5 = object : Migration(4, 5) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                // 创建课表元数据表
+                db.execSQL("""
+                    CREATE TABLE IF NOT EXISTS `table_metadata` (
+                        `id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, 
+                        `tableName` TEXT NOT NULL, 
+                        `semesterConfig` TEXT NOT NULL, 
+                        `isCurrent` INTEGER NOT NULL
+                    )
+                """.trimIndent())
+
+                // 创建课程表，并设置外键和索引
+                db.execSQL("""
+                    CREATE TABLE IF NOT EXISTS `courses` (
+                        `id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, 
+                        `tableId` INTEGER NOT NULL, 
+                        `name` TEXT NOT NULL, 
+                        `teacher` TEXT NOT NULL, 
+                        `location` TEXT NOT NULL, 
+                        `dayOfWeek` INTEGER NOT NULL, 
+                        `startPeriod` INTEGER NOT NULL, 
+                        `duration` INTEGER NOT NULL, 
+                        `color` INTEGER NOT NULL, 
+                        `weekRule` TEXT NOT NULL, 
+                        `note` TEXT NOT NULL, 
+                        FOREIGN KEY(`tableId`) REFERENCES `table_metadata`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE 
+                    )
+                """.trimIndent())
+
+                db.execSQL("CREATE INDEX IF NOT EXISTS `index_courses_tableId` ON `courses` (`tableId`)")
             }
         }
 
@@ -65,8 +104,7 @@ abstract class AppDatabase : RoomDatabase() {
                     AppDatabase::class.java,
                     "app_database"
                 )
-                    .addMigrations(MIGRATION_2_3)
-                    .addMigrations(MIGRATION_3_4)
+                    .addMigrations(MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5) // 3. 添加新迁移脚本
                     .fallbackToDestructiveMigration(false)
                     .build()
                 INSTANCE = instance

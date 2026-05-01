@@ -14,16 +14,21 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.WindowInsetsSides
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.DrawerValue
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalDrawerSheet
 import androidx.compose.material3.ModalNavigationDrawer
@@ -61,6 +66,7 @@ import org.openjwc.client.ui.chat.EditMetadataDialog
 import org.openjwc.client.ui.me.MeScreen
 import org.openjwc.client.ui.news.NewsScreen
 import org.openjwc.client.ui.timetable.view.TimetableScreen
+import org.openjwc.client.ui.timetable.view.components.TimetableTopAppBar
 import org.openjwc.client.viewmodels.ChatViewModel
 import org.openjwc.client.viewmodels.MainViewModel
 import org.openjwc.client.viewmodels.MeViewModel
@@ -192,6 +198,25 @@ private fun MainScaffoldContent(
                 containerColor = Color.Transparent,
                 modifier = Modifier.weight(1f),
                 topBar = {
+                    if (currentTab == MainTab.Timetable) {
+                        val currentWeek by timetableViewModel.currentWeek.collectAsState()
+                        Column {
+                            timetableViewModel.currentTable.collectAsState().value?.let { metadata ->
+                                TimetableTopAppBar(
+                                    timetableName = metadata.tableName,
+                                    currentWeek = currentWeek,
+                                    onTitleClick = {
+                                        timetableViewModel.updateUiState {
+                                            it.copy(
+                                                showTableSelectSheet = true
+                                            )
+                                        }
+                                    },
+                                )
+                            }
+                                ?: TopAppBar(title = { Text(stringResource(R.string.timetable)) })
+                        }
+                    } else
                     TopAppBar(
                         title = {
                             Column {
@@ -224,11 +249,28 @@ private fun MainScaffoldContent(
                                 }
                             }
                         },
+
                         windowInsets = TopAppBarDefaults.windowInsets.only(WindowInsetsSides.Top)
                     )
                 },
                 bottomBar = {
                     if (!useNavRail) MainNavigationBar(currentTab) { mainViewModel.updateTab(it) }
+                },
+                floatingActionButton = {
+                    if (currentTab is MainTab.Timetable && !timetableViewModel.isImporting) {
+                        FloatingActionButton(onClick = {
+                            timetableViewModel.updateUiState {
+                                it.copy(
+                                    showActionSheet = true
+                                )
+                            }
+                        }) {
+                            Icon(
+                                Icons.Default.Add,
+                                contentDescription = stringResource(R.string.operating_menu)
+                            )
+                        }
+                    }
                 },
                 contentWindowInsets = WindowInsets(0, 0, 0, 0)
             ) { contentPadding ->

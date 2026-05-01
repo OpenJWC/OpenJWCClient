@@ -13,6 +13,7 @@ import androidx.compose.material.icons.filled.BugReport
 import androidx.compose.material.icons.filled.CalendarMonth
 import androidx.compose.material.icons.filled.Dns
 import androidx.compose.material.icons.filled.Language
+import androidx.compose.material.icons.filled.Newspaper
 import androidx.compose.material.icons.filled.Palette
 import androidx.compose.material.icons.filled.VpnKey
 import androidx.compose.material3.MaterialTheme
@@ -56,13 +57,13 @@ import org.openjwc.client.ui.me.settings.general.LanguageScreen
 import org.openjwc.client.ui.me.settings.general.ThemeScreen
 import org.openjwc.client.ui.me.settings.log.LogScreen
 import org.openjwc.client.ui.me.settings.news.NewsDisplaySettingsScreen
+import org.openjwc.client.ui.me.settings.timetable.TimetablePrefsScreen
 import org.openjwc.client.ui.news.FavoriteScreen
 import org.openjwc.client.ui.news.NewsDetailScreen
 import org.openjwc.client.ui.news.upload.UploadNewsScreen
 import org.openjwc.client.ui.policy.LicenseScreen
 import org.openjwc.client.ui.policy.PolicyScreen
 import org.openjwc.client.ui.theme.seedColors
-import org.openjwc.client.ui.timetable.load.ImportWebViewScreen
 import org.openjwc.client.utils.languages
 import org.openjwc.client.viewmodels.AuthViewModel
 import org.openjwc.client.viewmodels.ChatViewModel
@@ -108,7 +109,8 @@ fun NavGraph(
         chatViewModel.uiEvent.receiveAsFlow().collect { event ->
             when (event) {
                 is UiEvent.ShowToast -> {
-                    Toast.makeText(context, event.uiText.asString(context), Toast.LENGTH_SHORT).show()
+                    Toast.makeText(context, event.uiText.asString(context), Toast.LENGTH_SHORT)
+                        .show()
                 }
 
                 is UiEvent.ShowSnackBar -> {
@@ -122,7 +124,8 @@ fun NavGraph(
         mainViewModel.uiEvent.receiveAsFlow().collect { event ->
             when (event) {
                 is UiEvent.ShowToast -> {
-                    Toast.makeText(context, event.uiText.asString(context), Toast.LENGTH_SHORT).show()
+                    Toast.makeText(context, event.uiText.asString(context), Toast.LENGTH_SHORT)
+                        .show()
                 }
 
                 else -> {}
@@ -134,7 +137,8 @@ fun NavGraph(
         meViewModel.uiEvent.receiveAsFlow().collect { event ->
             when (event) {
                 is UiEvent.ShowToast -> {
-                    Toast.makeText(context, event.uiText.asString(context), Toast.LENGTH_SHORT).show()
+                    Toast.makeText(context, event.uiText.asString(context), Toast.LENGTH_SHORT)
+                        .show()
                 }
 
                 else -> {}
@@ -146,7 +150,8 @@ fun NavGraph(
         authViewModel.uiEvent.receiveAsFlow().collect { event ->
             when (event) {
                 is UiEvent.ShowToast -> {
-                    Toast.makeText(context, event.uiText.asString(context), Toast.LENGTH_SHORT).show()
+                    Toast.makeText(context, event.uiText.asString(context), Toast.LENGTH_SHORT)
+                        .show()
                 }
 
                 else -> {}
@@ -304,8 +309,20 @@ fun NavGraph(
                     timetableViewModel = timetableViewModel
                 )
             }
+
+            composable<Screen.TimetablePrefs> {
+                val prefs by timetableViewModel.displayPrefs.collectAsState()
+                TimetablePrefsScreen(
+                    prefs = prefs,
+                    onBack = { navController.popBackStack() },
+                    onToggleTimeline = { settingsViewModel.updateShowTimeline(it) },
+                    onToggleDate = { settingsViewModel.updateShowDate(it) },
+                    onTogglePeriodTime = { settingsViewModel.updateShowPeriodTime(it) },
+                    onToggleNonCurrentWeek = { settingsViewModel.updateShowNonCurrentWeek(it) }
+                )
+            }
             composable<Screen.Load> {
-                ImportWebViewScreen(
+                org.openjwc.client.ui.timetable.load.ImportWebViewScreen(
                     onDismiss = { navController.popBackStack() },
                     onDataAcquired = {
                         timetableViewModel.handleImportedJson(it)
@@ -376,6 +393,7 @@ fun NavGraph(
                 val generalText = stringResource(R.string.general)
                 val connectionText = stringResource(R.string.connection)
                 val themeText = stringResource(R.string.theme)
+                val timetablePrefsText = stringResource(R.string.timetable_settings)
                 val newsText = stringResource(R.string.news)
                 val hostText = stringResource(R.string.network_config)
                 val accountText = stringResource(R.string.account_management)
@@ -383,9 +401,11 @@ fun NavGraph(
                 val displaySettingsText = stringResource(R.string.display_settings)
                 val debugText = stringResource(R.string.debug)
                 val languageText = stringResource(R.string.language)
-                val currentLanguage = languages[settingsViewModel.settings.collectAsState().value.languageCode]
+                val currentLanguage =
+                    languages[settingsViewModel.settings.collectAsState().value.languageCode]
                 val languageName = currentLanguage?.translatedName?.asString()
-                val menuTemplates = remember {
+                val timetableText = stringResource(R.string.timetable)
+                val menuTemplates = remember(languageName) {
                     Menu(
                         route = Screen.Settings, title = settingsText, sections = listOf(
                             SettingSection(
@@ -418,10 +438,19 @@ fun NavGraph(
                             ), SettingSection(
                                 title = newsText, items = listOf(
                                     MenuItem.Route(
-                                        icon = Icons.Default.CalendarMonth,
+                                        icon = Icons.Default.Newspaper,
                                         route = Screen.NewsSettings,
                                         title = displaySettingsText,
                                     )
+                                )
+                            ),
+                            SettingSection(
+                                title = timetableText, items = listOf(
+                                    MenuItem.Route(
+                                        icon = Icons.Default.CalendarMonth,
+                                        route = Screen.TimetablePrefs,
+                                        title = timetablePrefsText,
+                                    ),
                                 )
                             ), SettingSection(
                                 title = debugText, items = listOf(

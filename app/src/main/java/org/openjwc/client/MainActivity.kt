@@ -92,7 +92,7 @@ class MainActivity : AppCompatActivity() {
         val splashScreen = installSplashScreen()
 
         splashScreen.setKeepOnScreenCondition {
-            !mainViewModel.uiState.value.isReady
+            !mainViewModel.uiState.value.isReady || !timetableViewModel.isReady.value
         }
         enableEdgeToEdge()
         setContent {

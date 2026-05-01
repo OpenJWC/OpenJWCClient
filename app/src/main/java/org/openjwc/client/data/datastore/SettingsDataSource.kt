@@ -29,7 +29,11 @@ data class UserSettings(
     val backgroundAlpha: Float = 0.3f,
     val proxy: Proxy = Proxy.NoProxy(),
     val languageCode: String? = null,
-    val currentTableId: Long? = null
+    val currentTableId: Long? = null,
+    val showTimeline: Boolean = true,
+    val showDate: Boolean = true,
+    val showPeriodTime: Boolean = true,
+    val showNonCurrentWeek: Boolean = true
 )
 
 private val Context.settingsStore by preferencesDataStore(name = "user_settings")
@@ -50,6 +54,10 @@ class SettingsDataSource(private val context: Context) {
         val PROXY_PORT = intPreferencesKey("proxy_port")
         val LANGUAGE_CODE = stringPreferencesKey("language_code")
         val CURRENT_TABLE_ID = longPreferencesKey("current_table_id")
+        val SHOW_TIMELINE = booleanPreferencesKey("show_timeline")
+        val SHOW_DATE = booleanPreferencesKey("show_date")
+        val SHOW_PERIOD_TIME = booleanPreferencesKey("show_period_time")
+        val SHOW_NON_CURRENT_WEEK = booleanPreferencesKey("show_non_current_week")
     }
 
     val userSettings: Flow<UserSettings> = context.settingsStore.data.map { prefs ->
@@ -84,7 +92,11 @@ class SettingsDataSource(private val context: Context) {
             },
             languageCode = prefs[Keys.LANGUAGE_CODE]?.takeIf { it.isNotBlank() }
                 ?: default.languageCode,
-            currentTableId = prefs[Keys.CURRENT_TABLE_ID].takeIf { it != 0L } ?: default.currentTableId
+            currentTableId = prefs[Keys.CURRENT_TABLE_ID].takeIf { it != 0L } ?: default.currentTableId,
+            showTimeline = prefs[Keys.SHOW_TIMELINE] ?: default.showTimeline,
+            showDate = prefs[Keys.SHOW_DATE] ?: default.showDate,
+            showPeriodTime = prefs[Keys.SHOW_PERIOD_TIME] ?: default.showPeriodTime,
+            showNonCurrentWeek = prefs[Keys.SHOW_NON_CURRENT_WEEK] ?: default.showNonCurrentWeek
         )
     }
     suspend fun <T> save(key: Preferences.Key<T>, value: T) {

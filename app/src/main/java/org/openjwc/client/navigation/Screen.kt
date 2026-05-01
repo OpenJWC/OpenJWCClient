@@ -39,4 +39,6 @@ sealed interface Screen {
     object Language : Screen
     @Serializable
     object Load: Screen
+    @Serializable
+    object TimetablePrefs : Screen
 }

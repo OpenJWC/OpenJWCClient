@@ -1,5 +1,6 @@
 package org.openjwc.client.viewmodels
 
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableLongStateOf
@@ -9,29 +10,39 @@ import androidx.lifecycle.ViewModel
 import org.openjwc.client.data.models.Period
 import org.openjwc.client.data.models.SemesterConfig
 import org.openjwc.client.data.models.TableMetadata
+import java.time.DayOfWeek
 import java.time.Instant
 import java.time.LocalDate
 import java.time.LocalTime
 import java.time.ZoneId
+import java.time.temporal.TemporalAdjusters
 
-class TableConfigViewModel(initialMetadata: TableMetadata? = null) : ViewModel() {
+class TableConfigViewModel(private val initialMetadata: TableMetadata? = null) : ViewModel() {
     var tableName by mutableStateOf(initialMetadata?.tableName ?: "")
-    
+
     var selectedDateMillis by mutableLongStateOf(
-        initialMetadata?.semesterConfig?.startDate?.atStartOfDay(ZoneId.systemDefault())?.toInstant()?.toEpochMilli()
+        initialMetadata?.semesterConfig?.startDate?.atStartOfDay(ZoneId.systemDefault())
+            ?.toInstant()?.toEpochMilli()
             ?: LocalDate.now().atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli()
     )
 
-    val selectedLocalDate: LocalDate
-        get() = Instant.ofEpochMilli(selectedDateMillis).atZone(ZoneId.systemDefault()).toLocalDate()
+    val selectedLocalDate: LocalDate by derivedStateOf {
+        Instant.ofEpochMilli(selectedDateMillis)
+            .atZone(ZoneId.systemDefault())
+            .toLocalDate()
+            .with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY))
+    }
 
     var weeks by mutableIntStateOf(initialMetadata?.semesterConfig?.weeks ?: 16)
-    
+
     var showWeekend by mutableStateOf(
-        initialMetadata?.semesterConfig?.visibleDays?.containsAll(java.time.DayOfWeek.entries) ?: true
+        initialMetadata?.semesterConfig?.visibleDays?.containsAll(java.time.DayOfWeek.entries)
+            ?: true
     )
 
-    var periods by mutableStateOf(initialMetadata?.semesterConfig?.periods ?: SemesterConfig.default().periods)
+    var periods by mutableStateOf(
+        initialMetadata?.semesterConfig?.periods ?: SemesterConfig.default().periods
+    )
 
     val isPeriodsValid: Boolean
         get() = periods.indices.all { getPeriodErrorType(it) == null }
@@ -64,7 +75,7 @@ class TableConfigViewModel(initialMetadata: TableMetadata? = null) : ViewModel()
     fun getPeriodErrorType(index: Int): String? {
         val period = periods[index]
         if (period.end <= period.start) return "End before start"
-        
+
         // Check overlap with other periods
         periods.forEachIndexed { i, other ->
             if (i != index) {
@@ -82,9 +93,9 @@ class TableConfigViewModel(initialMetadata: TableMetadata? = null) : ViewModel()
         } else {
             java.time.DayOfWeek.entries.filter { it.value <= 5 }.toSet()
         }
-        
+
         return TableMetadata(
-            id = 0, // Should be handled by Room or caller
+            id = initialMetadata?.id ?: 0L, // Should be handled by Room or caller
             tableName = tableName,
             semesterConfig = SemesterConfig(
                 startDate = selectedLocalDate,
@@ -92,7 +103,7 @@ class TableConfigViewModel(initialMetadata: TableMetadata? = null) : ViewModel()
                 visibleDays = visibleDays,
                 periods = periods
             ),
-            isCurrent = false
+            isCurrent = initialMetadata?.isCurrent?:false
         )
     }
 }

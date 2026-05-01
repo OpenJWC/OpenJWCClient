@@ -76,14 +76,12 @@ fun TimetableGrid(
     val config = tableMetadata.semesterConfig
     val locale = LocalLocale.current.platformLocale
 
-    // 提取排序后的可见天数
     val sortedVisibleDays = remember(config.visibleDays) {
         config.visibleDays.sortedBy { it.value }
     }
 
     BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
         val availableHeight = maxHeight
-        // 注意：如果外层有 Scroll，maxHeight 可能是 Infinity，这里处理一下
         val gridHeight = if (availableHeight.isFinite) availableHeight - titleHeight else 600.dp
         val periodHeight = maxOf(minPeriodHeight, gridHeight / config.periods.size)
 
@@ -92,7 +90,6 @@ fun TimetableGrid(
                 .fillMaxWidth()
                 .verticalScroll(rememberScrollState())
         ) {
-            // --- 💡 星期标题栏 ---
             TimetableHeader(
                 currentWeek = currentWeek,
                 startDate = config.startDate,
@@ -103,9 +100,7 @@ fun TimetableGrid(
                 showDate = showDate
             )
 
-            // --- 核心网格区 ---
             Box(modifier = Modifier.fillMaxWidth()) {
-                // A. 底层网格
                 GridBackgroundLayer(
                     config = config,
                     sortedVisibleDays = sortedVisibleDays,
@@ -117,7 +112,6 @@ fun TimetableGrid(
                 )
 
                 if (showTimeLine) {
-                    // B. 中层时间指示线
                     TimeIndicatorLine(
                         periods = config.periods,
                         periodHeight = periodHeight,
@@ -125,7 +119,6 @@ fun TimetableGrid(
                     )
                 }
 
-                // C. 顶层课程卡片
                 Row(modifier = Modifier.fillMaxWidth().padding(start = timeLabelWidth)) {
                     sortedVisibleDays.forEach { day ->
                         CourseColumnScope(

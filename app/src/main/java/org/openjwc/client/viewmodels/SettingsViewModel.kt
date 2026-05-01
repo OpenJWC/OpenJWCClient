@@ -58,6 +58,22 @@ class SettingsViewModel(
         settingsRepository.updateLanguageCode(code)
     }
 
+    fun updateShowTimeline(show: Boolean) = viewModelScope.launch {
+        settingsRepository.updateShowTimeline(show)
+    }
+
+    fun updateShowDate(show: Boolean) = viewModelScope.launch {
+        settingsRepository.updateShowDate(show)
+    }
+
+    fun updateShowPeriodTime(show: Boolean) = viewModelScope.launch {
+        settingsRepository.updateShowPeriodTime(show)
+    }
+
+    fun updateShowNonCurrentWeek(show: Boolean) = viewModelScope.launch {
+        settingsRepository.updateShowNonCurrentWeek(show)
+    }
+
     private var _deviceResult =
         MutableStateFlow<NetworkResult<SuccessResponse<DevicesQueryResponseData>>>(
             NetworkResult.Success(

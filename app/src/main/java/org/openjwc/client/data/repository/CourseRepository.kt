@@ -6,6 +6,7 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.withContext
 import org.json.JSONObject
 import org.openjwc.client.data.dao.CourseDao
@@ -120,6 +121,7 @@ class CourseRepository(
             if (table == null) flowOf(emptyList())
             else courseDao.getCoursesByTableId(table.id)
         }
+        .flowOn(Dispatchers.IO)
 
     /**
      * 观察特定课表下的课程

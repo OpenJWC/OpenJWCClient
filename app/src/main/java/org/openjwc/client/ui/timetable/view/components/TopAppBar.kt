@@ -31,34 +31,25 @@ fun TimetableTopAppBarPreview() {
         timetableName = "测试课表",
         currentWeek = 1,
         onTitleClick = {},
-        onPrev = {},
-        onNext = {}
     )
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TimetableTopAppBar(
-    // 建议直接传入 Metadata 对象，或者保持 String 并在调用处传 tableMetadata.tableName
     timetableName: String,
     currentWeek: Int,
     onTitleClick: () -> Unit,
-    canPrev: Boolean = true,
-    canNext: Boolean = true,
-    onPrev: () -> Unit,
-    onNext: () -> Unit
 ) {
     TopAppBar(
         title = {
-            // 点击区域：包含标题和下拉图标
             Column(
                 modifier = Modifier
                     .clickable(
                         interactionSource = remember { MutableInteractionSource() },
-                        indication = null, // 标题点击通常不需要大面积涟漪，保持干净
+                        indication = null,
                         onClick = onTitleClick
                     ),
-                horizontalAlignment = Alignment.Start
             ) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Text(
@@ -81,23 +72,5 @@ fun TimetableTopAppBar(
                 )
             }
         },
-        actions = {
-            // 组合周次切换按钮
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                IconButton(onClick = onPrev, enabled = canPrev) {
-                    Icon(
-                        imageVector = Icons.Default.ChevronLeft,
-                        contentDescription = stringResource(R.string.last_week)
-                    )
-                }
-                // 这里可以加一个微小的分割线或间距
-                IconButton(onClick = onNext, enabled = canNext) {
-                    Icon(
-                        imageVector = Icons.Default.ChevronRight,
-                        contentDescription = stringResource(R.string.next_week)
-                    )
-                }
-            }
-        }
     )
 }

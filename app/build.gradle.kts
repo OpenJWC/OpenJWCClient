@@ -21,8 +21,8 @@ android {
         applicationId = "org.openjwc.client"
         minSdk = 26
         targetSdk = 36
-        versionCode = 23
-        versionName = "1.1.6 (Beta)"
+        versionCode = 24
+        versionName = "1.1.7 (Beta)"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }

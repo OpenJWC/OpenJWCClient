@@ -129,17 +129,6 @@ fun TimetableActionSheet(
                     onActionClick(TimetableAction.CreateEmpty)
                 }
             )
-
-            ActionItem(
-                title = stringResource(R.string.add_to_launcher),
-                subtitle = stringResource(R.string.add_to_launcher_hint),
-                icon = Icons.Default.Widgets,
-                onClick = {
-                    onDismissRequest()
-                    onActionClick(TimetableAction.AddShortCut)
-                }
-            )
-            // --- 第三组：危险操作 ---
             if (timetableCount > 0) {
                 HorizontalDivider(
                     modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp), // 增加水平边距

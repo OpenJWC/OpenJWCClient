@@ -13,17 +13,22 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import org.openjwc.client.data.models.Course
+import org.openjwc.client.data.models.SemesterConfig
 import org.openjwc.client.data.models.TableMetadata
 import org.openjwc.client.data.repository.CourseRepository
 import org.openjwc.client.data.repository.SettingsRepository
 import org.openjwc.client.log.Logger
 import org.openjwc.client.ui.timetable.view.state.TimetableUiState
+import java.time.LocalDate
 import java.time.LocalTime
+import java.time.temporal.ChronoUnit
 
 /**
  * 课表界面显示偏好
@@ -45,17 +50,24 @@ class TimetableViewModel(
     private val _uiState = MutableStateFlow(TimetableUiState())
     val uiState: StateFlow<TimetableUiState> = _uiState.asStateFlow()
 
-    val allTables = courseRepository.allTables
+    private val _isReady = MutableStateFlow(false)
+    val isReady: StateFlow<Boolean> = _isReady.asStateFlow()
 
     val currentTable = courseRepository.currentTable.stateIn(
         scope = viewModelScope,
-        started = SharingStarted.WhileSubscribed(5000),
+        started = SharingStarted.Lazily,
         initialValue = null
+    )
+
+    val allTables = courseRepository.allTables.stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.Lazily,
+        initialValue = emptyList()
     )
 
     val currentTableCourses = courseRepository.currentCourses.stateIn(
         scope = viewModelScope,
-        started = SharingStarted.WhileSubscribed(5000),
+        started = SharingStarted.Lazily,
         initialValue = emptyList()
     )
 
@@ -63,28 +75,26 @@ class TimetableViewModel(
         courses.maxOfOrNull { it.startPeriod + it.duration - 1 } ?: 0
     }.stateIn(
         scope = viewModelScope,
-        started = SharingStarted.WhileSubscribed(5000),
+        started = SharingStarted.Lazily,
         initialValue = 0
     )
 
     private val _currentWeek = MutableStateFlow(1)
     val currentWeek: StateFlow<Int> = _currentWeek.asStateFlow()
 
-    // 内部状态标记，用于 Pager 滚动同步
     var isInternalWeekUpdate by mutableStateOf(false)
         private set
 
     private val _activePeriodIndex = MutableStateFlow(-1)
     val activePeriodIndex = _activePeriodIndex.asStateFlow()
 
-    // TODO
     val displayPrefs: StateFlow<TimetableDisplayPrefs> = settingsRepository.userSettings
         .map { settings ->
             TimetableDisplayPrefs(
-                showTimeline = true,
-                showDate = true,
-                showPeriodTime = true,
-                showNonCurrentWeek = true
+                showTimeline = settings.showTimeline,
+                showDate = settings.showDate,
+                showPeriodTime = settings.showPeriodTime,
+                showNonCurrentWeek = settings.showNonCurrentWeek
             )
         }.stateIn(
             scope = viewModelScope,
@@ -96,14 +106,23 @@ class TimetableViewModel(
         private set
 
     private var timerJob: Job? = null
+    private var lastTableId: Long? = null
 
     init {
         viewModelScope.launch {
+            combine(currentTable, allTables) { _, _ -> true }.first()
+            _isReady.value = true
+        }
+
+        viewModelScope.launch {
             currentTable.collect { table ->
-                table?.semesterConfig?.let { config ->
-                    val calculated = config.calculateCurrentWeek() ?: 1
-                    _currentWeek.value = calculated
-                    isInternalWeekUpdate = true
+                if (table?.id != lastTableId) {
+                    lastTableId = table?.id
+                    table?.semesterConfig?.let { config ->
+                        val calculated = config.calculateCurrentWeek() ?: 1
+                        _currentWeek.value = calculated
+                        isInternalWeekUpdate = true
+                    }
                 }
             }
         }
@@ -127,7 +146,6 @@ class TimetableViewModel(
         }
     }
 
-
     fun setWeek(week: Int, fromPager: Boolean = false) {
         _currentWeek.value = week
         if (!fromPager) isInternalWeekUpdate = true
@@ -137,43 +155,76 @@ class TimetableViewModel(
         isInternalWeekUpdate = false
     }
 
-    fun nextWeek() {
-        val maxWeeks = currentTable.value?.semesterConfig?.weeks ?: 1
-        if (_currentWeek.value < maxWeeks) {
-            _currentWeek.value++
-            isInternalWeekUpdate = false
-        }
-    }
-
-    fun prevWeek() {
-        if (_currentWeek.value > 1) {
-            _currentWeek.value--
-            isInternalWeekUpdate = false
-        }
-    }
-
     fun switchTable(tableId: Long) {
         viewModelScope.launch {
             courseRepository.setCurrentTable(tableId)
+            val table = courseRepository.getTableById(tableId)
+            table?.semesterConfig?.let { config ->
+                syncToActualWeek(config)
+                isInternalWeekUpdate = true
+            }
         }
     }
 
     fun createTable(table: TableMetadata) {
         viewModelScope.launch {
-            courseRepository.saveTable(table)
+            val newId = courseRepository.saveTable(table)
+            courseRepository.setCurrentTable(newId)
+            syncToActualWeek(table.semesterConfig)
+            isInternalWeekUpdate = true
+            Logger.d(TAG, "Created and switched to new table ID: $newId")
         }
     }
 
-    fun updateTable(table: TableMetadata) {
-        viewModelScope.launch {
-            courseRepository.updateTable(table)
+    private fun syncToActualWeek(config: SemesterConfig) {
+        val today = LocalDate.now()
+        val startMonday = config.startDate.with(java.time.DayOfWeek.MONDAY)
+        val daysBetween = ChronoUnit.DAYS.between(startMonday, today)
+        val calculatedWeek = (daysBetween / 7).toInt() + 1
+
+        _currentWeek.value = when {
+            today.isBefore(config.startDate) -> 1
+            else -> calculatedWeek.coerceIn(1, config.weeks)
         }
     }
 
-    fun deleteTable(tableId: Long) {
-        viewModelScope.launch {
-            courseRepository.deleteTable(tableId)
+    fun deleteTable(tableId: Long) = viewModelScope.launch {
+        val currentList = allTables.first()
+        val isDeletingCurrent = (currentTable.value?.id == tableId)
+        courseRepository.deleteTable(tableId)
+        if (isDeletingCurrent) {
+            val remaining = currentList.filter { it.id != tableId }
+            if (remaining.isNotEmpty()) {
+                val nextTable = remaining.first()
+                courseRepository.setCurrentTable(nextTable.id)
+                syncToActualWeek(nextTable.semesterConfig)
+            } else {
+                _currentWeek.value = 1
+            }
         }
+    }
+
+    fun updateTable(metadata: TableMetadata) = viewModelScope.launch {
+        val tableToUpdate = if (metadata.id == 0L) {
+            currentTable.value?.copy(tableName = metadata.tableName, semesterConfig = metadata.semesterConfig)
+                ?: metadata
+        } else {
+            metadata
+        }
+
+        courseRepository.updateTable(tableToUpdate)
+
+        if (_currentWeek.value > tableToUpdate.semesterConfig.weeks) {
+            _currentWeek.value = tableToUpdate.semesterConfig.weeks
+            isInternalWeekUpdate = true
+        }
+
+        if (tableToUpdate.id == currentTable.value?.id) {
+            lastTableId = tableToUpdate.id
+        }
+
+        courseRepository.setCurrentTable(tableToUpdate.id)
+        Logger.d(TAG, "Updated table with ID ${tableToUpdate.id}: $tableToUpdate")
     }
 
     fun saveCourse(course: Course) {
@@ -188,7 +239,6 @@ class TimetableViewModel(
         }
     }
 
-
     fun updateUiState(reducer: (TimetableUiState) -> TimetableUiState) {
         _uiState.value = reducer(_uiState.value)
     }
@@ -198,7 +248,6 @@ class TimetableViewModel(
     }
 
     data class PendingImport(val metadata: TableMetadata, val courses: List<Course>)
-
     var pendingImport by mutableStateOf<PendingImport?>(null); private set
     var importErrorMessage by mutableStateOf<String?>(null); private set
 
@@ -220,32 +269,20 @@ class TimetableViewModel(
         val importData = pendingImport ?: return
         viewModelScope.launch {
             try {
-                // 1. 保存课表并获取数据库生成的真实 ID
+                isImporting = true
                 val newTableId = courseRepository.saveTable(finalMetadata)
-
-                // 2. 将所有课程关联到这个真实的 tableId
-                val coursesToSave = importData.courses.map { course ->
-                    course.copy(tableId = newTableId)
-                }
-
-                // 3. 批量保存关联了正确 ID 的课程
+                val coursesToSave = importData.courses.map { it.copy(tableId = newTableId) }
                 courseRepository.saveCourses(coursesToSave)
-
-                // 4. 切换当前课表为新生成的 ID
                 courseRepository.setCurrentTable(newTableId)
-
-                // 5. 更新 UI 状态
                 _currentWeek.value = 1
                 isInternalWeekUpdate = true
-                pendingImport = null
-
             } catch (e: Exception) {
                 Log.e(TAG, "Failed to save table", e)
                 importErrorMessage = "保存失败: ${e.message}"
-            }
-
-            finally {
-                Logger.d(TAG, "当前已有的课表：${courseRepository.currentTable}")
+            } finally {
+                isImporting = false
+                pendingImport = null
+                Logger.d(TAG, "Import sequence finished for table ID: ${currentTable.value?.id}")
             }
         }
     }
@@ -254,9 +291,6 @@ class TimetableViewModel(
         pendingImport = null
     }
 
-    fun clearImportError() {
-        importErrorMessage = null
-    }
 }
 
 class TimetableViewModelFactory(

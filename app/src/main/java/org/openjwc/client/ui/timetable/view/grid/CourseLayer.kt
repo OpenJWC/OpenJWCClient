@@ -37,10 +37,10 @@ fun CourseColumnScope(
 
         // 💡 修正 2：建立一个已占用节次的集合，用于“防重叠”
         // 初始占用者是【本周课程】
-        val occupiedPeriods = remember(thisWeek) {
-            thisWeek.flatMap { c -> c.startPeriod until (c.startPeriod + c.duration) }
-                .toMutableSet()
-        }
+        // 注意：这里不要使用 remember，因为我们在下面循环中会通过 addAll 修改它。
+        // 如果使用 remember，当 courses 变化但 thisWeek 内容不变时，会拿到上一次重组污染后的 Set 实例。
+        val occupiedPeriods = thisWeek.flatMap { c -> c.startPeriod until (c.startPeriod + c.duration) }
+            .toMutableSet()
 
         // 2. 绘制非本周课程（背景层）
         if (showNonCurrentWeek) {

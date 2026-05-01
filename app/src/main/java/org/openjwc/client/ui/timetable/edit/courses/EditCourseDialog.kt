@@ -47,6 +47,7 @@ import org.openjwc.client.R
 import org.openjwc.client.data.models.Course
 import org.openjwc.client.data.models.SemesterConfig
 import org.openjwc.client.data.models.TableMetadata
+import org.openjwc.client.log.Logger
 import org.openjwc.client.ui.theme.courseBackgroundColors
 import org.openjwc.client.viewmodels.EditCourseViewModel
 import java.time.DayOfWeek
@@ -77,7 +78,6 @@ fun EditCourseDialog(
     onDismiss: () -> Unit,
     onSave: (Course) -> Unit
 ) {
-    // 使用 remember 配合 currentCourseId 作为 Key，确保切换编辑对象时 ViewModel 重置
     val viewModel = remember(currentCourseId) {
         EditCourseViewModel(
             tableMetadata = tableMetadata,
@@ -87,8 +87,6 @@ fun EditCourseDialog(
             initialStartPeriod = initialStartPeriod
         )
     }
-
-    // 控制自定义周次弹窗的显示
     var showCustomWeekPicker by remember { mutableStateOf(false) }
 
     if (showCustomWeekPicker) {
@@ -131,7 +129,7 @@ fun EditCourseDialog(
                                 TextButton(
                                     onClick = {
                                         val result = viewModel.getResultCourse()
-                                        Log.e("重构检查", "准备发往数据库的 ID: ${result.id}, 名字: ${result.name}")
+                                        Logger.e("重构检查", "准备发往数据库的 ID: ${result.id}, 名字: ${result.name}")
                                         onSave(result)},
                                     enabled = viewModel.canSave
                                 ) {

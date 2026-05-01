@@ -30,7 +30,6 @@ fun TimetableHeader(
     locale: Locale = Locale.getDefault(),
     showDate: Boolean = true,
 ) {
-    // 💡 1. 逻辑抽离：计算本周每一天对应的真实日期
     val weekDates = remember(currentWeek, startDate) {
         val weekStart = startDate.plusWeeks((currentWeek - 1).toLong())
             .with(DayOfWeek.MONDAY)
@@ -44,7 +43,6 @@ fun TimetableHeader(
         modifier = modifier
             .fillMaxWidth()
             .height(titleHeight)
-            .background(MaterialTheme.colorScheme.surface) // 确保有背景色遮盖底部滚动
     ) {
         // 左侧节次栏的上方空白占位
         Box(modifier = Modifier.width(timeLabelWidth))

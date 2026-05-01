@@ -131,4 +131,9 @@ class SettingsRepository(
     suspend fun updateProxy(proxy: Proxy) = settingsDataSource.saveProxy(proxy)
 
     suspend fun updateLanguageCode(code: String?) = settingsDataSource.saveLanguageCode(code)
+
+    suspend fun updateShowTimeline(show: Boolean) = settingsDataSource.save(keys.SHOW_TIMELINE, show)
+    suspend fun updateShowDate(show: Boolean) = settingsDataSource.save(keys.SHOW_DATE, show)
+    suspend fun updateShowPeriodTime(show: Boolean) = settingsDataSource.save(keys.SHOW_PERIOD_TIME, show)
+    suspend fun updateShowNonCurrentWeek(show: Boolean) = settingsDataSource.save(keys.SHOW_NON_CURRENT_WEEK, show)
 }

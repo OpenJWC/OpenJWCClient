@@ -399,4 +399,11 @@ SOFTWARE.\n
     <string name="week_range">周次</string>
     <string name="custom_weeks">自定义</string>
     <string name="location">地点</string>
+    <string name="timetable_settings">课程表设置</string>
+
+    <string name="show_timeline_desc">在课表中显示横向时间线</string>
+    <string name="show_date_header">显示日期表头</string>
+    <string name="show_date_header_desc">在周几下方显示具体的日期（如 05–01）</string>
+    <string name="show_period_time_desc">在侧边序号下方显示上课和下课的具体时间</string>
+    <string name="show_non_current_week_desc">在当前周次也显示灰色半透明的非本周课程</string>
 </resources>

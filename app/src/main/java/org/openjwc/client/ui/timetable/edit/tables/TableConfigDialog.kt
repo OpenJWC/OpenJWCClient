@@ -153,7 +153,7 @@ fun TableConfigDialog(
                 TextButton(onClick = { showDatePicker = false }) { Text(stringResource(R.string.confirm)) }
             }
         ) {
-            DatePicker(state = datePickerState, showModeToggle = false, title = null, headline = null)
+            DatePicker(state = datePickerState, showModeToggle = false)
         }
     }
 

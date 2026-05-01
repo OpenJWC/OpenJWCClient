@@ -65,24 +65,23 @@ val seedColors = listOf(
 )
 
 val courseBackgroundColors = listOf(
-    Color(0xFFE57373), // Red 300
-    Color(0xFFF06292), // Pink 300
-    Color(0xFFBA68C8), // Purple 300
-    Color(0xFF9575CD), // Deep Purple 300
-    Color(0xFF7986CB), // Indigo 300
-    Color(0xFF64B5F6), // Blue 300
-    Color(0xFF4FC3F7), // Light Blue 300
-    Color(0xFF4DD0E1), // Cyan 300
-    Color(0xFF4DB6AC), // Teal 300
-    Color(0xFF81C784), // Green 300
-    Color(0xFFAED581), // Light Green 300
-    Color(0xFFFFD54F), // Amber 300
-    Color(0xFFFFB74D), // Orange 300
-    Color(0xFFFF8A65), // Deep Orange 300
-    Color(0xFFA1887F), // Brown 300
-    Color(0xFF90A4AE)  // Blue Grey 300
+    Color(0xFFC62828), // Red 800
+    Color(0xFFAD1457), // Pink 800
+    Color(0xFF6A1B9A), // Purple 800
+    Color(0xFF4527A0), // Deep Purple 800
+    Color(0xFF283593), // Indigo 800
+    Color(0xFF1565C0), // Blue 800
+    Color(0xFF0277BD), // Light Blue 800
+    Color(0xFF00838F), // Cyan 800
+    Color(0xFF00695C), // Teal 800
+    Color(0xFF2E7D32), // Green 800
+    Color(0xFF558B2F), // Light Green 800
+    Color(0xFFFF8F00), // Amber 800
+    Color(0xFFEF6C00), // Orange 800
+    Color(0xFFD84315), // Deep Orange 800
+    Color(0xFF4E342E), // Brown 800
+    Color(0xFF37474F)  // Blue Grey 800
 )
-
 
 @Composable
 fun ColorItem(
