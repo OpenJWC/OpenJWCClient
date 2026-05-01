@@ -264,8 +264,6 @@ SOFTWARE.\n
     <string name="check_update_failed">Failed to check for updates</string>
     <string name="upload_success">Upload successful</string>
     <string name="load_error">Load error: %1$s</string>
-    <string name="load_error_with_code">Load error (%1$d): %2$s</string>
-
     <string name="language">Language</string>
     <string name="language_settings">Language Settings</string>
     <string name="simplified_chinese">Simplified Chinese</string>
