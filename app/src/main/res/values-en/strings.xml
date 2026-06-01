@@ -312,7 +312,7 @@ SOFTWARE.\n
     <string name="custom_periods_format">%1$s / Period %2$d-%3$d</string>
     <string name="create_a_table_name">Name your new timetable, e.g., \"Spring 2025\"</string>
     <string name="timetable_name">Timetable Name</string>
-    <string name="type_name">Enter name...</string>
+    <string name="type_name">Enter name…</string>
     <string name="name_cannot_be_empty">Name cannot be empty</string>
     <string name="select_all">Select All</string>
     <string name="currently_using">Current Timetable</string>
@@ -395,7 +395,7 @@ SOFTWARE.\n
 
     <string name="show_timeline_desc">Show horizontal timeline in timetable</string>
     <string name="show_date_header">Show Date Header</string>
-    <string name="show_date_header_desc">Display specific dates (e.g., 05-01) under the day of the week</string>
+    <string name="show_date_header_desc">Display specific dates (e.g., 05–01) under the day of the week</string>
     <string name="show_period_time_desc">Display start and end times below the period number</string>
     <string name="show_non_current_week_desc">Display non-current week courses as semi-transparent grey</string>
 </resources>

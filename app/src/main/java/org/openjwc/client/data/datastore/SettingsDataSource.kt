@@ -23,7 +23,7 @@ data class UserSettings(
     val themeColor: ColorType = ColorType.Dynamic,
     val host: String = "101.132.106.186",
     val port: Int = 8001,
-    val useHttp: Boolean = false,
+    val useHttp: Boolean = true,
     val freshDays: Int = 21,
     val backgroundPath: String? = null,
     val backgroundAlpha: Float = 0.3f,
