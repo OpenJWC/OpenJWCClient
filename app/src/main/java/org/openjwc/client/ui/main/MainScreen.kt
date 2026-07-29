@@ -68,8 +68,6 @@ import org.openjwc.client.ui.chat.EditMetadataDialog
 import org.openjwc.client.ui.me.MeScreenContent
 import org.openjwc.client.ui.news.NewsScreen
 import org.openjwc.client.ui.timetable.view.TimetableScreen
-import org.openjwc.client.ui.theme.blurEffect
-import org.openjwc.client.ui.theme.blurSource
 import org.openjwc.client.ui.util.LocalHandlePageChange
 import org.openjwc.client.ui.util.LocalSelectedPage
 import org.openjwc.client.viewmodels.ChatViewModel
@@ -214,8 +212,8 @@ fun MainScreen(navigator: Navigator) {
                                 }
                             },
                             colors = TopAppBarDefaults.topAppBarColors(
-                                containerColor = Color.Transparent,
-                                scrolledContainerColor = Color.Transparent
+                                containerColor = MaterialTheme.colorScheme.surface,
+                                scrolledContainerColor = MaterialTheme.colorScheme.surface
                             ),
                             windowInsets = TopAppBarDefaults.windowInsets.only(WindowInsetsSides.Top)
                         )
@@ -225,7 +223,7 @@ fun MainScreen(navigator: Navigator) {
                             MainNavigationBar(isBottomBar = true)
                         }
                     },
-                    containerColor = Color.Transparent
+                    containerColor = MaterialTheme.colorScheme.surface
                 ) { innerPadding ->
                     Box(Modifier.fillMaxSize().padding(innerPadding)) {
                         when (selectedPage) {

@@ -13,6 +13,7 @@ import androidx.compose.material.icons.twotone.OpenInFull
 import androidx.compose.material.icons.twotone.Swipe
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.LargeFlexibleTopAppBar
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
@@ -30,8 +31,6 @@ import org.openjwc.client.ui.component.settings.SettingsChooseWidget
 import org.openjwc.client.ui.component.settings.SettingsSwitchWidget
 import org.openjwc.client.ui.theme.BackgroundManager
 import org.openjwc.client.ui.theme.ThemeConfig
-import org.openjwc.client.ui.theme.blurEffect
-import org.openjwc.client.ui.theme.blurSource
 
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
@@ -42,17 +41,16 @@ fun ThemeSettingsScreen(navigator: Navigator) {
     Scaffold(
         topBar = {
             LargeFlexibleTopAppBar(
-                modifier = Modifier.blurEffect(),
                 title = { Text("Advanced Theme") },
                 navigationIcon = { AppBackButton(onClick = { navigator.pop() }) },
                 scrollBehavior = scrollBehavior,
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = Color.Transparent,
-                    scrolledContainerColor = Color.Transparent
+                    containerColor = MaterialTheme.colorScheme.surface,
+                    scrolledContainerColor = MaterialTheme.colorScheme.surface
                 )
             )
         },
-        containerColor = Color.Transparent
+        containerColor = MaterialTheme.colorScheme.surface
     ) { innerPadding ->
         Column(
             modifier = Modifier
@@ -60,35 +58,7 @@ fun ThemeSettingsScreen(navigator: Navigator) {
                 .nestedScroll(scrollBehavior.nestedScrollConnection)
                 .verticalScroll(rememberScrollState())
                 .padding(innerPadding)
-                .blurSource()
         ) {
-            SegmentedColumn(title = "Background") {
-                item {
-                    SettingsSwitchWidget(
-                        icon = Icons.TwoTone.BlurOn,
-                        title = "Enable Blur",
-                        checked = ThemeConfig.isEnableBlur,
-                        onCheckedChange = { BackgroundManager.saveEnableBlur(context, it) }
-                    )
-                }
-                item {
-                    SettingsSwitchWidget(
-                        icon = Icons.TwoTone.BlurOn,
-                        title = "Enable Experimental Blur",
-                        checked = ThemeConfig.isEnableBlurExp,
-                        onCheckedChange = { BackgroundManager.saveEnableBlurExp(context, it) }
-                    )
-                }
-                item {
-                    SettingsSwitchWidget(
-                        icon = Icons.TwoTone.Colorize,
-                        title = "Use Background Seed Color",
-                        checked = ThemeConfig.isUseBackgroundSeedColor,
-                        onCheckedChange = { BackgroundManager.saveUseBackgroundSeedColor(context, it) }
-                    )
-                }
-            }
-
             SegmentedColumn(title = "Accessibility") {
                 item {
                     SettingsSwitchWidget(

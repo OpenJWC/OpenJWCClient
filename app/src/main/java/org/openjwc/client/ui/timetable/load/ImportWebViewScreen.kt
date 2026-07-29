@@ -22,6 +22,7 @@ import androidx.compose.material3.CircularWavyProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LargeFlexibleTopAppBar
 import androidx.compose.material3.Scaffold
@@ -54,7 +55,6 @@ import org.openjwc.client.data.repository.SettingsRepository
 import org.openjwc.client.log.Logger
 import org.openjwc.client.navigation3.Navigator
 import org.openjwc.client.ui.component.settings.AppBackButton
-import org.openjwc.client.ui.theme.blurEffect
 import org.openjwc.client.viewmodels.TimetableViewModel
 import org.openjwc.client.viewmodels.TimetableViewModelFactory
 
@@ -161,13 +161,12 @@ fun ImportWebViewScreen(navigator: Navigator) {
     Scaffold(
         topBar = {
             LargeFlexibleTopAppBar(
-                modifier = Modifier.blurEffect(),
                 title = { Text(stringResource(R.string.login_title)) },
                 navigationIcon = { AppBackButton(onClick = { navigator.pop() }) },
                 scrollBehavior = scrollBehavior,
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = Color.Transparent,
-                    scrolledContainerColor = Color.Transparent
+                    containerColor = MaterialTheme.colorScheme.surface,
+                    scrolledContainerColor = MaterialTheme.colorScheme.surface
                 )
             )
         },
@@ -199,7 +198,7 @@ fun ImportWebViewScreen(navigator: Navigator) {
                 }
             )
         },
-        containerColor = Color.Transparent
+        containerColor = MaterialTheme.colorScheme.surface
     ) { innerPadding ->
         Box(modifier = Modifier.verticalScroll(rememberScrollState())
                 .padding(innerPadding).fillMaxSize()) {

@@ -31,8 +31,6 @@ import org.openjwc.client.log.Logger
 import org.openjwc.client.navigation3.Navigator
 import org.openjwc.client.ui.component.settings.AppBackButton
 import org.openjwc.client.ui.component.settings.SettingsBaseWidget
-import org.openjwc.client.ui.theme.blurEffect
-import org.openjwc.client.ui.theme.blurSource
 
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
@@ -44,17 +42,16 @@ fun LogScreen(navigator: Navigator) {
     Scaffold(
         topBar = {
             LargeFlexibleTopAppBar(
-                modifier = Modifier.blurEffect(),
                 title = { Text(stringResource(R.string.log)) },
                 navigationIcon = { AppBackButton(onClick = { navigator.pop() }) },
                 scrollBehavior = scrollBehavior,
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = Color.Transparent,
-                    scrolledContainerColor = Color.Transparent
+                    containerColor = MaterialTheme.colorScheme.surface,
+                    scrolledContainerColor = MaterialTheme.colorScheme.surface
                 )
             )
         },
-        containerColor = Color.Transparent
+        containerColor = MaterialTheme.colorScheme.surface
     ) { innerPadding ->
         LazyColumn(
             modifier = Modifier
@@ -63,7 +60,6 @@ fun LogScreen(navigator: Navigator) {
                 .verticalScroll(rememberScrollState())
                 .padding(innerPadding)
                 .padding(horizontal = 12.dp, vertical = 4.dp)
-                .blurSource()
         ) {
             items(items = logs, key = { it.id }) { log ->
                 LogItemWidget(log)

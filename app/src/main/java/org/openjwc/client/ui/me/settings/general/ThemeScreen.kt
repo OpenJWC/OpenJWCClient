@@ -13,7 +13,6 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.twotone.AutoAwesome
-import androidx.compose.material.icons.twotone.BlurOn
 import androidx.compose.material.icons.twotone.Brightness6
 import androidx.compose.material.icons.twotone.FormatPaint
 import androidx.compose.material.icons.twotone.Opacity
@@ -21,6 +20,7 @@ import androidx.compose.material.icons.twotone.Palette
 import androidx.compose.material.icons.twotone.Wallpaper
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.LargeFlexibleTopAppBar
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -48,8 +48,6 @@ import org.openjwc.client.ui.theme.ColorItem
 import org.openjwc.client.ui.theme.ThemeConfig
 import org.openjwc.client.ui.theme.ThemeManager
 import org.openjwc.client.ui.theme.ThemeSeedColors
-import org.openjwc.client.ui.theme.blurEffect
-import org.openjwc.client.ui.theme.blurSource
 import org.openjwc.client.ui.theme.saveAndApplyCustomBackground
 
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
@@ -65,17 +63,16 @@ fun ThemeScreen(navigator: Navigator) {
     Scaffold(
         topBar = {
             LargeFlexibleTopAppBar(
-                modifier = Modifier.blurEffect(),
                 title = { Text(stringResource(R.string.theme)) },
                 navigationIcon = { AppBackButton(onClick = { navigator.pop() }) },
                 scrollBehavior = scrollBehavior,
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = Color.Transparent,
-                    scrolledContainerColor = Color.Transparent
+                    containerColor = MaterialTheme.colorScheme.surface,
+                    scrolledContainerColor = MaterialTheme.colorScheme.surface
                 )
             )
         },
-        containerColor = Color.Transparent
+        containerColor = MaterialTheme.colorScheme.surface
     ) { innerPadding ->
         Column(
             modifier = Modifier
@@ -83,7 +80,6 @@ fun ThemeScreen(navigator: Navigator) {
                 .nestedScroll(scrollBehavior.nestedScrollConnection)
                 .verticalScroll(rememberScrollState())
                 .padding(innerPadding)
-                .blurSource()
         ) {
             SegmentedColumn(title = stringResource(R.string.display_mode)) {
                 item {
@@ -164,15 +160,6 @@ fun ThemeScreen(navigator: Navigator) {
                             items = (0..10).map { "${it * 10}%" },
                             selectedIndex = (ThemeConfig.backgroundDim * 10f).toInt().coerceIn(0, 10),
                             onSelectedIndexChange = { BackgroundManager.saveBackgroundDim(context, it / 10f) }
-                        )
-                    }
-                    item {
-                        SettingsSwitchWidget(
-                            icon = Icons.TwoTone.BlurOn,
-                            title = "Background Blur",
-                            description = "Apply Gaussian blur to wallpaper",
-                            checked = ThemeConfig.isEnableBlur,
-                            onCheckedChange = { BackgroundManager.saveEnableBlur(context, it) }
                         )
                     }
                 }

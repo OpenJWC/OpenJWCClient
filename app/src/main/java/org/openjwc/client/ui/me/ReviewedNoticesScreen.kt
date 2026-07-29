@@ -37,8 +37,6 @@ import org.openjwc.client.data.appPreferences
 import org.openjwc.client.navigation3.Navigator
 import org.openjwc.client.ui.component.settings.AppBackButton
 import org.openjwc.client.ui.component.settings.SettingsBaseWidget
-import org.openjwc.client.ui.theme.blurEffect
-import org.openjwc.client.ui.theme.blurSource
 
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
@@ -59,17 +57,16 @@ fun ReviewedNoticesScreen(navigator: Navigator) {
     Scaffold(
         topBar = {
             LargeFlexibleTopAppBar(
-                modifier = Modifier.blurEffect(),
                 title = { Text(stringResource(R.string.upload_results)) },
                 navigationIcon = { AppBackButton(onClick = { navigator.pop() }) },
                 scrollBehavior = scrollBehavior,
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = Color.Transparent,
-                    scrolledContainerColor = Color.Transparent
+                    containerColor = MaterialTheme.colorScheme.surface,
+                    scrolledContainerColor = MaterialTheme.colorScheme.surface
                 )
             )
         },
-        containerColor = Color.Transparent
+        containerColor = MaterialTheme.colorScheme.surface
     ) { innerPadding ->
         if (reviews.isEmpty()) {
             Column(
@@ -78,7 +75,6 @@ fun ReviewedNoticesScreen(navigator: Navigator) {
                     .nestedScroll(scrollBehavior.nestedScrollConnection)
                     .verticalScroll(rememberScrollState())
                 .padding(innerPadding)
-                    .blurSource()
                     .padding(32.dp),
             ) {
                 Icon(
@@ -101,7 +97,6 @@ fun ReviewedNoticesScreen(navigator: Navigator) {
                     .nestedScroll(scrollBehavior.nestedScrollConnection)
                     .verticalScroll(rememberScrollState())
                 .padding(innerPadding)
-                    .blurSource()
                     .padding(horizontal = 12.dp, vertical = 4.dp)
             ) {
                 items(reviews) { (id, title, status) ->

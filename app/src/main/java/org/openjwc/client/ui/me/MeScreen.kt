@@ -17,7 +17,6 @@ import org.openjwc.client.navigation.Screen
 import org.openjwc.client.navigation3.Navigator
 import org.openjwc.client.ui.component.settings.SegmentedColumn
 import org.openjwc.client.ui.component.settings.SettingsJumpPageWidget
-import org.openjwc.client.ui.theme.blurSource
 
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
@@ -25,7 +24,6 @@ fun MeScreenContent(navigator: Navigator) {
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .blurSource()
     ) {
         SegmentedColumn {
             item {

@@ -82,7 +82,7 @@ fun TableSelectSheet(
                             )
                         }
                     },
-                    colors = ListItemDefaults.colors(containerColor = Color.Transparent),
+                    colors = ListItemDefaults.colors(containerColor = MaterialTheme.colorScheme.surface),
                     modifier = Modifier.clickable {
                         onTableSelect(table)
                         onDismissRequest()
@@ -110,7 +110,7 @@ fun TableSelectSheet(
                             tint = MaterialTheme.colorScheme.primary
                         )
                     },
-                    colors = ListItemDefaults.colors(containerColor = Color.Transparent),
+                    colors = ListItemDefaults.colors(containerColor = MaterialTheme.colorScheme.surface),
                     modifier = Modifier.clickable {
                         onDismissRequest()
                         onImport()
@@ -130,7 +130,7 @@ fun TableSelectSheet(
                             tint = MaterialTheme.colorScheme.primary
                         )
                     },
-                    colors = ListItemDefaults.colors(containerColor = Color.Transparent),
+                    colors = ListItemDefaults.colors(containerColor = MaterialTheme.colorScheme.surface),
                     modifier = Modifier.clickable {
                         onDismissRequest()
                         onCreateNew()

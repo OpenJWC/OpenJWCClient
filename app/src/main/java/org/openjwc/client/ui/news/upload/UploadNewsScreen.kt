@@ -1,11 +1,13 @@
 package org.openjwc.client.ui.news.upload
 
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -26,7 +28,6 @@ import androidx.compose.material3.DisplayMode
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.LargeFlexibleTopAppBar
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
@@ -43,7 +44,6 @@ import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.nestedscroll.nestedScroll
@@ -51,7 +51,6 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
-import kotlinx.coroutines.flow.collect
 import org.openjwc.client.R
 import org.openjwc.client.data.datastore.AuthDataSource
 import org.openjwc.client.data.datastore.CachedDataSource
@@ -65,11 +64,9 @@ import org.openjwc.client.net.models.UploadedNotice
 import org.openjwc.client.net.models.UploadedNoticeContent
 import org.openjwc.client.ui.component.settings.AppBackButton
 import org.openjwc.client.ui.component.settings.SegmentedColumn
-import org.openjwc.client.ui.component.settings.SettingsChooseWidget
+import org.openjwc.client.ui.component.settings.SettingsBaseWidget
 import org.openjwc.client.ui.component.settings.SettingsSwitchWidget
 import org.openjwc.client.ui.component.settings.SettingsTextFieldWidget
-import org.openjwc.client.ui.theme.blurEffect
-import org.openjwc.client.ui.theme.blurSource
 import org.openjwc.client.viewmodels.NavEvent
 import org.openjwc.client.viewmodels.NewsViewModel
 import org.openjwc.client.viewmodels.NewsViewModelFactory
@@ -102,9 +99,7 @@ fun UploadNewsScreen(navigator: Navigator) {
     }
 
     LaunchedEffect(uploadError) {
-        if (uploadError != null) {
-            isUploading = false
-        }
+        if (uploadError != null) isUploading = false
     }
 
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior(rememberTopAppBarState())
@@ -113,20 +108,20 @@ fun UploadNewsScreen(navigator: Navigator) {
     val labelState = remember { TextFieldState() }
     val detailUrlState = remember { TextFieldState() }
     val contentState = remember { TextFieldState() }
-    var date by remember { mutableStateOf("") }
+    val dateState = remember { TextFieldState() }
     var isPage by remember { mutableStateOf(true) }
     val attachmentStates = remember { mutableStateListOf<TextFieldState>() }
     var showDatePicker by remember { mutableStateOf(false) }
     val datePickerState = rememberDatePickerState(initialDisplayMode = DisplayMode.Picker)
-
     val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd")
+
     val titleError = if (titleState.text.isBlank()) "Required" else ""
     val labelError = if (labelState.text.isBlank()) "Required" else ""
     val detailUrlError = if (detailUrlState.text.isBlank()) "Required" else ""
     val contentError = if (contentState.text.isBlank()) "Required" else ""
-    val canSubmit = titleError.isEmpty() && labelError.isEmpty() &&
-            date.isNotBlank() && detailUrlError.isEmpty() && contentError.isEmpty()
-
+    val dateError = if (dateState.text.isBlank()) "Required" else ""
+    val canSubmit = titleError.isEmpty() && labelError.isEmpty() && dateError.isEmpty() &&
+            detailUrlError.isEmpty() && contentError.isEmpty()
     val scrollState = rememberScrollState()
 
     if (showDatePicker) {
@@ -135,86 +130,58 @@ fun UploadNewsScreen(navigator: Navigator) {
             confirmButton = {
                 TextButton(onClick = {
                     datePickerState.selectedDateMillis?.let { millis ->
-                        val selectedDate = Instant.ofEpochMilli(millis)
-                            .atZone(ZoneId.systemDefault())
-                            .toLocalDate()
-                        date = selectedDate.format(formatter)
+                        val d = Instant.ofEpochMilli(millis).atZone(ZoneId.systemDefault()).toLocalDate()
+                        dateState.edit { replace(0, length, d.format(formatter)) }
                     }
                     showDatePicker = false
-                }) {
-                    Text(stringResource(R.string.confirm))
-                }
+                }) { Text(stringResource(R.string.confirm)) }
             },
             dismissButton = {
-                TextButton(onClick = { showDatePicker = false }) {
-                    Text(stringResource(R.string.cancel))
-                }
+                TextButton(onClick = { showDatePicker = false }) { Text(stringResource(R.string.cancel)) }
             }
-        ) {
-            DatePicker(state = datePickerState, showModeToggle = false)
-        }
+        ) { DatePicker(state = datePickerState, showModeToggle = false) }
     }
 
     Scaffold(
         topBar = {
             LargeFlexibleTopAppBar(
-                modifier = Modifier.blurEffect(),
                 title = { Text(stringResource(R.string.upload_news)) },
                 navigationIcon = { AppBackButton(onClick = { navigator.pop() }) },
                 scrollBehavior = scrollBehavior,
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = Color.Transparent,
-                    scrolledContainerColor = Color.Transparent
+                    containerColor = MaterialTheme.colorScheme.surface, scrolledContainerColor = MaterialTheme.colorScheme.surface
                 )
             )
         },
-        containerColor = Color.Transparent
+        containerColor = MaterialTheme.colorScheme.surface
     ) { innerPadding ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .nestedScroll(scrollBehavior.nestedScrollConnection)
+                .imePadding()
                 .verticalScroll(scrollState)
                 .padding(innerPadding)
-                .blurSource()
         ) {
             SegmentedColumn(title = stringResource(R.string.basic_information)) {
+                item { SettingsTextFieldWidget(state = titleState, title = stringResource(R.string.title), error = titleError) }
+                item { SettingsTextFieldWidget(state = labelState, title = stringResource(R.string.label), error = labelError) }
                 item {
                     SettingsTextFieldWidget(
-                        state = titleState,
-                        title = stringResource(R.string.title),
-                        error = titleError
-                    )
-                }
-                item {
-                    SettingsTextFieldWidget(
-                        state = labelState,
-                        title = stringResource(R.string.label),
-                        error = labelError
-                    )
-                }
-                item {
-                    SettingsTextFieldWidget(
-                        state = remember { TextFieldState(date) },
+                        state = dateState,
                         title = stringResource(R.string.date),
+                        error = dateError,
                         leadingContent = {
-                            Icon(
-                                imageVector = Icons.TwoTone.DateRange,
-                                contentDescription = null,
-                                modifier = Modifier.size(20.dp),
-                                tint = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
+                            Icon(Icons.TwoTone.DateRange, null, Modifier.size(20.dp), tint = MaterialTheme.colorScheme.onSurfaceVariant)
                         },
-                        onClick = { showDatePicker = true }
+                        trailingContent = {
+                            IconButton(onClick = { showDatePicker = true }, modifier = Modifier.size(32.dp)) {
+                                Icon(Icons.TwoTone.DateRange, null, Modifier.size(18.dp))
+                            }
+                        }
                     )
                 }
-                item {
-                    SettingsTextFieldWidget(
-                        state = detailUrlState,
-                        title = stringResource(R.string.detail_url),
-                        error = detailUrlError
-                    )
-                }
+                item { SettingsTextFieldWidget(state = detailUrlState, title = stringResource(R.string.detail_url), error = detailUrlError) }
                 item {
                     SettingsSwitchWidget(
                         icon = Icons.TwoTone.Link,
@@ -227,65 +194,36 @@ fun UploadNewsScreen(navigator: Navigator) {
             }
 
             SegmentedColumn(title = stringResource(R.string.main_content)) {
-                item {
-                    SettingsTextFieldWidget(
-                        state = contentState,
-                        title = stringResource(R.string.markdown_text),
-                        error = contentError
-                    )
-                }
+                item { SettingsTextFieldWidget(state = contentState, title = stringResource(R.string.markdown_text), error = contentError) }
             }
 
-            SegmentedColumn(title = stringResource(R.string.attachment_url_lists, attachmentStates.size)) {
-                attachmentStates.forEachIndexed { index, state ->
-                    item {
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Icon(
-                                imageVector = Icons.TwoTone.Link,
-                                contentDescription = null,
-                                modifier = Modifier
-                                    .size(18.dp)
-                                    .padding(start = 8.dp),
-                                tint = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
-                            Spacer(modifier = Modifier.width(8.dp))
-                            Column(modifier = Modifier.weight(1f)) {
-                                SettingsTextFieldWidget(
-                                    state = state,
-                                    title = "URL"
-                                )
-                            }
-                            IconButton(
-                                onClick = { attachmentStates.removeAt(index) },
-                                colors = IconButtonDefaults.iconButtonColors(
-                                    contentColor = MaterialTheme.colorScheme.error
-                                )
-                            ) {
-                                Icon(
-                                    Icons.TwoTone.Delete,
-                                    contentDescription = stringResource(R.string.delete_attachment_url),
-                                    modifier = Modifier.size(20.dp)
-                                )
+            if (attachmentStates.isNotEmpty()) {
+                SegmentedColumn(title = stringResource(R.string.attachment_url_lists, attachmentStates.size)) {
+                    attachmentStates.forEachIndexed { index, state ->
+                        item {
+                            Row(Modifier.fillMaxWidth(), verticalAlignment = androidx.compose.ui.Alignment.CenterVertically) {
+                                Icon(Icons.TwoTone.Link, null, Modifier.size(18.dp).padding(start = 4.dp), tint = MaterialTheme.colorScheme.onSurfaceVariant)
+                                Spacer(Modifier.width(8.dp))
+                                Column(Modifier.weight(1f)) {
+                                    SettingsTextFieldWidget(state = state, title = "URL $index")
+                                }
+                                Spacer(Modifier.width(4.dp))
+                                IconButton(onClick = { attachmentStates.removeAt(index) }) {
+                                    Icon(Icons.TwoTone.Delete, stringResource(R.string.delete_attachment_url), Modifier.size(18.dp), tint = MaterialTheme.colorScheme.error)
+                                }
                             }
                         }
                     }
                 }
+            }
+
+            SegmentedColumn {
                 item {
-                    TextButton(
-                        onClick = { attachmentStates.add(TextFieldState()) },
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
-                        Icon(
-                            Icons.TwoTone.Add,
-                            contentDescription = null,
-                            modifier = Modifier.size(18.dp)
-                        )
-                        Spacer(modifier = Modifier.width(4.dp))
-                        Text(stringResource(R.string.add_attachment_urls))
-                    }
+                    SettingsBaseWidget(
+                        icon = Icons.TwoTone.Add,
+                        title = stringResource(R.string.add_attachment_urls),
+                        onClick = { attachmentStates.add(TextFieldState()) }
+                    ) {}
                 }
             }
 
@@ -305,7 +243,7 @@ fun UploadNewsScreen(navigator: Navigator) {
                         UploadedNotice(
                             label = labelState.text.toString(),
                             title = titleState.text.toString(),
-                            date = date,
+                            date = dateState.text.toString(),
                             detailUrl = detailUrlState.text.toString(),
                             isPage = isPage,
                             content = UploadedNoticeContent(
@@ -316,29 +254,20 @@ fun UploadNewsScreen(navigator: Navigator) {
                     )
                 },
                 enabled = canSubmit && !isUploading,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 32.dp, vertical = 16.dp)
+                modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 12.dp)
             ) {
                 if (isUploading) {
-                    CircularWavyProgressIndicator(
-                        modifier = Modifier.size(24.dp),
-                        color = MaterialTheme.colorScheme.onPrimary
-                    )
-                    Spacer(modifier = Modifier.width(8.dp))
+                    CircularWavyProgressIndicator(Modifier.size(20.dp), color = MaterialTheme.colorScheme.onPrimary)
+                    Spacer(Modifier.width(8.dp))
                     Text(stringResource(R.string.uploading))
                 } else {
-                    Icon(
-                        Icons.TwoTone.CloudUpload,
-                        contentDescription = null,
-                        modifier = Modifier.size(20.dp)
-                    )
-                    Spacer(modifier = Modifier.width(8.dp))
+                    Icon(Icons.TwoTone.CloudUpload, null, Modifier.size(20.dp))
+                    Spacer(Modifier.width(8.dp))
                     Text(stringResource(R.string.submit_upload))
                 }
             }
 
-            Spacer(modifier = Modifier.height(100.dp))
+            Spacer(Modifier.height(32.dp))
         }
     }
 }
