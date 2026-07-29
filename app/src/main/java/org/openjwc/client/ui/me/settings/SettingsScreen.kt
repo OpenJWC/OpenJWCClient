@@ -1,93 +1,125 @@
 package org.openjwc.client.ui.me.settings
 
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.LargeTopAppBar
-import androidx.compose.material3.MaterialTheme
+import androidx.compose.material.icons.twotone.BugReport
+import androidx.compose.material.icons.twotone.CalendarMonth
+import androidx.compose.material.icons.twotone.Dns
+import androidx.compose.material.icons.twotone.Language
+import androidx.compose.material.icons.twotone.Newspaper
+import androidx.compose.material.icons.twotone.Palette
+import androidx.compose.material.icons.twotone.VpnKey
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
+import androidx.compose.material3.LargeFlexibleTopAppBar
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material3.rememberTopAppBarState
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.unit.dp
 import org.openjwc.client.R
-import org.openjwc.client.data.models.Event
-import org.openjwc.client.data.models.Menu
-import org.openjwc.client.data.models.ToggleID
 import org.openjwc.client.navigation.Screen
+import org.openjwc.client.navigation3.Navigator
+import org.openjwc.client.ui.component.settings.AppBackButton
+import org.openjwc.client.ui.component.settings.SegmentedColumn
+import org.openjwc.client.ui.component.settings.SettingsJumpPageWidget
+import org.openjwc.client.ui.theme.blurEffect
+import org.openjwc.client.ui.theme.blurSource
 
-
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
-fun SettingsScreen(
-    onRoute: (Screen) -> Unit,
-    onBack: () -> Unit,
-    onToggle: (ToggleID) -> Unit,
-    menu: Menu,
-) {
-    val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
+fun SettingsScreen(navigator: Navigator) {
+    val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior(rememberTopAppBarState())
 
     Scaffold(
-        containerColor = MaterialTheme.colorScheme.background,
-        modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
         topBar = {
-            LargeTopAppBar(
-                title = { Text(menu.title) },
-                navigationIcon = {
-                    IconButton(onClick = onBack) {
-                        Icon(
-                            Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = stringResource(
-                                R.string.back
-                            )
-                        )
-                    }
-                },
-                scrollBehavior = scrollBehavior
+            LargeFlexibleTopAppBar(
+                modifier = Modifier.blurEffect(),
+                title = { Text(stringResource(R.string.settings)) },
+                navigationIcon = { AppBackButton(onClick = { navigator.pop() }) },
+                scrollBehavior = scrollBehavior,
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = Color.Transparent,
+                    scrolledContainerColor = Color.Transparent
+                )
             )
-        }
+        },
+        containerColor = Color.Transparent
     ) { innerPadding ->
-        LazyColumn(
+        Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(innerPadding),
-            contentPadding = PaddingValues(16.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
+                .nestedScroll(scrollBehavior.nestedScrollConnection)
+                .padding(innerPadding)
+                .blurSource()
         ) {
-            items(
-                items = menu.sections,
-                key = { it.title ?: it.hashCode() }
-            ) { section ->
-                MenuSectionCard(
-                    section = section,
-                    onEvent = {
-                        when (it) {
-                            is Event.Route -> {
-                                onRoute(it.route)
-                            }
+            SegmentedColumn(title = stringResource(R.string.general)) {
+                item {
+                    SettingsJumpPageWidget(
+                        icon = Icons.TwoTone.Palette,
+                        title = stringResource(R.string.theme),
+                        onClick = { navigator.push(Screen.Theme) }
+                    )
+                }
+                item {
+                    SettingsJumpPageWidget(
+                        icon = Icons.TwoTone.Language,
+                        title = stringResource(R.string.language),
+                        onClick = { navigator.push(Screen.Language) }
+                    )
+                }
+            }
 
-                            is Event.Action -> {
-                                // 处理 Action 执行
-                                it.onAction()
-                            }
+            SegmentedColumn(title = stringResource(R.string.connection)) {
+                item {
+                    SettingsJumpPageWidget(
+                        icon = Icons.TwoTone.Dns,
+                        title = stringResource(R.string.network_config),
+                        onClick = { navigator.push(Screen.Host) }
+                    )
+                }
+                item {
+                    SettingsJumpPageWidget(
+                        icon = Icons.TwoTone.VpnKey,
+                        title = stringResource(R.string.account_management),
+                        onClick = { navigator.push(Screen.Account) }
+                    )
+                }
+            }
 
-                            is Event.Toggle -> {
-                                onToggle(it.id)
-                            }
-                        }
-                    }
-                )
+            SegmentedColumn(title = stringResource(R.string.news)) {
+                item {
+                    SettingsJumpPageWidget(
+                        icon = Icons.TwoTone.Newspaper,
+                        title = stringResource(R.string.display_settings),
+                        onClick = { navigator.push(Screen.NewsSettings) }
+                    )
+                }
+            }
+
+            SegmentedColumn(title = stringResource(R.string.timetable)) {
+                item {
+                    SettingsJumpPageWidget(
+                        icon = Icons.TwoTone.CalendarMonth,
+                        title = stringResource(R.string.timetable_settings),
+                        onClick = { navigator.push(Screen.TimetablePrefs) }
+                    )
+                }
+            }
+
+            SegmentedColumn(title = stringResource(R.string.debug)) {
+                item {
+                    SettingsJumpPageWidget(
+                        icon = Icons.TwoTone.BugReport,
+                        title = stringResource(R.string.log),
+                        onClick = { navigator.push(Screen.Log) }
+                    )
+                }
             }
         }
     }

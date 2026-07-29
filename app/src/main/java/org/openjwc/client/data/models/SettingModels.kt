@@ -1,49 +1,39 @@
 package org.openjwc.client.data.models
 
 import androidx.compose.ui.graphics.vector.ImageVector
-import org.openjwc.client.navigation.Screen
+import androidx.navigation3.runtime.NavKey
 
-sealed class MenuItem {
+sealed interface SettingsItem {
+    val icon: ImageVector
+    val title: String
+    val subtitle: String?
+
     data class Route(
-        val icon: ImageVector,
-        val title: String? = null,
-        val subtitle: String? = null,
-        val route: Screen,
+        override val icon: ImageVector,
+        override val title: String,
+        override val subtitle: String? = null,
+        val target: NavKey,
         val trailing: String? = null,
-    ) : MenuItem()
+    ) : SettingsItem
 
     data class Action(
-        val icon: ImageVector,
-        val label: String? = null,
-        val subtitle: String? = null,
+        override val icon: ImageVector,
+        override val title: String,
+        override val subtitle: String? = null,
         val trailing: String? = null,
         val onClick: () -> Unit
-    ) : MenuItem()
+    ) : SettingsItem
 
     data class Toggle(
-        val id: ToggleID,
-        val icon: ImageVector,
-        val label: String? = null,
+        override val icon: ImageVector,
+        override val title: String,
         val isChecked: Boolean,
-        val subtitle: String? = null,
-    ) : MenuItem()
+        override val subtitle: String? = null,
+        val onCheckedChange: (Boolean) -> Unit
+    ) : SettingsItem
 }
 
-data class SettingSection(
+data class SettingsSection(
     val title: String? = null,
-    val items: List<MenuItem>
+    val items: List<SettingsItem>
 )
-
-data class Menu(
-    val route: Screen, val title: String, val sections: List<SettingSection>
-)
-
-enum class ToggleID {
-    TEST_TOGGLE
-}
-
-sealed class Event {
-    data class Toggle(val id: ToggleID) : Event()
-    data class Route(val route: Screen) : Event()
-    data class Action(val onAction: () -> Unit) : Event()
-}

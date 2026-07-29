@@ -1,60 +1,37 @@
 package org.openjwc.client.ui.main
 
-import org.openjwc.client.net.models.GitHubRelease
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.heightIn
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.AlertDialog
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.res.stringResource
-import dev.jeziellago.compose.markdowntext.MarkdownText
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.dp
 import org.openjwc.client.R
+import org.openjwc.client.net.models.GitHubRelease
 
 @Composable
-fun UpdateDialog(
-    gitHubRelease: GitHubRelease,
-    onDismiss: () -> Unit,
-    onUpdate: () -> Unit,
-) {
-    val screenHeight = LocalWindowInfo.current.containerDpSize.height
-    val scrollState = rememberScrollState()
-
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        title = {
-            Text(
-                text = stringResource(R.string.update_available),
-                style = MaterialTheme.typography.headlineSmall
-            )
-        },
-        text = {
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .heightIn(max = screenHeight * 0.6f)
-                    .verticalScroll(scrollState)
-            ) {
-                MarkdownText(
-                    markdown = gitHubRelease.body,
-                )
-            }
-        },
-        confirmButton = {
-            TextButton(onClick = onUpdate) {
-                Text(stringResource(R.string.download_update))
-            }
-        },
-        dismissButton = {
-            TextButton(onClick = onDismiss) {
-                Text(stringResource(R.string.cancel))
-            }
+fun UpdateDialog(gitHubRelease: GitHubRelease, onDismiss: () -> Unit, onUpdate: () -> Unit) {
+    Surface(shape = RoundedCornerShape(28.dp), color = MaterialTheme.colorScheme.surface, modifier = Modifier.padding(24.dp)) {
+        Column(Modifier.padding(24.dp)) {
+            Text(stringResource(R.string.update_available), style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
+            Spacer(Modifier.height(8.dp))
+            Text(gitHubRelease.name, style = MaterialTheme.typography.bodyLarge)
+            Spacer(Modifier.height(4.dp))
+            Text(gitHubRelease.body ?: "", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            Spacer(Modifier.height(16.dp))
+            Button(onClick = onUpdate, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(12.dp)) { Text(stringResource(R.string.download_update)) }
+            Spacer(Modifier.height(8.dp))
+            OutlinedButton(onClick = onDismiss, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(12.dp)) { Text(stringResource(R.string.cancel)) }
         }
-    )
+    }
 }

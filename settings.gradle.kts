@@ -24,5 +24,4 @@ dependencyResolutionManagement {
 
 rootProject.name = "OpenJWC-Client"
 include(":app")
-include(":jiguang")
  

@@ -5,6 +5,7 @@ plugins {
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.kotlin.serialization)
+    id("org.jetbrains.kotlin.plugin.parcelize")
     alias(libs.plugins.ksp)
 }
 
@@ -15,12 +16,12 @@ if (localPropertiesFile.exists()) {
 }
 android {
     namespace = "org.openjwc.client"
-    compileSdk = 36
+    compileSdk = 37
 
     defaultConfig {
         applicationId = "org.openjwc.client"
         minSdk = 26
-        targetSdk = 36
+        targetSdk = 37
         versionCode = 25
         versionName = "1.1.8 (Beta)"
 
@@ -57,7 +58,14 @@ kotlin {
     compilerOptions {
         jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.fromTarget(libs.versions.java.get()))
         freeCompilerArgs.add("-opt-in=androidx.compose.material3.ExperimentalMaterial3ExpressiveApi")
+        freeCompilerArgs.add("-opt-in=androidx.compose.material3.ExperimentalMaterial3Api")
+        freeCompilerArgs.add("-opt-in=androidx.compose.foundation.ExperimentalFoundationApi")
+        freeCompilerArgs.add("-opt-in=androidx.compose.material3.windowsizeclass.ExperimentalMaterial3WindowSizeClassApi")
     }
+}
+
+configurations.all {
+    exclude(group = "androidx.navigationevent", module = "navigationevent-compose")
 }
 
 dependencies {
@@ -87,6 +95,7 @@ dependencies {
     implementation(libs.androidx.lifecycle.viewmodel.compose)
     implementation(libs.compose.markdown)
     implementation(libs.coil.compose)
+    implementation(libs.monet.compat)
 
     implementation(libs.retrofit.core)
     implementation(libs.retrofit.converter.serialization)
@@ -94,6 +103,10 @@ dependencies {
     implementation(libs.okhttp.core)
     implementation(libs.okhttp.logging)
     implementation(libs.androidx.navigation.compose)
+    implementation(libs.androidx.navigation3.runtime)
+    implementation(libs.androidx.navigationevent)
+    implementation(libs.miuix.navigation3.ui)
+    implementation(libs.miuix.blur)
     implementation(libs.androidx.animation)
     implementation(libs.androidx.room.common.jvm)
     implementation(libs.androidx.room.ktx)

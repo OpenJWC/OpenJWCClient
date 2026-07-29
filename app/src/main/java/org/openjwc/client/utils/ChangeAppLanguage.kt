@@ -24,7 +24,10 @@ fun changeAppLanguage(languageCode: String?) {
 val languages = mapOf(
     null to LanguageOption(UiText.StringResource(R.string.follow_system), "Follow System"),
     "zh" to LanguageOption(UiText.StringResource(R.string.simplified_chinese), "简体中文"),
-    "en" to LanguageOption(UiText.StringResource(R.string.english), "English")
+    "en" to LanguageOption(UiText.StringResource(R.string.english), "English"),
+    "ja" to LanguageOption(UiText.StringResource(R.string.japanese), "日本語"),
+    "ko" to LanguageOption(UiText.StringResource(R.string.korean), "한국어"),
+    "zh-TW" to LanguageOption(UiText.StringResource(R.string.traditional_chinese), "繁體中文")
 )
 
 data class LanguageOption(

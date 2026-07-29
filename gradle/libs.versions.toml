@@ -2,7 +2,7 @@
 # Java 版本
 java = "11"
 
-agp = "8.12.3"
+agp = "9.1.0"
 kotlin = "2.3.20"
 
 coreKtx = "1.18.0"
@@ -26,6 +26,9 @@ junit = "4.13.2"
 junitVersion = "1.3.0"
 espressoCore = "3.7.0"
 navigationCompose = "2.9.7"
+navigation3 = "1.2.0-alpha04"
+navigationevent = "1.1.1"
+miuix = "0.9.3"
 animation = "1.10.5"
 roomCommonJvm = "2.8.4"
 roomKtx = "2.8.4"
@@ -36,6 +39,7 @@ foundation = "1.10.5"
 datastore = "1.2.1"
 animationVersion = "1.10.6"
 appcompat = "1.7.1"
+monetCompat = "0.4.1"
 
 [libraries]
 # Androidx 核心
@@ -78,6 +82,11 @@ androidx-espresso-core = { group = "androidx.test.espresso", name = "espresso-co
 androidx-ui-test-manifest = { group = "androidx.compose.ui", name = "ui-test-manifest" }
 androidx-ui-test-junit4 = { group = "androidx.compose.ui", name = "ui-test-junit4" }
 androidx-navigation-compose = { group = "androidx.navigation", name = "navigation-compose", version.ref = "navigationCompose" }
+androidx-navigation3-runtime = { module = "androidx.navigation3:navigation3-runtime", version.ref = "navigation3" }
+androidx-navigationevent = { module = "androidx.navigationevent:navigationevent", version.ref = "navigationevent" }
+androidx-navigationevent-compose = { module = "androidx.navigationevent:navigationevent-compose", version.ref = "navigationevent" }
+miuix-navigation3-ui = { group = "top.yukonga.miuix.kmp", name = "miuix-navigation3-ui-android", version.ref = "miuix" }
+miuix-blur = { group = "top.yukonga.miuix.kmp", name = "miuix-blur-android", version.ref = "miuix" }
 androidx-animation = { group = "androidx.compose.animation", name = "animation", version.ref = "animation" }
 androidx-room-common-jvm = { group = "androidx.room", name = "room-common-jvm", version.ref = "roomCommonJvm" }
 androidx-room-ktx = { group = "androidx.room", name = "room-ktx", version.ref = "roomKtx" }
@@ -86,6 +95,7 @@ androidx-foundation = { group = "androidx.compose.foundation", name = "foundatio
 androidx-datastore = { module = "androidx.datastore:datastore-preferences", version.ref = "datastore" }
 animation = { group = "androidx.compose.animation", name = "animation", version.ref = "animationVersion" }
 androidx-appcompat = { group = "androidx.appcompat", name = "appcompat", version.ref = "appcompat" }
+monet-compat = { module = "com.github.KieronQuinn:MonetCompat", version.ref = "monetCompat" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

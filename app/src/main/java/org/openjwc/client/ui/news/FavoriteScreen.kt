@@ -1,228 +1,123 @@
 package org.openjwc.client.ui.news
 
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.lazy.grid.GridCells
-import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
-import androidx.compose.foundation.lazy.grid.itemsIndexed
-import androidx.compose.foundation.lazy.grid.rememberLazyGridState
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.Delete
-import androidx.compose.material.icons.filled.Star
-import androidx.compose.material.icons.outlined.Add
-import androidx.compose.material.icons.outlined.Star
-import androidx.compose.material3.DropdownMenu
-import androidx.compose.material3.DropdownMenuItem
-import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material.icons.twotone.Star
+import androidx.compose.material.icons.twotone.StarBorder
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.LargeTopAppBar
+import androidx.compose.material3.LargeFlexibleTopAppBar
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
-import androidx.compose.material3.windowsizeclass.WindowSizeClass
-import androidx.compose.material3.windowsizeclass.WindowWidthSizeClass
+import androidx.compose.material3.rememberTopAppBarState
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.nestedscroll.nestedScroll
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import org.openjwc.client.R
-import org.openjwc.client.net.models.FetchedNotice
+import org.openjwc.client.data.appPreferences
+import org.openjwc.client.navigation.Screen
+import org.openjwc.client.navigation3.Navigator
+import org.openjwc.client.ui.component.settings.AppBackButton
+import org.openjwc.client.ui.component.settings.SettingsBaseWidget
+import org.openjwc.client.ui.theme.blurEffect
+import org.openjwc.client.ui.theme.blurSource
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
-fun FavoriteScreen(
-    favorites: List<FetchedNotice>,
-    windowSizeClass: WindowSizeClass,
-    freshDays: Int,
-    onBack: () -> Unit,
-    onItemClick: (FetchedNotice) -> Unit,
-    onAddToAttachments: (FetchedNotice) -> Unit,
-    onDeleteFavorite: (FetchedNotice) -> Unit,
-    onDeleteAllFavorites: () -> Unit,
-) {
-    val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
-    val listState = rememberLazyGridState()
+fun FavoriteScreen(navigator: Navigator) {
+    val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior(rememberTopAppBarState())
+    val context = LocalContext.current
+    val prefs = context.appPreferences
 
-    var selectedNotice by remember { mutableStateOf<FetchedNotice?>(null) }
-    val showMenu = selectedNotice != null
-    val onMenuDismiss = { selectedNotice = null }
-    var showDeleteAllDialog by remember { mutableStateOf(false) }
-
-    val columns = when (windowSizeClass.widthSizeClass) {
-        WindowWidthSizeClass.Expanded -> GridCells.Fixed(3)
-        WindowWidthSizeClass.Medium -> GridCells.Fixed(2)
-        else -> GridCells.Fixed(1)
-    }
-    if (showDeleteAllDialog) {
-        androidx.compose.material3.AlertDialog(
-            onDismissRequest = { showDeleteAllDialog = false },
-            title = { Text(stringResource(R.string.confirm_delete)) },
-            text = { Text(stringResource(R.string.clear_all_favorites_confirm)) },
-            confirmButton = {
-                androidx.compose.material3.TextButton(
-                    onClick = {
-                        onDeleteAllFavorites()
-                        showDeleteAllDialog = false
-                    }
-                ) {
-                    Text(stringResource(R.string.delete_all), color = MaterialTheme.colorScheme.error)
-                }
-            },
-            dismissButton = {
-                androidx.compose.material3.TextButton(onClick = { showDeleteAllDialog = false }) {
-                    Text(stringResource(R.string.cancel))
-                }
-            }
-        )
+    val favoriteCount = prefs.getInt("favorite_count", 0)
+    val favorites = remember {
+        (0 until favoriteCount).map { i ->
+            val id = prefs.getString("fav_id_$i", "$i") ?: "$i"
+            val title = prefs.getString("fav_title_$i", "News $i") ?: "News $i"
+            val date = prefs.getString("fav_date_$i", "") ?: ""
+            id to title
+        }
     }
 
     Scaffold(
-        containerColor = MaterialTheme.colorScheme.background,
         topBar = {
-            LargeTopAppBar(
+            LargeFlexibleTopAppBar(
+                modifier = Modifier.blurEffect(),
                 title = { Text(stringResource(R.string.favorite_news)) },
-                navigationIcon = {
-                    IconButton(onClick = onBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.back))
-                    }
-                },
-                actions = {
-                    // 只有当列表不为空时才显示删除图标
-                    if (favorites.isNotEmpty()) {
-                        IconButton(onClick = { showDeleteAllDialog = true }) {
-                            Icon(
-                                Icons.Default.Delete,
-                                contentDescription = stringResource(R.string.delete_all_favorites),
-                                tint = MaterialTheme.colorScheme.error
-                            )
-                        }
-                    }
-                },
-                scrollBehavior = scrollBehavior
+                navigationIcon = { AppBackButton(onClick = { navigator.pop() }) },
+                scrollBehavior = scrollBehavior,
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = Color.Transparent,
+                    scrolledContainerColor = Color.Transparent
+                )
             )
         },
-        modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection)
+        containerColor = Color.Transparent
     ) { innerPadding ->
-        Box(modifier = Modifier.padding(innerPadding)) {
-            if (favorites.isEmpty()) {
-                EmptyFavoritesPlaceholder()
-            } else {
-                LazyVerticalGrid(
-                    state = listState,
-                    columns = columns,
-                    modifier = Modifier.fillMaxSize(),
-                    contentPadding = PaddingValues(16.dp, 16.dp, 16.dp, 88.dp),
-                    horizontalArrangement = Arrangement.spacedBy(16.dp),
-                    verticalArrangement = Arrangement.spacedBy(16.dp)
-                ) {
-                    itemsIndexed(items = favorites, key = { index, item -> "${item.id} $index" }) { index, item ->
-                        val isFresh = remember(item.id, freshDays) {
-                            isDateFresh(item.date, freshDays)
-                        }
-
-                        Box {
-                            InfoCard(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .height(130.dp),
-                                fetchedNotice = item,
-                                isFresh = isFresh,
-                                isFavorited = true,
-                                onClick = { onItemClick(item) },
-                                onLongClick = { selectedNotice = item }, // 长按时记录当前选中的项
-                                showLabel = true
-                            )
-
-                            DropdownMenu(
-                                expanded = showMenu && selectedNotice === item,
-                                onDismissRequest = onMenuDismiss
-                            ) {
-                                DropdownMenuItem(
-                                    text = { Text(stringResource(R.string.add_to_attachments)) },
-                                    leadingIcon = {
-                                        Icon(Icons.Outlined.Add, contentDescription = null)
-                                    },
-                                    onClick = {
-                                        onAddToAttachments(item)
-                                        onMenuDismiss()
-                                    }
-                                )
-
-                                DropdownMenuItem(
-                                    text = {
-                                        Text(stringResource(R.string.remove_from_favorites), color = MaterialTheme.colorScheme.error)
-                                    },
-                                    leadingIcon = {
-                                        Icon(
-                                            imageVector = Icons.Default.Star,
-                                            contentDescription = null,
-                                            tint = MaterialTheme.colorScheme.error
-                                        )
-                                    },
-                                    onClick = {
-                                        onDeleteFavorite(item)
-                                        onMenuDismiss()
-                                    }
-                                )
-                            }
-                        }
-                    }
+        if (favorites.isEmpty()) {
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .nestedScroll(scrollBehavior.nestedScrollConnection)
+                    .padding(innerPadding)
+                    .blurSource()
+                    .padding(32.dp),
+            ) {
+                Icon(
+                    imageVector = Icons.TwoTone.StarBorder,
+                    contentDescription = null,
+                    modifier = Modifier.size(80.dp),
+                    tint = MaterialTheme.colorScheme.outlineVariant
+                )
+                Spacer(modifier = Modifier.height(16.dp))
+                Text(
+                    text = stringResource(R.string.no_favorites),
+                    style = MaterialTheme.typography.titleLarge,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+                Text(
+                    text = stringResource(R.string.favorite_hint),
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+        } else {
+            LazyColumn(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .nestedScroll(scrollBehavior.nestedScrollConnection)
+                    .padding(innerPadding)
+                    .blurSource()
+                    .padding(horizontal = 12.dp, vertical = 4.dp)
+            ) {
+                itemsIndexed(favorites) { index, (id, title) ->
+                    SettingsBaseWidget(
+                        icon = Icons.TwoTone.Star,
+                        iconColor = MaterialTheme.colorScheme.primary,
+                        title = title,
+                        titleStyle = MaterialTheme.typography.titleMedium,
+                        modifier = Modifier.fillMaxWidth(),
+                        leadingContent = null
+                    ) {}
                 }
             }
         }
-    }
-}
-
-@Composable
-fun EmptyFavoritesPlaceholder() {
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(32.dp),
-        verticalArrangement = Arrangement.Center,
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        Icon(
-            imageVector = Icons.Outlined.Star,
-            contentDescription = null,
-            modifier = Modifier.size(80.dp),
-            tint = MaterialTheme.colorScheme.outlineVariant
-        )
-
-        Spacer(modifier = Modifier.height(16.dp))
-
-        Text(
-            text = stringResource(R.string.no_favorites),
-            style = MaterialTheme.typography.titleLarge,
-            fontWeight = FontWeight.Bold,
-            color = MaterialTheme.colorScheme.onSurface
-        )
-
-        Spacer(modifier = Modifier.height(8.dp))
-
-        Text(
-            text = stringResource(R.string.favorite_hint),
-            style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-            textAlign = androidx.compose.ui.text.style.TextAlign.Center
-        )
     }
 }

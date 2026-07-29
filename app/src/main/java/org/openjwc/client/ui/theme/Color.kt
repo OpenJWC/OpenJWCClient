@@ -22,10 +22,18 @@ import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.unit.dp
 import androidx.core.graphics.toColorInt
 
+import kotlinx.serialization.Serializable
+
+@Serializable
+enum class DarkThemeStyle {
+    Auto, Light, Dark
+}
+
 sealed class ColorType {
     object Dynamic : ColorType()
     class Custom(val color: Color) : ColorType()
 }
+
 fun ColorType.toStorageString(): String = when (this) {
     is ColorType.Dynamic -> "DYNAMIC"
     is ColorType.Custom -> "CUSTOM:#%08X".format(this.color.toArgb())
@@ -42,6 +50,7 @@ fun String?.toColorType(): ColorType {
         }
     } else ColorType.Dynamic
 }
+
 val SeedDefault = Color(0xFF6750A4)
 
 val SeedVibrantRed = Color(0xFFB3261E)
@@ -54,41 +63,19 @@ val SeedRoyalPurple = Color(0xFF6750A4)
 val SeedSakuraPink = Color(0xFF984061)
 
 val seedColors = listOf(
-    SeedVibrantRed,
-    SeedDeepOrange,
-    SeedGoldenAmber,
-    SeedForestGreen,
-    SeedCyberTeal,
-    SeedBusinessBlue,
-    SeedRoyalPurple,
-    SeedSakuraPink
+    SeedVibrantRed, SeedDeepOrange, SeedGoldenAmber, SeedForestGreen,
+    SeedCyberTeal, SeedBusinessBlue, SeedRoyalPurple, SeedSakuraPink
 )
 
 val courseBackgroundColors = listOf(
-    Color(0xFFC62828), // Red 800
-    Color(0xFFAD1457), // Pink 800
-    Color(0xFF6A1B9A), // Purple 800
-    Color(0xFF4527A0), // Deep Purple 800
-    Color(0xFF283593), // Indigo 800
-    Color(0xFF1565C0), // Blue 800
-    Color(0xFF0277BD), // Light Blue 800
-    Color(0xFF00838F), // Cyan 800
-    Color(0xFF00695C), // Teal 800
-    Color(0xFF2E7D32), // Green 800
-    Color(0xFF558B2F), // Light Green 800
-    Color(0xFFFF8F00), // Amber 800
-    Color(0xFFEF6C00), // Orange 800
-    Color(0xFFD84315), // Deep Orange 800
-    Color(0xFF4E342E), // Brown 800
-    Color(0xFF37474F)  // Blue Grey 800
+    Color(0xFFC62828), Color(0xFFAD1457), Color(0xFF6A1B9A), Color(0xFF4527A0),
+    Color(0xFF283593), Color(0xFF1565C0), Color(0xFF0277BD), Color(0xFF00838F),
+    Color(0xFF00695C), Color(0xFF2E7D32), Color(0xFF558B2F), Color(0xFFFF8F00),
+    Color(0xFFEF6C00), Color(0xFFD84315), Color(0xFF4E342E), Color(0xFF37474F)
 )
 
 @Composable
-fun ColorItem(
-    color: Color,
-    isSelected: Boolean,
-    onClick: () -> Unit
-) {
+fun ColorItem(color: Color, isSelected: Boolean, onClick: () -> Unit) {
     Box(
         contentAlignment = Alignment.Center,
         modifier = Modifier
@@ -97,9 +84,7 @@ fun ColorItem(
             .aspectRatio(1f)
             .then(
                 if (isSelected) Modifier.border(
-                    3.dp,
-                    MaterialTheme.colorScheme.primary,
-                    CircleShape
+                    3.dp, MaterialTheme.colorScheme.primary, CircleShape
                 ) else Modifier
             )
             .padding(4.dp)
@@ -115,8 +100,7 @@ fun ColorItem(
         ) {
             if (isSelected) {
                 Icon(
-                    Icons.Default.Check,
-                    contentDescription = null,
+                    Icons.Default.Check, contentDescription = null,
                     tint = if (isDarkColor(color)) Color.White else Color.Black,
                     modifier = Modifier.size(24.dp)
                 )
@@ -128,4 +112,34 @@ fun ColorItem(
 private fun isDarkColor(color: Color): Boolean {
     val luminance = 0.299 * color.red + 0.587 * color.green + 0.114 * color.blue
     return luminance < 0.5
+}
+
+object ThemeSeedColors {
+    val Default = Color(0xFF415F91)
+    val Green = Color(0xFF4C662B)
+    val Purple = Color(0xFF7C4E7E)
+    val Orange = Color(0xFF8B4F24)
+    val Pink = Color(0xFF8C4A60)
+    val Gray = Color(0xFF5B5C5C)
+    val Yellow = Color(0xFF6D5E0F)
+    val Sakura = Color(0xFFB8708C)
+    val Blue = Color(0xFF415F91)
+    val Teal = Color(0xFF1E6E6E)
+
+    val all = listOf(Default, Green, Purple, Orange, Pink, Gray, Yellow, Sakura, Blue, Teal)
+
+    fun fromLegacyName(name: String): Color = when (name.lowercase()) {
+        "green" -> Green
+        "purple" -> Purple
+        "orange" -> Orange
+        "pink" -> Pink
+        "gray" -> Gray
+        "yellow" -> Yellow
+        "sakura" -> Sakura
+        "blue" -> Blue
+        "teal" -> Teal
+        else -> Default
+    }
+
+    fun fromLegacyNameArgb(name: String): Int = fromLegacyName(name).toArgb()
 }

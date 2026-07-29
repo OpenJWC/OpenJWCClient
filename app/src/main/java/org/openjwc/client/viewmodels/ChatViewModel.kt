@@ -1,8 +1,5 @@
 package org.openjwc.client.viewmodels
 
-import android.content.ClipData
-import androidx.compose.ui.platform.ClipEntry
-import androidx.compose.ui.platform.Clipboard
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
@@ -215,20 +212,9 @@ class ChatViewModel(
         }
     }
 
-    fun copyMessage(
-        message: ChatMessage,
-        clipboardManager: Clipboard,
-    ) {
+    fun copyMessage(message: ChatMessage) {
         viewModelScope.launch {
             uiEvent.send(UiEvent.ShowToast(UiText.StringResource(R.string.copy_success)))
-            clipboardManager.setClipEntry(
-                ClipEntry(
-                    ClipData.newPlainText(
-                        message.text,
-                        message.text
-                    )
-                )
-            )
         }
     }
 

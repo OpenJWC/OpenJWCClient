@@ -1,201 +1,122 @@
 package org.openjwc.client.ui.me.settings.news
 
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.Clear
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.LargeTopAppBar
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.text.input.TextFieldState
+import androidx.compose.material3.Button
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
+import androidx.compose.material3.LargeFlexibleTopAppBar
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material3.rememberTopAppBarState
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.nestedscroll.nestedScroll
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardType
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import org.openjwc.client.R
-import org.openjwc.client.net.models.FetchedNotice
-import org.openjwc.client.ui.news.InfoCard
-import java.time.LocalDate
+import org.openjwc.client.data.datastore.AuthDataSource
+import org.openjwc.client.data.datastore.CachedDataSource
+import org.openjwc.client.data.datastore.SettingsDataSource
+import org.openjwc.client.data.repository.AuthRepository
+import org.openjwc.client.data.repository.SettingsRepository
+import org.openjwc.client.navigation3.Navigator
+import org.openjwc.client.ui.component.settings.AppBackButton
+import org.openjwc.client.ui.component.settings.SegmentedColumn
+import org.openjwc.client.ui.component.settings.SettingsTextFieldWidget
+import org.openjwc.client.ui.theme.blurEffect
+import org.openjwc.client.ui.theme.blurSource
+import org.openjwc.client.viewmodels.SettingsViewModel
+import org.openjwc.client.viewmodels.SettingsViewModelFactory
 
-@Preview
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
-fun TestNewsDisplaySettingsScreen() {
-    NewsDisplaySettingsScreen(
-        initialFreshDays = 3,
-        onSave = {},
-        onBack = {}
-    )
-}
+fun NewsDisplaySettingsScreen(navigator: Navigator) {
+    val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior(rememberTopAppBarState())
+    val context = LocalContext.current
 
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-fun NewsDisplaySettingsScreen(
-    initialFreshDays: Int,
-    onSave: (Int) -> Unit,
-    onBack: () -> Unit,
-) {
-    var freshDaysString by remember { mutableStateOf(initialFreshDays.toString()) }
-    val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
+    val settingsDataSource = remember { SettingsDataSource(context) }
+    val authDataSource = remember { AuthDataSource(context) }
+    val cachedDataSource = remember { CachedDataSource(context) }
+    val settingsRepository = remember { SettingsRepository(settingsDataSource, cachedDataSource, authDataSource, context) }
+    val authRepository = remember { AuthRepository(authDataSource, settingsDataSource) }
+    val settingsViewModel: SettingsViewModel = viewModel(factory = SettingsViewModelFactory(settingsRepository, authRepository))
 
-    val freshDaysInt = freshDaysString.toIntOrNull()
-    val isValid = freshDaysInt != null && freshDaysInt >= 0
-    val isChanged = freshDaysInt != initialFreshDays
-    val canSave = isValid && isChanged
+    val settings by settingsViewModel.settings.collectAsStateWithLifecycle()
+    val savedFreshDays = settings.freshDays
+    val freshDaysState = remember { TextFieldState(savedFreshDays.toString()) }
+    val scrollState = rememberScrollState()
 
-    LaunchedEffect(initialFreshDays) {
-        freshDaysString = initialFreshDays.toString()
+    val freshDaysError = run {
+        val d = freshDaysState.text.toString().toIntOrNull()
+        when {
+            freshDaysState.text.isBlank() -> "Required"
+            d == null || d <= 0 -> "Must be a positive integer"
+            else -> ""
+        }
+    }
+    val isValid = freshDaysError.isEmpty()
+
+    fun save() {
+        val days = freshDaysState.text.toString().toIntOrNull() ?: savedFreshDays
+        settingsViewModel.updateFreshDays(days)
+        navigator.pop()
     }
 
     Scaffold(
-        containerColor = MaterialTheme.colorScheme.background,
-        modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
         topBar = {
-            LargeTopAppBar(
+            LargeFlexibleTopAppBar(
+                modifier = Modifier.blurEffect(),
                 title = { Text(stringResource(R.string.news_display_settings)) },
-                navigationIcon = {
-                    IconButton(onClick = onBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.back))
-                    }
-                },
-                actions = {
-                    TextButton(
-                        onClick = { if (canSave) onSave(freshDaysInt) },
-                        enabled = canSave
-                    ) {
-                        Text(stringResource(R.string.save))
-                    }
-                },
-                scrollBehavior = scrollBehavior
+                navigationIcon = { AppBackButton(onClick = { navigator.pop() }) },
+                scrollBehavior = scrollBehavior,
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = Color.Transparent,
+                    scrolledContainerColor = Color.Transparent
+                )
             )
-        }
+        },
+        containerColor = Color.Transparent
     ) { innerPadding ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
+                .nestedScroll(scrollBehavior.nestedScrollConnection)
+                .verticalScroll(scrollState)
                 .padding(innerPadding)
-                .verticalScroll(rememberScrollState())
-                .padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(24.dp)
+                .blurSource()
         ) {
-            Surface(
-                tonalElevation = 2.dp,
-                shape = MaterialTheme.shapes.extraLarge,
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Column(
-                    modifier = Modifier.padding(16.dp),
-                    verticalArrangement = Arrangement.spacedBy(12.dp)
-                ) {
-                    Text(
-                        text = stringResource(R.string.highlight_fresh_news),
-                        style = MaterialTheme.typography.labelLarge,
-                        color = MaterialTheme.colorScheme.primary
-                    )
-
-                    Text(
-                        text = stringResource(R.string.highlight_fresh_news_desc),
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-
-                    OutlinedTextField(
-                        value = freshDaysString,
-                        onValueChange = {
-                            if (it.all { char -> char.isDigit() }) {
-                                freshDaysString = it
-                            }
-                        },
-                        label = { Text(stringResource(R.string.fresh_threshold_days)) },
-                        placeholder = { Text(stringResource(R.string.fresh_threshold_example)) },
-                        modifier = Modifier.fillMaxWidth(),
-                        singleLine = true,
-                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                        isError = !isValid && freshDaysString.isNotEmpty(),
-                        supportingText = {
-                            if (!isValid && freshDaysString.isNotEmpty()) {
-                                Text(stringResource(R.string.invalid_positive_integer))
-                            } else {
-                                Text(stringResource(R.string.disable_highlight_hint))
-                            }
-                        },
-                        trailingIcon = {
-                            if (freshDaysString.isNotEmpty()) {
-                                IconButton(onClick = { freshDaysString = "" }) {
-                                    Icon(Icons.Default.Clear, contentDescription = stringResource(R.string.clear))
-                                }
-                            }
-                        }
+            SegmentedColumn(title = stringResource(R.string.highlight_fresh_news)) {
+                item {
+                    SettingsTextFieldWidget(
+                        state = freshDaysState,
+                        title = stringResource(R.string.fresh_threshold_days),
+                        error = freshDaysError,
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
                     )
                 }
             }
 
-            // 预览效果区
-            Text(
-                text = stringResource(R.string.preview_effect),
-                style = MaterialTheme.typography.labelLarge,
-                color = MaterialTheme.colorScheme.primary,
-                modifier = Modifier.padding(start = 4.dp)
-            )
-
-            InfoCard(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(130.dp),
-                fetchedNotice = FetchedNotice(
-                    id = "preview",
-                    title = stringResource(R.string.preview_fresh_title),
-                    date = LocalDate.now().toString(),
-                    label = stringResource(R.string.notice),
-                    detailUrl = "",
-                    isPage = true,
-                    contentText = "",
-                    attachmentUrls = emptyList()
-                ),
-                onClick = {},
-                isFavorited = false,
-                isFresh = isValid && freshDaysInt != 0
-            )
-            InfoCard(
-                Modifier
-                    .fillMaxWidth()
-                    .height(130.dp),
-                fetchedNotice = FetchedNotice(
-                    id = "preview",
-                    title = stringResource(R.string.preview_old_title),
-                    date = LocalDate.now().toString(),
-                    label = stringResource(R.string.notice),
-                    detailUrl = "",
-                    isPage = true,
-                    contentText = "",
-                    attachmentUrls = emptyList()
-                ),
-                onClick = {},
-                isFavorited = false,
-                isFresh = false
-            )
+            Button(
+                onClick = { save() },
+                enabled = isValid,
+                modifier = Modifier.fillMaxWidth().padding(horizontal = 32.dp, vertical = 16.dp)
+            ) {
+                Text(stringResource(R.string.save))
+            }
         }
     }
 }

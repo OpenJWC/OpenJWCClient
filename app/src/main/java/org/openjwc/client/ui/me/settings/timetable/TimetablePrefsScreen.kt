@@ -3,144 +3,128 @@ package org.openjwc.client.ui.me.settings.timetable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.LargeTopAppBar
-import androidx.compose.material3.ListItem
-import androidx.compose.material3.MaterialTheme
+import androidx.compose.material.icons.twotone.CalendarMonth
+import androidx.compose.material.icons.twotone.Schedule
+import androidx.compose.material.icons.twotone.Timeline
+import androidx.compose.material.icons.twotone.VisibilityOff
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
+import androidx.compose.material3.LargeFlexibleTopAppBar
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Surface
-import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material3.rememberTopAppBarState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.nestedscroll.nestedScroll
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import org.openjwc.client.R
-import org.openjwc.client.data.models.Course
-import org.openjwc.client.data.models.SemesterConfig
-import org.openjwc.client.data.models.TableMetadata
-import org.openjwc.client.ui.theme.courseBackgroundColors
-import org.openjwc.client.viewmodels.TimetableDisplayPrefs
-import java.time.DayOfWeek
+import org.openjwc.client.data.datastore.AuthDataSource
+import org.openjwc.client.data.datastore.CachedDataSource
+import org.openjwc.client.data.datastore.SettingsDataSource
+import org.openjwc.client.data.db.AppDatabase
+import org.openjwc.client.data.repository.AuthRepository
+import org.openjwc.client.data.repository.CourseRepository
+import org.openjwc.client.data.repository.SettingsRepository
+import org.openjwc.client.navigation3.Navigator
+import org.openjwc.client.ui.component.settings.AppBackButton
+import org.openjwc.client.ui.component.settings.SegmentedColumn
+import org.openjwc.client.ui.component.settings.SettingsSwitchWidget
+import org.openjwc.client.ui.theme.blurEffect
+import org.openjwc.client.ui.theme.blurSource
+import org.openjwc.client.viewmodels.TimetableViewModel
+import org.openjwc.client.viewmodels.TimetableViewModelFactory
+import org.openjwc.client.viewmodels.SettingsViewModel
+import org.openjwc.client.viewmodels.SettingsViewModelFactory
 
-val mockCourses = listOf(
-    Course(
-        id = 0L,
-        tableId = 0L,
-        name = "测试课程",
-        teacher = "老师",
-        location = "地点",
-        dayOfWeek = DayOfWeek.MONDAY,
-        startPeriod = 1,
-        duration = 2,
-        color = courseBackgroundColors[0],
-        weekRule = (1..16).toSet(),
-        note = ""
-    )
-)
-
-val mockTableMetadata = TableMetadata(
-    id = 0,
-    tableName = "测试课表",
-    semesterConfig = SemesterConfig.default(),
-    isCurrent = true
-)
-
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
-fun TimetablePrefsScreen(
-    prefs: TimetableDisplayPrefs,
-    onBack: () -> Unit,
-    onToggleTimeline: (Boolean) -> Unit,
-    onToggleDate: (Boolean) -> Unit,
-    onTogglePeriodTime: (Boolean) -> Unit,
-    onToggleNonCurrentWeek: (Boolean) -> Unit
-) {
-    val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
+fun TimetablePrefsScreen(navigator: Navigator) {
+    val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior(rememberTopAppBarState())
+    val context = LocalContext.current
+
+    val database = remember { AppDatabase.getDatabase(context) }
+    val settingsDataSource = remember { SettingsDataSource(context) }
+    val authDataSource = remember { AuthDataSource(context) }
+    val cachedDataSource = remember { CachedDataSource(context) }
+    val settingsRepository = remember { SettingsRepository(settingsDataSource, cachedDataSource, authDataSource, context) }
+    val courseRepository = remember { CourseRepository(database.courseDao(), database.tableDao()) }
+    val authRepository = remember { AuthRepository(authDataSource, settingsDataSource) }
+    val timetableViewModel: TimetableViewModel = viewModel(factory = TimetableViewModelFactory(courseRepository, settingsRepository))
+    val settingsViewModel: SettingsViewModel = viewModel(factory = SettingsViewModelFactory(settingsRepository, authRepository))
+
+    val prefs by timetableViewModel.displayPrefs.collectAsStateWithLifecycle()
+    val showTimeline = prefs.showTimeline
+    val showDate = prefs.showDate
+    val showPeriodTime = prefs.showPeriodTime
+    val showNonCurrentWeek = prefs.showNonCurrentWeek
 
     Scaffold(
-        modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
         topBar = {
-            LargeTopAppBar(
+            LargeFlexibleTopAppBar(
+                modifier = Modifier.blurEffect(),
                 title = { Text(stringResource(R.string.timetable_settings)) },
-                navigationIcon = {
-                    IconButton(onClick = onBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = null)
-                    }
-                },
-                scrollBehavior = scrollBehavior
+                navigationIcon = { AppBackButton(onClick = { navigator.pop() }) },
+                scrollBehavior = scrollBehavior,
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = Color.Transparent,
+                    scrolledContainerColor = Color.Transparent
+                )
             )
-        }
+        },
+        containerColor = Color.Transparent
     ) { innerPadding ->
         Column(
             modifier = Modifier
-                .padding(innerPadding)
                 .fillMaxSize()
-                .verticalScroll(rememberScrollState())
-                .padding(horizontal = 16.dp)
+                .nestedScroll(scrollBehavior.nestedScrollConnection)
+                .padding(innerPadding)
+                .blurSource()
         ) {
-            Surface(
-                tonalElevation = 1.dp,
-                shape = MaterialTheme.shapes.extraLarge
-            ) {
-                Column(modifier = Modifier.padding(vertical = 8.dp)) {
-                    ListItem(
-                        headlineContent = { Text(stringResource(R.string.show_timeline)) },
-                        supportingContent = { Text(stringResource(R.string.show_timeline_desc)) },
-                        trailingContent = {
-                            Switch(checked = prefs.showTimeline, onCheckedChange = onToggleTimeline)
-                        }
+            SegmentedColumn {
+                item {
+                    SettingsSwitchWidget(
+                        icon = Icons.TwoTone.Timeline,
+                        title = stringResource(R.string.show_timeline),
+                        description = stringResource(R.string.show_timeline_desc),
+                        checked = showTimeline,
+                        onCheckedChange = { settingsViewModel.updateShowTimeline(it) }
                     )
-                    ListItem(
-                        headlineContent = { Text(stringResource(R.string.show_date_header)) },
-                        supportingContent = { Text(stringResource(R.string.show_date_header_desc)) },
-                        trailingContent = {
-                            Switch(checked = prefs.showDate, onCheckedChange = onToggleDate)
-                        }
+                }
+                item {
+                    SettingsSwitchWidget(
+                        icon = Icons.TwoTone.CalendarMonth,
+                        title = stringResource(R.string.show_date_header),
+                        description = stringResource(R.string.show_date_header_desc),
+                        checked = showDate,
+                        onCheckedChange = { settingsViewModel.updateShowDate(it) }
                     )
-                    // 显示课节具体时间
-                    ListItem(
-                        headlineContent = { Text(stringResource(R.string.show_period_time)) },
-                        supportingContent = { Text(stringResource(R.string.show_period_time_desc)) },
-                        trailingContent = {
-                            Switch(checked = prefs.showPeriodTime, onCheckedChange = onTogglePeriodTime)
-                        }
+                }
+                item {
+                    SettingsSwitchWidget(
+                        icon = Icons.TwoTone.Schedule,
+                        title = stringResource(R.string.show_period_time),
+                        description = stringResource(R.string.show_period_time_desc),
+                        checked = showPeriodTime,
+                        onCheckedChange = { settingsViewModel.updateShowPeriodTime(it) }
                     )
-                    // 显示非本周课程
-                    ListItem(
-                        headlineContent = { Text(stringResource(R.string.show_non_current_week)) },
-                        supportingContent = { Text(stringResource(R.string.show_non_current_week_desc)) },
-                        trailingContent = {
-                            Switch(checked = prefs.showNonCurrentWeek, onCheckedChange = onToggleNonCurrentWeek)
-                        }
+                }
+                item {
+                    SettingsSwitchWidget(
+                        icon = Icons.TwoTone.VisibilityOff,
+                        title = stringResource(R.string.show_non_current_week),
+                        description = stringResource(R.string.show_non_current_week_desc),
+                        checked = showNonCurrentWeek,
+                        onCheckedChange = { settingsViewModel.updateShowNonCurrentWeek(it) }
                     )
                 }
             }
         }
-        /*Text(
-            text = stringResource(R.string.preview_effect),
-            style = MaterialTheme.typography.labelSmall,
-            color = MaterialTheme.colorScheme.primary,
-            modifier = Modifier.padding(16.dp)
-        )
-        TimetableGrid(
-            tableMetadata = mockTableMetadata,
-            courses = mockCourses,
-            currentWeek = 2,
-            showNonCurrentWeek = prefs.showNonCurrentWeek,
-            showTimeLine = prefs.showTimeline,
-            showDate = prefs.showDate,
-            showPeriodTime = prefs.showPeriodTime,
-            onCourseClick = {},
-            onEmptySlotClick = { _, _ -> }
-        )*/
     }
 }

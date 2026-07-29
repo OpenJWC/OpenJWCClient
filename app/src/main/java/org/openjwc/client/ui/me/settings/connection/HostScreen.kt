@@ -1,361 +1,219 @@
 package org.openjwc.client.ui.me.settings.connection
 
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.Crossfade
-import androidx.compose.animation.expandVertically
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
-import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.WindowInsets
-import androidx.compose.foundation.layout.consumeWindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.ime
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.Check
-import androidx.compose.material.icons.filled.Http
-import androidx.compose.material.icons.filled.LinkOff
-import androidx.compose.material.icons.filled.SettingsInputComponent
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.LargeTopAppBar
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material.icons.twotone.Http
+import androidx.compose.material.icons.twotone.LinkOff
+import androidx.compose.material3.Button
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
+import androidx.compose.material3.LargeFlexibleTopAppBar
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.SegmentedButton
-import androidx.compose.material3.SegmentedButtonDefaults
-import androidx.compose.material3.SingleChoiceSegmentedButtonRow
-import androidx.compose.material3.Surface
-import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material3.rememberTopAppBarState
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.nestedscroll.nestedScroll
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import org.openjwc.client.R
+import org.openjwc.client.data.datastore.AuthDataSource
+import org.openjwc.client.data.datastore.CachedDataSource
+import org.openjwc.client.data.datastore.SettingsDataSource
+import org.openjwc.client.data.repository.AuthRepository
+import org.openjwc.client.data.repository.SettingsRepository
+import org.openjwc.client.navigation3.Navigator
 import org.openjwc.client.net.models.Proxy
+import org.openjwc.client.ui.component.settings.AppBackButton
+import org.openjwc.client.ui.component.settings.SegmentedColumn
+import org.openjwc.client.ui.component.settings.SettingsChooseWidget
+import org.openjwc.client.ui.component.settings.SettingsTextFieldWidget
+import org.openjwc.client.ui.theme.blurEffect
+import org.openjwc.client.ui.theme.blurSource
+import org.openjwc.client.viewmodels.SettingsViewModel
+import org.openjwc.client.viewmodels.SettingsViewModelFactory
 
-@Preview
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
-fun TestHostScreen() {
-    val proxy by remember { mutableStateOf(Proxy.NoProxy()) }
-    HostScreen(
-        initialHost = "127.0.0.1",
-        initialPort = 8,
-        initialProxy = proxy,
-        onConfirm = { _, _, _, _ -> },
-        onBack = {}
-    )
-}
+fun HostScreen(navigator: Navigator) {
+    val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior(rememberTopAppBarState())
+    val context = LocalContext.current
 
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-fun HostScreen(
-    initialHost: String,
-    initialPort: Int,
-    initialUseHttp: Boolean = false,
-    initialProxy: Proxy,
-    onConfirm: (String, Int, Boolean, Proxy) -> Unit,
-    onBack: () -> Unit
-) {
-    val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
-    var host by remember { mutableStateOf(initialHost) }
-    var portString by remember { mutableStateOf(initialPort.toString()) }
-    var useHttp by remember { mutableStateOf(initialUseHttp) }
+    val settingsDataSource = remember { SettingsDataSource(context) }
+    val authDataSource = remember { AuthDataSource(context) }
+    val cachedDataSource = remember { CachedDataSource(context) }
+    val settingsRepository = remember { SettingsRepository(settingsDataSource, cachedDataSource, authDataSource, context) }
+    val authRepository = remember { AuthRepository(authDataSource, settingsDataSource) }
+    val settingsViewModel: SettingsViewModel = viewModel(factory = SettingsViewModelFactory(settingsRepository, authRepository))
 
-    var proxyType by remember {
-        mutableIntStateOf(
-            when (initialProxy) {
-                is Proxy.NoProxy -> 0
-                is Proxy.HttpProxy -> 1
-                is Proxy.SocksProxy -> 2
-            }
-        )
-    }
-    var proxyHost by remember {
-        mutableStateOf(
-            when (initialProxy) {
-                is Proxy.HttpProxy -> initialProxy.host
-                is Proxy.SocksProxy -> initialProxy.host
-                else -> "127.0.0.1"
-            }
-        )
-    }
-    var proxyPortString by remember {
-        mutableStateOf(
-            when (initialProxy) {
-                is Proxy.HttpProxy -> initialProxy.port.toString()
-                is Proxy.SocksProxy -> initialProxy.port.toString()
-                else -> "8888"
-            }
-        )
-    }
+    val settings by settingsViewModel.settings.collectAsStateWithLifecycle()
 
-    val isHostValid = host.isNotBlank()
-    val portInt = portString.toIntOrNull()
-    val isPortValid = portInt != null && portInt in 0..65535
+    val hostState = remember { TextFieldState(settings.host) }
+    val portState = remember { TextFieldState(settings.port.toString()) }
+    var useHttp by remember { mutableStateOf(settings.useHttp) }
 
-    val proxyPortInt = proxyPortString.toIntOrNull()
-    val isProxyValid =
-        proxyType == 0 || (proxyHost.isNotBlank() && proxyPortInt != null && proxyPortInt in 0..65535)
-
-    val currentProxy = when (proxyType) {
-        1 -> Proxy.HttpProxy(proxyHost, proxyPortInt ?: 8888)
-        2 -> Proxy.SocksProxy(proxyHost, proxyPortInt ?: 1080)
-        else -> Proxy.NoProxy()
-    }
-
-    val isChanged =
-        initialHost != host || initialPort != portInt || initialUseHttp != useHttp || initialProxy != currentProxy
-    val canSave = isHostValid && isPortValid && isProxyValid && isChanged
-
-    LaunchedEffect(initialHost, initialPort, initialUseHttp, initialProxy) {
-        host = initialHost
-        portString = initialPort.toString()
-        useHttp = initialUseHttp
-        proxyType = when (initialProxy) {
-            is Proxy.NoProxy -> 0
+    val currentProxy = settings.proxy
+    var proxyType by remember { mutableIntStateOf(
+        when (currentProxy) {
             is Proxy.HttpProxy -> 1
             is Proxy.SocksProxy -> 2
+            else -> 0
         }
-        proxyHost = when (initialProxy) {
-            is Proxy.HttpProxy -> initialProxy.host
-            is Proxy.SocksProxy -> initialProxy.host
-            else -> "127.0.0.1"
-        }
-        proxyPortString = when (initialProxy) {
-            is Proxy.HttpProxy -> initialProxy.port.toString()
-            is Proxy.SocksProxy -> initialProxy.port.toString()
-            else -> "8888"
+    ) }
+    val proxyHost = when (currentProxy) {
+        is Proxy.HttpProxy -> currentProxy.host
+        is Proxy.SocksProxy -> currentProxy.host
+        else -> ""
+    }
+    val proxyPort = when (currentProxy) {
+        is Proxy.HttpProxy -> currentProxy.port.toString()
+        is Proxy.SocksProxy -> currentProxy.port.toString()
+        else -> "8080"
+    }
+    val proxyHostState = remember { TextFieldState(proxyHost) }
+    val proxyPortState = remember { TextFieldState(proxyPort) }
+
+    val showProxyFields = proxyType != 0
+    val scrollState = rememberScrollState()
+
+    val hostError = if (hostState.text.isBlank()) "Required" else ""
+    val portError = run {
+        val p = portState.text.toString().toIntOrNull()
+        when {
+            portState.text.isBlank() -> "Required"
+            p == null || p !in 0..65535 -> "0–65535"
+            else -> ""
         }
     }
-    Scaffold(
-        modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
-        topBar = {
-            LargeTopAppBar(
-                title = { Text(stringResource(R.string.network_config)) },
-                navigationIcon = {
-                    IconButton(onClick = onBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.back))
-                    }
-                },
-                actions = {
-                    TextButton(
-                        onClick = { if (canSave) onConfirm(host, portInt, useHttp, currentProxy) },
-                        enabled = canSave
-                    ) { Text(stringResource(R.string.save)) }
-                },
-                scrollBehavior = scrollBehavior
-            )
+    val proxyPortError = if (showProxyFields) {
+        val p = proxyPortState.text.toString().toIntOrNull()
+        when {
+            proxyPortState.text.isBlank() -> "Required"
+            p == null || p !in 0..65535 -> "0–65535"
+            else -> ""
         }
+    } else ""
+
+    val isValid = hostError.isEmpty() && portError.isEmpty() && proxyPortError.isEmpty()
+
+    fun save() {
+        settingsViewModel.updateHost(hostState.text.toString())
+        settingsViewModel.updatePort(portState.text.toString().toIntOrNull() ?: settings.port)
+        settingsViewModel.updateUseHttp(useHttp)
+        val proxy = when (proxyType) {
+            1 -> Proxy.HttpProxy(proxyHostState.text.toString(), proxyPortState.text.toString().toIntOrNull() ?: 8080)
+            2 -> Proxy.SocksProxy(proxyHostState.text.toString(), proxyPortState.text.toString().toIntOrNull() ?: 8080)
+            else -> Proxy.NoProxy()
+        }
+        settingsViewModel.updateProxy(proxy)
+        navigator.pop()
+    }
+
+    Scaffold(
+        topBar = {
+            LargeFlexibleTopAppBar(
+                modifier = Modifier.blurEffect(),
+                title = { Text(stringResource(R.string.network_config)) },
+                navigationIcon = { AppBackButton(onClick = { navigator.pop() }) },
+                scrollBehavior = scrollBehavior,
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = Color.Transparent,
+                    scrolledContainerColor = Color.Transparent
+                )
+            )
+        },
+        containerColor = Color.Transparent
     ) { innerPadding ->
         Column(
             modifier = Modifier
-                .padding(innerPadding)
                 .fillMaxSize()
-                .verticalScroll(rememberScrollState())
-                .padding(horizontal = 24.dp)
-                .consumeWindowInsets(innerPadding)
-                .windowInsetsPadding(WindowInsets.ime)
+                .nestedScroll(scrollBehavior.nestedScrollConnection)
+                .verticalScroll(scrollState)
+                .padding(innerPadding)
+                .blurSource()
         ) {
-            Surface(
-                tonalElevation = 2.dp,
-                shape = MaterialTheme.shapes.extraLarge,
-                modifier = Modifier.fillMaxWidth(),
-            ) {
-                Column(modifier = Modifier.padding(16.dp)) {
-                    Text(
-                        stringResource(R.string.server_config),
-                        style = MaterialTheme.typography.labelLarge,
-                        color = MaterialTheme.colorScheme.primary
+            SegmentedColumn(title = stringResource(R.string.server_config)) {
+                item {
+                    SettingsTextFieldWidget(
+                        state = hostState,
+                        title = "Host URL",
+                        error = hostError,
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Uri)
                     )
-                    Spacer(Modifier.height(12.dp))
-                    OutlinedTextField(
-                        value = host,
-                        onValueChange = { host = it.trim() },
-                        label = { Text(stringResource(R.string.host_address)) },
-                        modifier = Modifier.fillMaxWidth(),
-                        isError = !isHostValid,
-                        supportingText = {
-                            if (!isHostValid) {
-                                Text(stringResource(R.string.host_empty_error))
-                            }
-                        },
-                        singleLine = true
-                    )
-                    Spacer(Modifier.height(8.dp))
-                    OutlinedTextField(
-                        value = portString,
-                        onValueChange = { if (it.all { c -> c.isDigit() }) portString = it },
-                        label = { Text(stringResource(R.string.port_number)) },
-                        modifier = Modifier.fillMaxWidth(),
-                        isError = !isPortValid,
-                        supportingText = {
-                            if (!isPortValid) {
-                                Text(stringResource(R.string.port_range_error))
-                            }
-                        },
+                }
+                item {
+                    SettingsTextFieldWidget(
+                        state = portState,
+                        title = "Port",
+                        error = portError,
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
                     )
                 }
-            }
-
-            Spacer(modifier = Modifier.height(24.dp))
-
-            Surface(
-                tonalElevation = 2.dp,
-                shape = MaterialTheme.shapes.extraLarge,
-                modifier = Modifier.fillMaxWidth(),
-            ) {
-                Column(
-                    modifier = Modifier
-                        .padding(16.dp)
-                ) {
-                    Text(
-                        stringResource(R.string.proxy_settings),
-                        style = MaterialTheme.typography.labelLarge,
-                        color = MaterialTheme.colorScheme.primary
+                item {
+                    SettingsChooseWidget(
+                        icon = Icons.TwoTone.Http,
+                        title = "Protocol",
+                        items = listOf("HTTP", "HTTPS"),
+                        selectedIndex = if (useHttp) 0 else 1,
+                        onSelectedIndexChange = { useHttp = it == 0 }
                     )
-                    Spacer(Modifier.height(12.dp))
+                }
+            }
 
-
-                    SingleChoiceSegmentedButtonRow(
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
-                        val options = listOf(
-                            Triple(0, stringResource(R.string.no_proxy), Icons.Default.LinkOff),
-                            Triple(1, "HTTP", Icons.Default.Http),
-                            Triple(2, "SOCKS", Icons.Default.SettingsInputComponent)
+            SegmentedColumn(title = "Proxy") {
+                item {
+                    SettingsChooseWidget(
+                        icon = Icons.TwoTone.LinkOff,
+                        title = "Proxy Type",
+                        items = listOf("None", "HTTP Proxy", "SOCKS Proxy"),
+                        selectedIndex = proxyType,
+                        onSelectedIndexChange = { proxyType = it }
+                    )
+                }
+                if (showProxyFields) {
+                    item {
+                        SettingsTextFieldWidget(
+                            state = proxyHostState,
+                            title = "Proxy Host",
+                            error = if (proxyHostState.text.isBlank()) "Required" else "",
+                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Uri)
                         )
-
-                        options.forEachIndexed { index, (type, label, icon) ->
-                            val isSelected = proxyType == type
-                            SegmentedButton(
-                                selected = isSelected,
-                                onClick = { proxyType = type },
-                                shape = SegmentedButtonDefaults.itemShape(
-                                    index = index,
-                                    count = options.size
-                                ),
-                                icon = {
-                                    Crossfade(
-                                        targetState = isSelected,
-                                        label = "ProxyIconSwitch"
-                                    ) { target ->
-                                        Icon(
-                                            imageVector = if (target) Icons.Default.Check else icon,
-                                            contentDescription = null,
-                                            modifier = Modifier.size(18.dp)
-                                        )
-                                    }
-                                },
-                                label = {
-                                    Text(
-                                        text = label,
-                                        style = MaterialTheme.typography.labelLarge
-                                    )
-                                }
-                            )
-                        }
                     }
-
-                    AnimatedVisibility(
-                        visible = proxyType != 0,
-                        enter = fadeIn() + expandVertically(),
-                        exit = fadeOut() + shrinkVertically()
-                    ) {
-                        Column {
-                            val ipv4Pattern = remember {
-                                Regex("^((25[0-5]|(2[0-4]|1\\d|[1-9]|)\\d)\\.?\\b){4}$")
-                            }
-                            val isProxyHostError =
-                                proxyHost.isBlank() || !ipv4Pattern.matches(proxyHost)
-                            val isProxyPortError = proxyPortInt == null || proxyPortInt !in 0..65535
-
-                            Spacer(Modifier.height(12.dp))
-                            OutlinedTextField(
-                                value = proxyHost,
-                                onValueChange = { proxyHost = it.trim() },
-                                label = { Text(stringResource(R.string.proxy_host)) },
-                                modifier = Modifier.fillMaxWidth(),
-                                isError = isProxyHostError,
-                                supportingText = { if (isProxyHostError) Text(stringResource(R.string.proxy_host_ipv4_error)) },
-                                singleLine = true,
-                                keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next)
-                            )
-                            Spacer(Modifier.height(8.dp))
-                            OutlinedTextField(
-                                value = proxyPortString,
-                                onValueChange = {
-                                    if (it.all { c -> c.isDigit() }) proxyPortString = it
-                                },
-                                label = { Text(stringResource(R.string.proxy_port)) },
-                                modifier = Modifier.fillMaxWidth(),
-                                isError = isProxyPortError,
-                                supportingText = { if (isProxyPortError) Text(stringResource(R.string.proxy_port_range_error)) },
-                                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
-                            )
-                        }
+                    item {
+                        SettingsTextFieldWidget(
+                            state = proxyPortState,
+                            title = "Proxy Port",
+                            error = proxyPortError,
+                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
+                        )
                     }
                 }
             }
 
-            Spacer(modifier = Modifier.height(24.dp))
-
-            Surface(
-                tonalElevation = 1.dp,
-                shape = MaterialTheme.shapes.extraLarge,
-                modifier = Modifier.fillMaxWidth()
+            Button(
+                onClick = { save() },
+                enabled = isValid,
+                modifier = Modifier.fillMaxWidth().padding(horizontal = 32.dp, vertical = 16.dp)
             ) {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(16.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Column(modifier = Modifier.weight(1f)) {
-                        Text(stringResource(R.string.use_unsafe_http), style = MaterialTheme.typography.bodyLarge)
-                        Text(
-                            stringResource(R.string.force_https_desc),
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
-                    Switch(checked = useHttp, onCheckedChange = { useHttp = it })
-                }
+                Text(stringResource(R.string.save))
             }
-
-            Text(
-                text = stringResource(R.string.host_config_hint),
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier.padding(top = 24.dp)
-            )
         }
     }
 }

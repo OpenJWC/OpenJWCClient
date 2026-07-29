@@ -1,59 +1,36 @@
 package org.openjwc.client.ui.policy
 
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalWindowInfo
-import androidx.compose.ui.res.stringResource
-import dev.jeziellago.compose.markdowntext.MarkdownText
-import org.openjwc.client.R
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.dp
 
 @Composable
-fun PolicyDialog(
-    policyText: String,
-    onDismiss: () -> Unit,
-    onAgree: () -> Unit,
-) {
-    val screenHeight = LocalWindowInfo.current.containerDpSize.height
-    val scrollState = rememberScrollState()
-
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        title = {
-            Text(
-                text = stringResource(R.string.user_agreement_and_privacy_policy),
-                style = MaterialTheme.typography.headlineSmall
-            )
-        },
-        text = {
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .heightIn(max = screenHeight * 0.6f)
-                    .verticalScroll(scrollState)
-            ) {
-                MarkdownText(
-                    markdown = policyText,
-                )
+fun PolicyDialog(policyText: String, onDismiss: () -> Unit, onAgree: () -> Unit) {
+    Surface(shape = RoundedCornerShape(28.dp), color = MaterialTheme.colorScheme.surface, modifier = Modifier.padding(24.dp)) {
+        Column(Modifier.padding(24.dp)) {
+            Text("用户协议与隐私政策", style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
+            Spacer(Modifier.height(16.dp))
+            Column(Modifier.weight(1f).fillMaxWidth().verticalScroll(rememberScrollState()).padding(8.dp)) {
+                Text(policyText, style = MaterialTheme.typography.bodyMedium)
             }
-        },
-        confirmButton = {
-            TextButton(onClick = onAgree) {
-                Text(stringResource(R.string.agree_and_continue))
-            }
-        },
-        dismissButton = {
-            TextButton(onClick = onDismiss) {
-                Text(stringResource(R.string.decline_and_exit))
-            }
+            Spacer(Modifier.height(16.dp))
+            Button(onClick = onAgree, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(12.dp)) { Text("同意并继续") }
+            Spacer(Modifier.height(8.dp))
+            OutlinedButton(onClick = onDismiss, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(12.dp)) { Text("拒绝并退出") }
         }
-    )
+    }
 }

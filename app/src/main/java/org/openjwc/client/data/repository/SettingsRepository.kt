@@ -40,7 +40,6 @@ class SettingsRepository(
     }
 
     suspend fun tryRefreshHitokoto(): NetworkResult<SuccessResponse<Hitokoto>> {
-        if (!authDataSource.authSession.first().isLoggedIn) return NetworkResult.Failure(401, "Not logged in")
         try {
             val settings = getSettingsSnapshot()
             val apiService =
@@ -52,7 +51,7 @@ class SettingsRepository(
                 )
 
             val result = apiService.fetchHitokoto(
-                authDataSource.authSession.first().token ?: throw Exception("No token"),
+                authDataSource.authSession.first().token ?: "",
                 authDataSource.authSession.first().uuid,
             )
             if (result is NetworkResult.Success) {
@@ -136,4 +135,8 @@ class SettingsRepository(
     suspend fun updateShowDate(show: Boolean) = settingsDataSource.save(keys.SHOW_DATE, show)
     suspend fun updateShowPeriodTime(show: Boolean) = settingsDataSource.save(keys.SHOW_PERIOD_TIME, show)
     suspend fun updateShowNonCurrentWeek(show: Boolean) = settingsDataSource.save(keys.SHOW_NON_CURRENT_WEEK, show)
+
+    suspend fun getToggleState(id: String): Boolean = settingsDataSource.getToggleState(id)
+
+    suspend fun saveToggleState(id: String, value: Boolean) = settingsDataSource.saveToggleState(id, value)
 }

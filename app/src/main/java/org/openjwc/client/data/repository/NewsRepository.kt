@@ -13,7 +13,6 @@ class NewsRepository(
     private val settingsDataSource: SettingsDataSource,
     private val authDataSource: AuthDataSource
 ) {
-    /// TODO: 这个地方之后会加缓存逻辑
     private suspend fun getApiService(): NetService {
         val settings = settingsDataSource.userSettings.first()
         return NetClient.getService(
@@ -49,9 +48,8 @@ class NewsRepository(
 
     suspend fun uploadNews(notice: UploadedNotice): NetworkResult<SuccessResponse<Map<String, String>>> {
         val authSession = authDataSource.authSession.first()
-        if (!authSession.isLoggedIn) return NetworkResult.Failure(401,"Not logged in")
         return getApiService().uploadNews(
-            authSession.token ?: return NetworkResult.Failure(401, "No token"),
+            authSession.token ?: "",
             authSession.uuid,
             notice
         )
@@ -59,9 +57,8 @@ class NewsRepository(
 
     suspend fun getReviewedNews(): NetworkResult<SuccessResponse<ReviewedNoticesData>> {
         val authSession = authDataSource.authSession.first()
-        if (!authSession.isLoggedIn) return NetworkResult.Failure(401,"Not logged in")
         return getApiService().fetchReviewedNews(
-            authSession.token ?: return NetworkResult.Failure(401, "No token"),
+            authSession.token ?: "",
             authSession.uuid,
         )
     }

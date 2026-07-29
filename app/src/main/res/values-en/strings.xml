@@ -62,6 +62,7 @@ SOFTWARE.\n
     <string name="upload_news">Upload News</string>
     <string name="back">Back</string>
     <string name="uploading">Uploading…</string>
+    <string name="loading">Loading…</string>
     <string name="submit_upload">Submit</string>
     <string name="basic_information">Basic Information</string>
     <string name="title">Title</string>
@@ -268,6 +269,9 @@ SOFTWARE.\n
     <string name="language_settings">Language Settings</string>
     <string name="simplified_chinese">Simplified Chinese</string>
     <string name="english">English</string>
+    <string name="japanese">Japanese</string>
+    <string name="korean">Korean</string>
+    <string name="traditional_chinese">Traditional Chinese</string>
 
     <!-- Timetable -->
     <string name="timetable">Timetable</string>

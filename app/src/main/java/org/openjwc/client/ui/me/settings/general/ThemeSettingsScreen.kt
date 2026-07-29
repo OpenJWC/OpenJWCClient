@@ -1,0 +1,140 @@
+package org.openjwc.client.ui.me.settings.general
+
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.twotone.BlurOn
+import androidx.compose.material.icons.twotone.Colorize
+import androidx.compose.material.icons.twotone.Contrast
+import androidx.compose.material.icons.twotone.OpenInFull
+import androidx.compose.material.icons.twotone.Swipe
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
+import androidx.compose.material3.LargeFlexibleTopAppBar
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material3.rememberTopAppBarState
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.input.nestedscroll.nestedScroll
+import androidx.compose.ui.platform.LocalContext
+import org.openjwc.client.data.appPreferences
+import org.openjwc.client.navigation3.Navigator
+import org.openjwc.client.ui.component.settings.AppBackButton
+import org.openjwc.client.ui.component.settings.SegmentedColumn
+import org.openjwc.client.ui.component.settings.SettingsChooseWidget
+import org.openjwc.client.ui.component.settings.SettingsSwitchWidget
+import org.openjwc.client.ui.theme.BackgroundManager
+import org.openjwc.client.ui.theme.ThemeConfig
+import org.openjwc.client.ui.theme.blurEffect
+import org.openjwc.client.ui.theme.blurSource
+
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
+@Composable
+fun ThemeSettingsScreen(navigator: Navigator) {
+    val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior(rememberTopAppBarState())
+    val context = LocalContext.current
+
+    Scaffold(
+        topBar = {
+            LargeFlexibleTopAppBar(
+                modifier = Modifier.blurEffect(),
+                title = { Text("Advanced Theme") },
+                navigationIcon = { AppBackButton(onClick = { navigator.pop() }) },
+                scrollBehavior = scrollBehavior,
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = Color.Transparent,
+                    scrolledContainerColor = Color.Transparent
+                )
+            )
+        },
+        containerColor = Color.Transparent
+    ) { innerPadding ->
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .nestedScroll(scrollBehavior.nestedScrollConnection)
+                .padding(innerPadding)
+                .blurSource()
+        ) {
+            SegmentedColumn(title = "Background") {
+                item {
+                    SettingsSwitchWidget(
+                        icon = Icons.TwoTone.BlurOn,
+                        title = "Enable Blur",
+                        checked = ThemeConfig.isEnableBlur,
+                        onCheckedChange = { BackgroundManager.saveEnableBlur(context, it) }
+                    )
+                }
+                item {
+                    SettingsSwitchWidget(
+                        icon = Icons.TwoTone.BlurOn,
+                        title = "Enable Experimental Blur",
+                        checked = ThemeConfig.isEnableBlurExp,
+                        onCheckedChange = { BackgroundManager.saveEnableBlurExp(context, it) }
+                    )
+                }
+                item {
+                    SettingsSwitchWidget(
+                        icon = Icons.TwoTone.Colorize,
+                        title = "Use Background Seed Color",
+                        checked = ThemeConfig.isUseBackgroundSeedColor,
+                        onCheckedChange = { BackgroundManager.saveUseBackgroundSeedColor(context, it) }
+                    )
+                }
+            }
+
+            SegmentedColumn(title = "Accessibility") {
+                item {
+                    SettingsSwitchWidget(
+                        icon = Icons.TwoTone.Contrast,
+                        title = "High Contrast Mode",
+                        checked = ThemeConfig.isHighContrastMode,
+                        onCheckedChange = { BackgroundManager.saveEnableHighContrastMode(context, it) }
+                    )
+                }
+            }
+
+            SegmentedColumn(title = "Predictive Back Animation") {
+                item {
+                    SettingsChooseWidget(
+                        icon = Icons.TwoTone.Swipe,
+                        title = "Animation Type",
+                        items = listOf("AOSP", "Scale", "KernelSU Classic", "MIUIX", "None"),
+                        selectedIndex = when (ThemeConfig.predictiveBackAnimation) {
+                            "AOSP" -> 0
+                            "Scale" -> 1
+                            "KernelSUClassic" -> 2
+                            "MIUIX" -> 3
+                            else -> 4
+                        },
+                        onSelectedIndexChange = { index ->
+                            val value = listOf("AOSP", "Scale", "KernelSUClassic", "MIUIX", "None")[index]
+                            context.appPreferences.putString("predictive_back_animation", value)
+                            ThemeConfig.predictiveBackAnimation = value
+                        }
+                    )
+                }
+                item {
+                    SettingsChooseWidget(
+                        icon = Icons.TwoTone.OpenInFull,
+                        title = "Exit Direction",
+                        items = listOf("Follow Gesture", "Always Right", "Always Left"),
+                        selectedIndex = when (ThemeConfig.predictiveBackExitDirection) {
+                            "FOLLOW_GESTURE" -> 0
+                            "ALWAYS_RIGHT" -> 1
+                            else -> 2
+                        },
+                        onSelectedIndexChange = { index ->
+                            val value = listOf("FOLLOW_GESTURE", "ALWAYS_RIGHT", "ALWAYS_LEFT")[index]
+                            context.appPreferences.putString("predictive_back_exit_direction", value)
+                            ThemeConfig.predictiveBackExitDirection = value
+                        }
+                    )
+                }
+            }
+        }
+    }
+}

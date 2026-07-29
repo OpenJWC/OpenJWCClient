@@ -19,7 +19,7 @@ fun Set<Int>.toDisplayText(totalWeeks: Int = 16): String {
         this == evenWeeks -> stringResource(R.string.even_weeks)
         else -> {
             val rangeText = formatRangeText(this)
-            "$rangeText 周" // TODO: I18n required
+            stringResource(R.string.custom_weeks_format, rangeText)
         }
     }
 }

@@ -8,14 +8,12 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import org.openjwc.client.data.datastore.CachedHitokoto
-import org.openjwc.client.data.repository.AuthRepository
 import org.openjwc.client.data.repository.SettingsRepository
 import org.openjwc.client.net.models.NetworkResult
 import java.time.LocalDate
 
 class MeViewModel(
-    private val repository: SettingsRepository,
-    private val authRepository: AuthRepository
+    private val repository: SettingsRepository
 ) : ViewModel() {
     private val tag = "MeViewModel"
 
@@ -46,7 +44,6 @@ class MeViewModel(
                 is NetworkResult.Failure -> {
                     uiEvent.send(UiEvent.ShowToast(UiText.DynamicString("(${result.code}) ${result.msg}")))
                     if (result.code == 401) {
-                        authRepository.clearSession()
                         navEvent.send(NavEvent.ToLogin())
                     }
                 }
@@ -60,13 +57,12 @@ class MeViewModel(
 
 
 class MeViewModelFactory(
-    private val settingsRepository: SettingsRepository,
-    private val authRepository: AuthRepository
+    private val settingsRepository: SettingsRepository
 ) : ViewModelProvider.Factory {
     override fun <T : ViewModel> create(modelClass: Class<T>): T {
         if (modelClass.isAssignableFrom(MeViewModel::class.java)) {
             @Suppress("UNCHECKED_CAST")
-            return MeViewModel(settingsRepository, authRepository) as T
+            return MeViewModel(settingsRepository) as T
         }
         throw IllegalArgumentException("Unknown ViewModel class")
     }

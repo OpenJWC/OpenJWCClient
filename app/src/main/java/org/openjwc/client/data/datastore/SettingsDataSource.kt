@@ -9,6 +9,7 @@ import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.datastore.preferences.core.longPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import org.openjwc.client.net.models.Proxy
@@ -139,5 +140,14 @@ class SettingsDataSource(private val context: Context) {
         context.settingsStore.edit { prefs ->
             prefs[Keys.LANGUAGE_CODE] = code ?: ""
         }
+    }
+
+    suspend fun getToggleState(id: String): Boolean {
+        val key = booleanPreferencesKey("toggle_$id")
+        return context.settingsStore.data.first()[key] ?: false
+    }
+
+    suspend fun saveToggleState(id: String, value: Boolean) {
+        save(booleanPreferencesKey("toggle_$id"), value)
     }
 }

@@ -21,7 +21,7 @@ import org.openjwc.client.net.update.getLatestRelease
 import org.openjwc.client.net.models.CheckUpdateClient
 import org.openjwc.client.net.models.GitHubRelease
 import org.openjwc.client.net.models.NetworkResult
-import org.openjwc.client.ui.main.MainTab
+import org.openjwc.client.navigation.MainTab
 import org.openjwc.client.ui.theme.ColorType
 import org.openjwc.client.ui.theme.DarkThemeStyle
 

@@ -74,7 +74,7 @@ data class Course(
     val weekRule: Set<Int>,
     val note: String,
 ){
-    infix fun isConflictingWith(other: Course): Boolean { //TODO
+    infix fun isConflictingWith(other: Course): Boolean {
         if (this.tableId != other.tableId) return false
         if (this.id != 0L && this.id == other.id) return false
         if (this.dayOfWeek != other.dayOfWeek) return false

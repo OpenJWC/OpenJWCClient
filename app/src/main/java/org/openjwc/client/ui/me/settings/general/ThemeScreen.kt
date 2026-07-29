@@ -2,364 +2,182 @@ package org.openjwc.client.ui.me.settings.general
 
 import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.Crossfade
-import androidx.compose.animation.animateContentSize
-import androidx.compose.animation.expandVertically
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
-import androidx.compose.animation.shrinkVertically
-import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.FlowRow
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.AutoMode
-import androidx.compose.material.icons.filled.BrightnessHigh
-import androidx.compose.material.icons.filled.BrightnessLow
-import androidx.compose.material.icons.filled.Check
-import androidx.compose.material.icons.filled.DarkMode
-import androidx.compose.material.icons.filled.DeleteSweep
-import androidx.compose.material.icons.filled.Edit
-import androidx.compose.material.icons.filled.Image
-import androidx.compose.material.icons.filled.LightMode
-import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material.icons.twotone.AutoAwesome
+import androidx.compose.material.icons.twotone.BlurOn
+import androidx.compose.material.icons.twotone.Brightness6
+import androidx.compose.material.icons.twotone.FormatPaint
+import androidx.compose.material.icons.twotone.Palette
+import androidx.compose.material.icons.twotone.Wallpaper
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.LargeTopAppBar
-import androidx.compose.material3.ListItem
-import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.LargeFlexibleTopAppBar
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.SegmentedButton
-import androidx.compose.material3.SegmentedButtonDefaults
-import androidx.compose.material3.SingleChoiceSegmentedButtonRow
-import androidx.compose.material3.Slider
-import androidx.compose.material3.Surface
-import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material3.rememberTopAppBarState
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableFloatStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.input.nestedscroll.nestedScroll
-import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import coil.compose.AsyncImage
 import org.openjwc.client.R
+import org.openjwc.client.navigation.Screen
+import org.openjwc.client.navigation3.Navigator
+import org.openjwc.client.ui.component.settings.AppBackButton
+import org.openjwc.client.ui.component.settings.SegmentedColumn
+import org.openjwc.client.ui.component.settings.SettingsBaseWidget
+import org.openjwc.client.ui.component.settings.SettingsChooseWidget
+import org.openjwc.client.ui.component.settings.SettingsJumpPageWidget
+import org.openjwc.client.ui.component.settings.SettingsSwitchWidget
+import org.openjwc.client.ui.theme.BackgroundManager
 import org.openjwc.client.ui.theme.ColorItem
-import org.openjwc.client.ui.theme.ColorType
-import org.openjwc.client.ui.theme.DarkThemeStyle
-import org.openjwc.client.ui.theme.seedColors
-import java.io.File
+import org.openjwc.client.ui.theme.ThemeConfig
+import org.openjwc.client.ui.theme.ThemeManager
+import org.openjwc.client.ui.theme.ThemeSeedColors
+import org.openjwc.client.ui.theme.blurEffect
+import org.openjwc.client.ui.theme.blurSource
+import org.openjwc.client.ui.theme.saveAndApplyCustomBackground
 
-@Preview
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
-fun TestThemeScreen() {
-    ThemeScreen(
-        onSelect = { _, _ ->
-        },
-        onBack = {},
-        colorPresets = seedColors,
-        onSelectBackground = {},
-        onClearBackground = {},
-        currentBackgroundPath = "",
-        darkThemeStyle = DarkThemeStyle.Auto,
-        selectedColorType = ColorType.Dynamic,
-        onAlphaChange = {}
-    )
-}
+fun ThemeScreen(navigator: Navigator) {
+    val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior(rememberTopAppBarState())
+    val context = LocalContext.current
 
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-fun ThemeScreen(
-    onBack: () -> Unit,
-    onSelect: (ColorType, DarkThemeStyle) -> Unit,
-    onSelectBackground: (Uri) -> Unit,
-    onClearBackground: () -> Unit,
-    currentBackgroundPath: String?,
-    backgroundAlpha: Float = 1f,
-    onAlphaChange: (Float) -> Unit,
-    colorPresets: List<Color>,
-    selectedColorType: ColorType = ColorType.Dynamic,
-    darkThemeStyle: DarkThemeStyle = DarkThemeStyle.Auto
-) {
-    val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
-    val pickMedia = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.PickVisualMedia()
-    ) { uri ->
-        uri?.let { onSelectBackground(it) }
+    val imagePicker = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri: Uri? ->
+        uri?.let { context.saveAndApplyCustomBackground(it) }
     }
-    var sliderValue by remember(backgroundAlpha) { mutableFloatStateOf(backgroundAlpha) }
+
     Scaffold(
-        containerColor = MaterialTheme.colorScheme.background,
-        modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
         topBar = {
-            LargeTopAppBar(
+            LargeFlexibleTopAppBar(
+                modifier = Modifier.blurEffect(),
                 title = { Text(stringResource(R.string.theme)) },
-                navigationIcon = {
-                    IconButton(onClick = onBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.back))
-                    }
-                },
-                scrollBehavior = scrollBehavior
+                navigationIcon = { AppBackButton(onClick = { navigator.pop() }) },
+                scrollBehavior = scrollBehavior,
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = Color.Transparent,
+                    scrolledContainerColor = Color.Transparent
+                )
             )
-        }
+        },
+        containerColor = Color.Transparent
     ) { innerPadding ->
         Column(
             modifier = Modifier
-                .padding(innerPadding)
                 .fillMaxSize()
-                .verticalScroll(rememberScrollState())
-                .padding(horizontal = 16.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
+                .nestedScroll(scrollBehavior.nestedScrollConnection)
+                .padding(innerPadding)
+                .blurSource()
         ) {
-            ThemeStyleSelectorCard(darkThemeStyle, onSelect, selectedColorType)
-
-//            HorizontalDivider(modifier = Modifier.padding(vertical = 16.dp, horizontal = 24.dp))
-
-            Surface(
-                tonalElevation = 1.dp,
-                shape = MaterialTheme.shapes.extraLarge,
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Column(modifier = Modifier.padding(vertical = 8.dp)) {
-                    ListItem(
-                        headlineContent = {
-                            Text(
-                                stringResource(R.string.color_theme),
-                                style = MaterialTheme.typography.labelLarge,
-                                color = MaterialTheme.colorScheme.primary
-                            )
-                        },
-                        supportingContent = { Text(stringResource(R.string.color_scheme_based_on_material_you)) }
+            SegmentedColumn(title = stringResource(R.string.display_mode)) {
+                item {
+                    SettingsChooseWidget(
+                        icon = Icons.TwoTone.Brightness6,
+                        title = stringResource(R.string.display_mode),
+                        items = listOf(stringResource(R.string.follow_system), stringResource(R.string.light), stringResource(R.string.dark)),
+                        selectedIndex = when (ThemeConfig.forceDarkMode) { null -> 0; false -> 1; true -> 2 },
+                        onSelectedIndexChange = { ThemeManager.saveThemeMode(context, when (it) { 0 -> null; 1 -> false; else -> true }) }
                     )
-
-                    ListItem(
-                        headlineContent = { Text(stringResource(R.string.dynamic_color)) },
-                        supportingContent = { Text(stringResource(R.string.auto_extracted_from_wallpaper)) },
-                        trailingContent = {
-                            Switch(
-                                checked = selectedColorType is ColorType.Dynamic,
-                                onCheckedChange = { isChecked ->
-                                    onSelect(
-                                        if (isChecked) ColorType.Dynamic else ColorType.Custom(
-                                            colorPresets.first()
-                                        ), darkThemeStyle
-                                    )
-                                }
-                            )
-                        }
-                    )
-
-                    AnimatedVisibility(
-                        visible = selectedColorType is ColorType.Custom,
-                        enter = fadeIn() + expandVertically(),
-                        exit = fadeOut() + shrinkVertically()
-                    ) {
-                        Column {
-                            Text(
-                                text = stringResource(R.string.select_seed_color),
-                                style = MaterialTheme.typography.labelMedium,
-                                color = MaterialTheme.colorScheme.primary,
-                                modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
-                            )
-                            FlowRow(
-                                modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp),
-                                horizontalArrangement = Arrangement.spacedBy(12.dp),
-                                verticalArrangement = Arrangement.spacedBy(12.dp)
-                            ) {
-                                colorPresets.forEach { color ->
-                                    ColorItem(
-                                        color = color,
-                                        isSelected = (selectedColorType as? ColorType.Custom)?.color == color,
-                                        onClick = {
-                                            onSelect(
-                                                ColorType.Custom(color),
-                                                darkThemeStyle
-                                            )
-                                        }
-                                    )
-                                }
-                            }
-                        }
-                    }
                 }
             }
 
-            Surface(
-                tonalElevation = 1.dp,
-                shape = MaterialTheme.shapes.extraLarge,
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Column(modifier = Modifier
-                    .padding(vertical = 8.dp)
-                    .animateContentSize()) {
-                    Text(
-                        stringResource(R.string.ui_decoration),
-                        style = MaterialTheme.typography.labelLarge,
-                        color = MaterialTheme.colorScheme.primary,
-                        modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp)
+            SegmentedColumn(title = stringResource(R.string.color_theme)) {
+                item {
+                    SettingsSwitchWidget(
+                        icon = Icons.TwoTone.AutoAwesome,
+                        title = stringResource(R.string.dynamic_color),
+                        checked = ThemeConfig.useDynamicColor,
+                        onCheckedChange = { ThemeManager.saveDynamicColorState(context, it) }
                     )
-                    ListItem(
-                        headlineContent = { Text(stringResource(R.string.customize_background)) },
-                        supportingContent = {
-                            Text(if (currentBackgroundPath != null) stringResource(R.string.background_selected) else stringResource(
-                                R.string.background_not_selected
-                            ))
-                        },
-                        leadingContent = {
-                            Box(
-                                modifier = Modifier
-                                    .size(48.dp)
-                                    .clip(RoundedCornerShape(8.dp))
-                                    .background(MaterialTheme.colorScheme.surfaceVariant),
-                                contentAlignment = Alignment.Center
-                            ) {
-                                if (currentBackgroundPath != null) {
-                                    AsyncImage(
-                                        model = File(currentBackgroundPath),
-                                        contentDescription = null,
-                                        contentScale = ContentScale.Crop,
-                                        modifier = Modifier.fillMaxSize()
-                                    )
-                                } else {
-                                    Icon(Icons.Default.Image, contentDescription = null)
-                                }
-                            }
-                        },
-                        trailingContent = {
-                            Row {
-                                if (currentBackgroundPath != null) {
-                                    IconButton(onClick = onClearBackground) {
-                                        Icon(
-                                            Icons.Default.DeleteSweep,
-                                            contentDescription = stringResource(R.string.clear_background),
-                                            tint = MaterialTheme.colorScheme.error
+                }
+            }
+
+            if (!ThemeConfig.useDynamicColor) {
+                SegmentedColumn(title = stringResource(R.string.seed_color)) {
+                    item {
+                        SettingsBaseWidget(
+                            icon = Icons.TwoTone.Palette,
+                            title = stringResource(R.string.select_seed_color),
+                        ) {}
+                    }
+                    item {
+                        SettingsBaseWidget(
+                            iconPlaceholder = false,
+                            title = null,
+                            foreContent = {
+                                FlowRow(
+                                    horizontalArrangement = Arrangement.spacedBy(6.dp),
+                                    verticalArrangement = Arrangement.spacedBy(2.dp)
+                                ) {
+                                    ThemeSeedColors.all.forEach { color ->
+                                        ColorItem(
+                                            color = color,
+                                            isSelected = color.toArgb() == ThemeConfig.seedColor,
+                                            onClick = { ThemeManager.saveSeedColor(context, color.toArgb()) }
                                         )
                                     }
                                 }
-                                IconButton(onClick = {
-                                    pickMedia.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly))
-                                }) {
-                                    Icon(Icons.Default.Edit, contentDescription = stringResource(R.string.change_background))
-                                }
                             }
-                        },
-                        modifier = Modifier
-                            .padding(horizontal = 8.dp)
-                            .clickable {
-                                pickMedia.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly))
-                            }
-                    )
-
-                    if (currentBackgroundPath != null) {
-                        ListItem(
-                            headlineContent = { Text(stringResource(R.string.background_alpha)) },
-                            supportingContent = {
-                                Row(
-                                    verticalAlignment = Alignment.CenterVertically,
-                                    horizontalArrangement = Arrangement.spacedBy(12.dp)
-                                ) {
-                                    Icon(
-                                        imageVector = Icons.Default.BrightnessLow,
-                                        contentDescription = null,
-                                        modifier = Modifier.size(18.dp)
-                                    )
-                                    Slider(
-                                        value = sliderValue,
-                                        onValueChange = {
-                                            sliderValue = it
-                                        },
-                                        onValueChangeFinished = {
-                                            onAlphaChange(sliderValue)
-                                        },
-                                        valueRange = 0f..1f,
-                                        modifier = Modifier.weight(1f)
-                                    )
-                                    Icon(
-                                        imageVector = Icons.Default.BrightnessHigh,
-                                        contentDescription = null,
-                                        modifier = Modifier.size(18.dp)
-                                    )
-                                }
-                            },
-                            modifier = Modifier.padding(horizontal = 8.dp)
-                        )
+                        ) {}
                     }
                 }
             }
-        }
-    }
-}
 
+            SegmentedColumn(title = stringResource(R.string.background)) {
+                item {
+                    SettingsBaseWidget(
+                        icon = Icons.TwoTone.Wallpaper,
+                        title = stringResource(R.string.custom_background),
+                        onClick = { imagePicker.launch("image/*") }
+                    ) {
+                        Icon(Icons.TwoTone.FormatPaint, null, modifier = Modifier.size(24.dp))
+                    }
+                }
+                if (ThemeConfig.customBackgroundUri != null) {
+                    item {
+                        SettingsBaseWidget(
+                            icon = Icons.TwoTone.Wallpaper,
+                            title = "Clear Background",
+                            onClick = { BackgroundManager.clearCustomBackground(context) }
+                        ) {}
+                    }
+                }
+                item {
+                    SettingsSwitchWidget(
+                        icon = Icons.TwoTone.BlurOn,
+                        title = "Enable Blur",
+                        checked = ThemeConfig.isEnableBlur,
+                        onCheckedChange = { BackgroundManager.saveEnableBlur(context, it) }
+                    )
+                }
+                item {
+                    SettingsSwitchWidget(
+                        icon = Icons.TwoTone.BlurOn,
+                        title = "Experimental Blur",
+                        checked = ThemeConfig.isEnableBlurExp,
+                        onCheckedChange = { BackgroundManager.saveEnableBlurExp(context, it) }
+                    )
+                }
+            }
 
-@Composable
-fun ThemeStyleSelectorCard(
-    selectedStyle: DarkThemeStyle,
-    onSelect: (ColorType, DarkThemeStyle) -> Unit,
-    selectedColorType: ColorType
-) {
-    Surface(
-        tonalElevation = 2.dp,
-        shape = MaterialTheme.shapes.extraLarge,
-        modifier = Modifier.fillMaxWidth()
-    ) {
-        Column(modifier = Modifier.padding(16.dp)) {
-            Text(
-                text = stringResource(R.string.display_mode),
-                style = MaterialTheme.typography.labelLarge,
-                color = MaterialTheme.colorScheme.primary,
-                modifier = Modifier.padding(start = 4.dp, bottom = 12.dp)
-            )
-            SingleChoiceSegmentedButtonRow(modifier = Modifier.fillMaxWidth()) {
-                val options = listOf(
-                    Triple(DarkThemeStyle.Light,
-                        stringResource(R.string.light), Icons.Default.LightMode),
-                    Triple(DarkThemeStyle.Dark,
-                        stringResource(R.string.dark), Icons.Default.DarkMode),
-                    Triple(DarkThemeStyle.Auto,
-                        stringResource(R.string.follow_system), Icons.Default.AutoMode)
-                )
-                options.forEachIndexed { index, (style, label, icon) ->
-                    val isSelected = selectedStyle == style
-                    SegmentedButton(
-                        selected = isSelected,
-                        onClick = { onSelect(selectedColorType, style) },
-                        shape = SegmentedButtonDefaults.itemShape(
-                            index = index,
-                            count = options.size
-                        ),
-                        icon = {
-                            Crossfade(targetState = isSelected) { target ->
-                                Icon(
-                                    imageVector = if (target) Icons.Default.Check else icon,
-                                    contentDescription = null,
-                                    modifier = Modifier.size(18.dp)
-                                )
-                            }
-                        },
-                        label = { Text(label) }
+            SegmentedColumn {
+                item {
+                    SettingsJumpPageWidget(
+                        icon = Icons.TwoTone.Palette,
+                        title = stringResource(R.string.advanced_theme),
+                        onClick = { navigator.push(Screen.ThemeSettings) }
                     )
                 }
             }

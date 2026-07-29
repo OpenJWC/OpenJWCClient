@@ -1,6 +1,7 @@
 package org.openjwc.client.net.models
 
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.Json
 import okhttp3.MediaType.Companion.toMediaType
@@ -23,9 +24,20 @@ sealed class Proxy {
     data class SocksProxy(val host: String, val port: Int) : Proxy()
 }
 
+object AuthEvents {
+    val onUnauthorized = MutableSharedFlow<Unit>(extraBufferCapacity = 1)
+}
+
 object NetClient {
     private val loggingInterceptor = okhttp3.logging.HttpLoggingInterceptor().apply {
         level = okhttp3.logging.HttpLoggingInterceptor.Level.HEADERS
+    }
+    private val authInterceptor = okhttp3.Interceptor { chain ->
+        val response = chain.proceed(chain.request())
+        if (response.code == 401) {
+            AuthEvents.onUnauthorized.tryEmit(Unit)
+        }
+        response
     }
     private val serviceCache = mutableMapOf<Pair<String, Proxy>, NetService>()
     private val clientCache = mutableMapOf<Proxy, OkHttpClient>()
@@ -45,6 +57,7 @@ object NetClient {
         }
         val okHttpClient = clientCache.getOrPut(proxy) {
             OkHttpClient.Builder()
+                .addInterceptor(authInterceptor)
                 .addInterceptor(loggingInterceptor)
                 .proxy(proxyArgument)
                 .connectTimeout(15, java.util.concurrent.TimeUnit.SECONDS)

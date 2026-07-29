@@ -1,0 +1,413 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources xmlns:tools="http://schemas.android.com/tools">
+    <string name="app_name">OpenJWC</string>
+    <string name="chat">聊天</string>
+    <string name="news">資訊</string>
+    <string name="me">我</string>
+    <string name="openjwc_description">
+        OpenJWC 團隊建立旨在通過軟件開發技術鏟除教務信息遞達學生的最後一道障礙。
+        團隊希望通過集中采集教務信息並分發推送的方式，讓原本網站中悄無聲息等待閱覽的資訊真正走入每一個東大人的生活。\n\n
+        我們拒絕臃腫，追求信息獲取的「直達」。在 OpenJWC 的安卓客戶端中，Material 3 的設計語言賦予了界面靈動與純淨。
+        不同於傳統的列表堆砌，我們引入了創新的 AI Chat 交互欄——這是一個懂東大的智能助手。
+        在其背後，是 Rust 爬蟲對校園動態的毫秒級捕捉，以及 Python 後端與向量數據庫構築的智慧大腦。
+        無論你詢問「選課要求」還是「講座信息」，系統都能通過語義搜索在海量資訊中定位關鍵點，並以自然語言娓娓道來。\n\n
+        作為一個完全開源的項目，我們不僅是在交付一個工具，更是邀請每一位東大開發者共同參與，用代碼溫暖校園生活。
+    </string>
+    <string name="policy_text">
+歡迎使用 OpenJWC（以下簡稱「本產品」）。本協議是您與 OpenJWC 開發者之間就使用本產品所訂立的法律協議。請您在安裝、配置或使用本產品前，認真審閱本協議的所有條款。一旦您完成客戶端配置或使用相關服務，即表示您已充分理解並自願接受本協議的全部約定。\n\n
+# 第一條 服務性質與範圍\n\n
+本產品是一款為用戶提供教務資訊聚合、RAG（檢索增強生成）教務問答及資訊投稿功能的輔助工具。\n\n
+本產品採用私有化部署架構。開發者僅提供軟件代碼及技術方案，不直接運營服務器。您所連接的服務是由具體的部署者（可能是您個人、學校社團或第三方組織）提供的，開發者不對部署者提供服務的可用性、合法性承擔責任。\n\n
+本產品的名稱、圖標及源代碼的版權歸開發者所有。用戶對本軟件的使用不代表開發者轉讓了除許可證規定之外的其他任何權利。\n\n
+# 第二條 賬號與服務使用規範\n\n
+用戶在客戶端配置服務器信息時，需確保所填寫的服務器 BaseURL 及賬戶信息準確有效。\n\n
+用戶不得利用本產品進行任何非法活動，包括但不限于爬取涉及個人隱私的敏感信息、傳播違法有害信息、攻擊教務系統等。\n\n
+用戶在進行資訊投稿時，應保證內容的真實性、合法性及非侵權性。嚴禁發布謠言、誹謗、煽動性言論或未經授權的版權內容。\n\n
+用戶應妥善保管自己的訪問憑證。因用戶保管不當導致的賬號被盜用或數據泄露，由用戶自行承擔責任。\n\n
+# 第三條 服務免責聲明\n\n
+**第三方關聯性**：OpenJWC 與東南大學教務處及校方其他機構不存在任何官方隸屬或合作關係。所有通過本產品獲取的資訊僅供參考，教務事項的最終結論請以學校官方渠道發布的信息為準。\n\n
+**服務可用性**：由於教務網站可能進行架構調整或維護，本產品無法保證 100% 的服務在線率。因不可抗力、網絡波動或校方系統變動導致的服務中斷或資訊獲取失敗，開發者不承擔賠償責任。\n\n
+**AI 準確性**：AI 問答功能基於現有知識庫生成，可能存在事實偏差或理解錯誤。對於任何基於 AI 回復而做出的學業決策，用戶需自行承擔風險，建議關鍵信息進行交叉核對。\n\n
+# 第四條 私有化部署責任邊界\n\n
+本產品作為遵循 **MIT 許可證**的開源工具發布。對於部署者在使用過程中產生的任何法律風險、數據合規問題及安全隱患，由部署者自行承擔全部責任。\n\n
+原開發者不參與也不干預私有服務器的運行維護。若您在使用過程中認為部署者的管理行為損害了您的合法權益，請直接與該服務器的管理員進行協商或根據相關法律途徑維護權益。\n\n
+# 第五條 協議修訂與終止\n\n
+開發者有權根據法律法規變化或產品功能升級對本協議進行修訂。更新後的協議將在產品內發布，即時生效。若您在協議變更後繼續使用本產品，視為接受修訂後的條款。\n\n
+若用戶違反本協議規定，開發者及部署者有權在不事先通知的情況下限制或終止其訪問權限。\n\n
+# 第六條 爭議解決\n\n
+本協議的訂立、執行及解釋均適用中華人民共和國法律。\n\n
+如用戶與原開發者發生爭議，應通過友好協商解決；協商不成的，任何一方均可向開發者所在地有管轄權的人民法院提起訴訟。\n\n
+# 第七條 聯繫與反饋\n\n
+如您對本協議有任何疑問或建議，歡迎通過項目開源平台提交反饋。對於具體的服務器運行、數據存儲等問題，請直接聯繫為您提供服務的私有化部署管理員。
+    </string>
+    <string name="license" tools:ignore="TypographyOther">
+MIT License\n
+\n
+Copyright (c) 2026 OpenJWC\n
+\n
+Permission is hereby granted, free of charge, to any person obtaining a copy\n
+of this software and associated documentation files (the "Software"), to deal\n
+in the Software without restriction, including without limitation the rights\n
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell\n
+copies of the Software, and to permit persons to whom the Software is\n
+furnished to do so, subject to the following conditions:\n
+\n
+The above copyright notice and this permission notice shall be included in all\n
+copies or substantial portions of the Software.\n
+\n
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\n
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\n
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\n
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\n
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\n
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE\n
+SOFTWARE.\n
+    </string>
+    <string name="confirm">確定</string>
+    <string name="cancel">取消</string>
+    <string name="upload_news">投稿資訊</string>
+    <string name="back">返回</string>
+    <string name="uploading">上傳中…</string>
+    <string name="loading">載入中…</string>
+    <string name="submit_upload">提交上傳</string>
+    <string name="basic_information">基本信息</string>
+    <string name="title">標題</string>
+    <string name="label">標籤</string>
+    <string name="date">日期</string>
+    <string name="detail_url">詳情連結 (URL)</string>
+    <string name="invalid_url">URL 格式非法</string>
+    <string name="link_is_a_page">詳情連結為網頁</string>
+    <string name="link_is_a_page_desc">關閉則視為附件或外鏈</string>
+    <string name="main_content">正文內容</string>
+    <string name="markdown_text">Markdown 文本</string>
+    <string name="attachment_url_lists">附件 URL 列表 (%1$d)</string>
+    <string name="add_attachment_urls">添加附件 URL</string>
+    <string name="no_attachment_urls">暫無附件 URL (可選)</string>
+    <string name="thousand_chars_limited">超過1000字符</string>
+    <string name="format_invalid">格式非法</string>
+    <string name="delete_attachment_url">刪除附件 URL</string>
+    <string name="update_available">有更新可用</string>
+    <string name="download_update">下載更新</string>
+    <string name="theme">主題</string>
+    <string name="color_theme">顏色主題</string>
+    <string name="color_scheme_based_on_material_you">基於 Material You 的色彩方案</string>
+    <string name="dynamic_color">動態色彩</string>
+    <string name="auto_extracted_from_wallpaper">"根據桌布顏色自動提取 (僅支持 Android 12 及以上) "</string>
+    <string name="select_seed_color">選擇種子顏色</string>
+    <string name="ui_decoration">界面裝飾</string>
+    <string name="customize_background">自定義背景圖</string>
+    <string name="background_selected">已設置自定義背景</string>
+    <string name="background_not_selected">未設置背景圖</string>
+    <string name="clear_background">清除背景</string>
+    <string name="change_background">更換背景</string>
+    <string name="background_alpha">背景不透明度</string>
+    <string name="display_mode">顯示模式</string>
+    <string name="light">淺色</string>
+    <string name="dark">深色</string>
+    <string name="follow_system">跟隨系統</string>
+    <string name="settings">設置</string>
+    <string name="general">通用</string>
+    <string name="connection">連接</string>
+    <string name="network_config">網絡配置</string>
+    <string name="account_management">賬號管理</string>
+    <string name="log">日誌</string>
+    <string name="display_settings">顯示設置</string>
+    <string name="upload_results">投稿審核結果</string>
+    <string name="no_upload_records">暫無審核記錄</string>
+    <string name="pending">待審核</string>
+    <string name="approved">已通過</string>
+    <string name="rejected">已駁回</string>
+    <string name="unknown">未知</string>
+    <string name="status_string">狀態：%1$s</string>
+    <string name="create_account">創建賬號</string>
+    <string name="username">用戶名</string>
+    <string name="username_3_chars_required">用戶名至少需要3個字符</string>
+    <string name="email">電子郵箱</string>
+    <string name="please_type_valid_email">請輸入有效的郵箱地址</string>
+    <string name="password">密碼</string>
+    <string name="password_requirement">密碼需包含大小寫字母、數字及特殊字符，且至少 8 位</string>
+    <string name="confirm_password">確認密碼</string>
+    <string name="password_not_same">兩次輸入的密碼不一致</string>
+    <string name="creating_account">正在創建賬號…</string>
+    <string name="register_now">立即註冊</string>
+    <string name="user_agreement_and_privacy_policy">用戶協議與隱私政策</string>
+    <string name="agree_and_continue">同意並繼續</string>
+    <string name="decline_and_exit">拒絕並退出</string>
+    <string name="news_display_settings">資訊顯示設置</string>
+    <string name="save">保存</string>
+    <string name="highlight_fresh_news">高亮新鮮資訊</string>
+    <string name="highlight_fresh_news_desc">設置資訊發布後多少天內顯示為「新鮮」狀態。新鮮資訊在列表中會以高亮顏色顯示並帶有標識。</string>
+    <string name="fresh_threshold_days">新鮮期限 (天)</string>
+    <string name="fresh_threshold_example">例如: 3</string>
+    <string name="invalid_positive_integer">請輸入有效的正整數</string>
+    <string name="disable_highlight_hint">設置為 0 則禁用高亮</string>
+    <string name="clear">清除</string>
+    <string name="preview_effect">預覽效果</string>
+    <string name="preview_fresh_title">這是一條最新最熱資訊標題</string>
+    <string name="preview_old_title">這是一條最舊最冷資訊標題</string>
+    <string name="notice">通知</string>
+    <string name="confirm_delete">確認刪除</string>
+    <string name="clear_all_favorites_confirm">確定要清空所有收藏的資訊嗎？此操作不可撤銷。</string>
+    <string name="delete_all">全部刪除</string>
+    <string name="favorite_news">收藏的資訊</string>
+    <string name="delete_all_favorites">刪除所有收藏</string>
+    <string name="add_to_attachments">添加到附件</string>
+    <string name="remove_from_favorites">取消收藏</string>
+    <string name="no_favorites">暫無收藏內容</string>
+    <string name="favorite_hint">在資訊列表長按即可將感興趣的內容收藏到這裡</string>
+    <string name="load_failed_retry">加載失敗，點擊重試</string>
+    <string name="all_content_loaded">— 已加載全部內容 —</string>
+    <string name="retry">重試</string>
+    <string name="no_news_categories">未發現資訊分類</string>
+    <string name="get_labels_failed_hint">暫時無法獲取到新聞標籤，請檢查網絡連接或稍後重試</string>
+    <string name="not_logged_in">您尚未登錄</string>
+    <string name="refetch_categories">重新獲取分類</string>
+    <string name="login">登錄</string>
+    <string name="favorite">收藏</string>
+    <string name="delete_favorite">刪除收藏</string>
+    <string name="back_to_top">回到頂部</string>
+    <string name="favorited">已收藏</string>
+    <string name="new_tag">NEW</string>
+    <string name="news_not_found">資訊不存在</string>
+    <string name="view_in_browser">在瀏覽器中查看原文</string>
+    <string name="news_empty_egg">資訊為空！你發現了彩蛋，按理來說這行字不該出現……</string>
+    <string name="publish_date">發布日期: %1$s</string>
+    <string name="original_link">原文連結: %1$s</string>
+    <string name="no_detail_view_original">暫無詳細內容，請在瀏覽器查看原文。</string>
+    <string name="attachment_list_count">附件列表 (%1$d)</string>
+    <string name="attachment_placeholder">附件 %1$d</string>
+    <string name="new_session">新建會話</string>
+    <string name="untitled_session">無標題會話</string>
+    <string name="more">更多</string>
+    <string name="edit_session_name">編輯會話名稱</string>
+    <string name="delete_session">刪除會話</string>
+    <string name="add_attachment_hint">請長按資訊卡片添加附件</string>
+    <string name="start_new_chat">開始新對話吧</string>
+    <string name="attach">添加附件</string>
+    <string name="ask_something">問些什麼</string>
+    <string name="send">發送</string>
+    <string name="delete">刪除</string>
+    <string name="bottom">底部</string>
+
+    <string name="about">關於</string>
+    <string name="app_icon_description">App 圖標</string>
+    <string name="version_label">版本 %1$s</string>
+    <string name="introduction">簡介</string>
+    <string name="check_for_updates">檢查更新</string>
+    <string name="github">GitHub</string>
+    <string name="open_source_licenses">開源許可證</string>
+
+    <string name="confirm_unbind">確認解綁</string>
+    <string name="unbind_device_confirm_msg">確定要解綁設備 [%1$s] 嗎？</string>
+    <string name="device_list_hint">登錄後即可查看和管理已授權的設備列表。</string>
+    <string name="device_list_login_hint">登錄後即可查看和管理已授權的設備列表。</string>
+    <string name="unnamed_user">未命名用戶</string>
+    <string name="unbound_email">未綁定郵箱</string>
+    <string name="device_label">設備: %1$s</string>
+    <string name="welcome_back">歡迎使用</string>
+    <string name="logout">退出登錄</string>
+    <string name="device_management">設備管理</string>
+    <string name="refresh">刷新</string>
+    <string name="unbind_failed">解綁失敗: %1$s</string>
+    <string name="unbind_failed_with_code">解綁失敗 (%1$d): %2$s</string>
+    <string name="no_bound_devices">暫無綁定設備</string>
+    <string name="query_devices_failed">查詢設備失敗: %1$s</string>
+    <string name="query_devices_failed_with_code">查詢設備失敗 (%1$d): %2$s</string>
+    <string name="local_device_id">本機 ID: %1$s</string>
+    <string name="current_device">當前登錄的設備</string>
+    <string name="unbind">解綁</string>
+    <string name="api_key_retry_hint">若改動 API Key，請先保存設置再點擊重試</string>
+    <string name="unknown_device">未知設備</string>
+
+    <!-- MeScreen & Hitokoto -->
+    <string name="hitokoto_text_format">「 %1$s 」</string>
+    <string name="hitokoto_author_format">—— %1$s</string>
+
+    <!-- MeViewModel sections -->
+    <string name="contribution">投稿</string>
+
+    <!-- HostScreen -->
+    <string name="server_config">服務器配置</string>
+    <string name="host_address">主機地址</string>
+    <string name="host_empty_error">服務器地址不能為空</string>
+    <string name="port_number">端口號</string>
+    <string name="port_range_error">端口應在 0–65535 之間</string>
+    <string name="proxy_settings">代理設置</string>
+    <string name="no_proxy">無</string>
+    <string name="proxy_host">代理主機</string>
+    <string name="proxy_host_ipv4_error">代理地址目前只支持 IPv4 格式</string>
+    <string name="proxy_port">代理端口</string>
+    <string name="proxy_port_range_error">端口需在 0–65535 之間</string>
+    <string name="use_unsafe_http">使用不安全的 HTTP 連接</string>
+    <string name="force_https_desc">關閉後將強制使用 HTTPS</string>
+    <string name="host_config_hint">提示：請確保設備能夠訪問到該地址，且防火牆正確配置。</string>
+
+    <!-- LoginScreen -->
+    <string name="account">賬號</string>
+    <string name="logging_in">正在登錄…</string>
+    <string name="no_account_register_now">還沒有賬號？立即註冊</string>
+
+    <!-- MessageBubble -->
+    <string name="copy">複製</string>
+
+    <!-- EditMetadataDialog -->
+    <string name="rename_session">重命名會話</string>
+    <string name="please_input_new_title">請輸入新標題</string>
+
+    <!-- UploadNewsScreen -->
+    <string name="date_format_hint">yyyy-MM-dd</string>
+    <string name="url_placeholder">https://…</string>
+    <string name="debug">調試</string>
+    <string name="using_unsafe_http">正在使用不安全的 HTTP</string>
+    <string name="chat_history">聊天記錄</string>
+    <string name="menu">菜單</string>
+    <string name="refreshed_successfully">刷新成功</string>
+    <string name="untitled">無標題</string>
+    <string name="login_successfully">登錄成功</string>
+    <string name="register_success_hint">註冊成功，請等待管理員審核</string>
+    <string name="logout_failed">注銷失敗: %1$s</string>
+    <string name="logout_failed_with_code">注銷失敗 (%1$d): %2$s</string>
+    <string name="copy_success">複製成功</string>
+    <string name="already_latest_version">當前版本已是最新</string>
+    <string name="check_update_failed">檢查更新失敗</string>
+    <string name="upload_success">上傳成功</string>
+    <string name="load_error">加載錯誤: %1$s</string>
+
+    <string name="language">語言</string>
+    <string name="language_settings">語言設置</string>
+    <string name="simplified_chinese">簡體中文</string>
+    <string name="english">英語</string>
+    <string name="japanese">日語</string>
+    <string name="korean">韓語</string>
+    <string name="traditional_chinese">繁體中文</string>
+
+    <!-- Timetable -->
+    <string name="timetable">課程表</string>
+    <string name="current_week">第 %d 週</string>
+    <string name="period_index">第 %d 節</string>
+    <string name="last_week">上一週</string>
+    <string name="next_week">下一週</string>
+    <string name="manage_timetable">管理課表</string>
+    <string name="end_of_info">— 已經到底部了 —</string>
+    <string name="add_new_course">新建課程</string>
+    <string name="time_conflict">時間衝突</string>
+    <string name="course_name">課程名稱</string>
+    <string name="teacher">教師</string>
+    <string name="place">地點</string>
+    <string name="class_time">上課時間</string>
+    <string name="course_already_existed_during_this_period">該時段已存在課程: %1$s</string>
+    <string name="weekly_repetition_rules">重複規則</string>
+    <string name="customize">自定義</string>
+    <string name="display_color">顯示顏色</string>
+    <string name="notes">備註</string>
+    <string name="notes_hint">選修課、考試提醒等…</string>
+    <string name="select_class_weeks">選擇上課周數</string>
+    <string name="import_from">從教務處導入</string>
+    <string name="auto_import">自動抓取東南大學教務系統課表</string>
+    <string name="add_single_course">新建單個課程</string>
+    <string name="add_manually">手動添加一門非教務處課程</string>
+    <string name="switch_timetable">切換當前課表</string>
+    <string name="switch_between">在不同的學期或多份課表間切換</string>
+    <string name="create_a_blank_timetable">新建空白課表</string>
+    <string name="plan_from_scratch">從零開始規劃你的日程</string>
+    <string name="no_timetables_yet">還沒有課表哦</string>
+    <string name="import_timetable">導入課表</string>
+    <string name="starting_period">起始節次</string>
+    <string name="lasting_periods">持續節數</string>
+    <string name="every_week">每週</string>
+    <string name="odd_week">單週</string>
+    <string name="even_week">雙週</string>
+    <string name="week_number">周次</string>
+    <string name="edit_course">編輯課程</string>
+    <string name="custom_weeks_format">第 %1$s 週</string>
+    <string name="period_number">節次</string>
+    <string name="custom_periods_format">%1$s / %2$d-%3$d 節</string>
+    <string name="create_a_table_name">為你的新課表起個名字，例如「2025 春季學期」</string>
+    <string name="timetable_name">課表名稱</string>
+    <string name="type_name">輸入名稱…</string>
+    <string name="name_cannot_be_empty">名稱不能為空</string>
+    <string name="select_all">全選</string>
+    <string name="currently_using">當前課表</string>
+    <string name="week_starting_date">%1$d 週 · %2$s</string>
+    <string name="operating_menu">操作菜單</string>
+    <string name="delete_table_warning">確定要刪除課表 \"%1$s\" 嗎？此操作將永久刪除該課表下的所有課程，且無法撤銷。</string>
+    <string name="delete_course">刪除課程</string>
+    <string name="delete_course_warning">確定要從課表中移除 \"%1$s\" 嗎？</string>
+    <string name="show_weekends">顯示週末</string>
+    <string name="total_week_number">%1$d 週</string>
+    <string name="week_number_in_a_semester">學期周數</string>
+    <string name="school_start_date">開學日期 (第一週週一)</string>
+    <string name="top">回到頂部</string>
+    <string name="delete_timetable">刪除課表</string>
+    <string name="delete_permanently">永久刪除課表</string>
+    <string name="delete_permanently_warning">該操作不可撤回！</string>
+    <string name="add">新增</string>
+    <string name="schedule">節次時間表</string>
+    <string name="nth_class">第 %1$d 節</string>
+    <string name="time_conflict_warning">時間設置衝突：請檢查紅色標記的節次。</string>
+    <string name="sub">減</string>
+    <string name="plus">加</string>
+    <string name="not_specified">未指定</string>
+    <string name="location_not_specified">未指定地點</string>
+    <string name="teacher_not_specified">未指定老師</string>
+    <string name="no_weeks_selected">未選擇星期</string>
+    <string name="click_me_when_you_see_the_timetable">看到課表後點我導入</string>
+    <string name="edit_semester_config">編輯課表配置</string>
+    <string name="extracting_timetable">正在提取課表……</string>
+    <string name="login_title">登錄東南大學教務處</string>
+    <string name="period_count_too_small_warning">警告：當前設置的總節數 (%1$d) 小於已選課程的最大節次 (%2$d)。超出部分的課程將被隱藏！</string>
+    <string name="edit_config_hint">修改周數、節次時間及開學日期</string>
+    <string name="one_week_at_least">請至少選擇一週</string>
+    <string name="course_conflict_format">%1$s 以及其他 %2$d 門課程</string>
+    <string name="import_failed">導入失敗: %1$s</string>
+    <string name="widget_week_desc">本週課程</string>
+    <string name="no_courses_today">今天沒有課，休息一下</string>
+    <string name="section_format">%1$d-%2$d節</string>
+    <string name="widget_today_desc">今日課程</string>
+    <string name="no_shortcut_for_creating_widgets">您的桌面不支持快捷添加小組件</string>
+    <string name="add_to_launcher">添加今日課程小組件到桌面</string>
+    <string name="add_to_launcher_hint">如果點擊後在桌面沒看到小組件，那麼你可能需要手動在設置中授予\"桌面快捷方式\"的權限</string>
+    <string name="table_name_cannot_be_empty">課表名不能為空</string>
+    <string name="reduce_weeks_warning">縮小周數可能導致部分課程被截斷不可見</string>
+    <string name="extend_weeks_warning">增大周數會改變「每週/單雙週」課程的覆蓋範圍</string>
+    <string name="loading_failed_click_to_retry">加載失敗，點此重試</string>
+    <string name="loading_failed_prefix">加載失敗</string>
+    <string name="having_lesson">正在上課</string>
+    <string name="next_course">下一節課</string>
+    <string name="upcoming">即將開始</string>
+    <string name="courses_today">今日課程</string>
+    <string name="today">今日</string>
+    <string name="nav_go_to_timetable">轉到課程表</string>
+    <string name="break_time">課間休息</string>
+    <string name="enjoy_your_vacation">享受假期吧</string>
+    <string name="outside_semester_time">當前不在學期時間內</string>
+    <string name="welcome_user">同學你好！</string>
+    <string name="study_statistics">在這個學期你已經上了 %1$d 節課，累計上課 %2$.2f 小時</string>
+    <string name="no_table_active">當前無課表</string>
+    <string name="table_management">管理課表</string>
+    <string name="switch_table">切換課表</string>
+    <string name="appearance_theme">主題</string>
+    <string name="widget_settings">小組件設置</string>
+    <string name="language_setting">語言</string>
+    <string name="about_app">關於</string>
+    <string name="show_timeline">顯示時間線</string>
+    <string name="show_date">在表頭顯示日期</string>
+    <string name="show_period_time">顯示課程時間</string>
+    <string name="show_non_current_week">顯示非本週課程</string>
+    <string name="general_settings">通用設置</string>
+    <string name="about_content">施工中</string>
+
+    <string name="not_in_current_week">非本週</string>
+    <string name="odd_weeks">單週</string>
+    <string name="even_weeks">雙週</string>
+    <string name="week_range">周次</string>
+    <string name="custom_weeks">自定義</string>
+    <string name="location">地點</string>
+    <string name="timetable_settings">課程表設置</string>
+
+    <string name="show_timeline_desc">在課表中顯示橫向時間線</string>
+    <string name="show_date_header">顯示日期表頭</string>
+    <string name="show_date_header_desc">在週幾下方顯示具體的日期（如 05–01）</string>
+    <string name="show_period_time_desc">在側邊序號下方顯示上課和下課的具體時間</string>
+    <string name="show_non_current_week_desc">在當前周次也顯示灰色半透明的非本週課程</string>
+</resources>

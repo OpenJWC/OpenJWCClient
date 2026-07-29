@@ -84,11 +84,6 @@ class ChatRepository(
         val currentSettings = settingsDataSource.userSettings.first()
         val authSession = authDataSource.authSession.first()
 
-        if (!authSession.isLoggedIn || authSession.token == null) {
-            emit(Failure(401, "Not Logged in"))
-            return@flow
-        }
-
         insertMessage(
             ChatMessage(
                 ownerSessionId = sessionId,
@@ -131,7 +126,7 @@ class ChatRepository(
 
             coroutineScope {
                 apiService.sendMessageStream(
-                    authSession.token,
+                    authSession.token ?: "",
                     authSession.uuid,
                     ChatRequestBody(attachments.map { it.id }, messageText, true, historyList)
                 ).collect { result ->

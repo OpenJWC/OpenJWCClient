@@ -12,36 +12,54 @@ import android.widget.Toast
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Check
-import androidx.compose.material.icons.filled.Close
-import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material.icons.twotone.Check
+import androidx.compose.material.icons.twotone.Close
+import androidx.compose.material3.CircularWavyProgressIndicator
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.LargeFlexibleTopAppBar
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material3.rememberTopAppBarState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshotFlow
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
+import androidx.lifecycle.viewmodel.compose.viewModel
 import org.openjwc.client.R
+import org.openjwc.client.data.datastore.AuthDataSource
+import org.openjwc.client.data.datastore.CachedDataSource
+import org.openjwc.client.data.datastore.SettingsDataSource
+import org.openjwc.client.data.db.AppDatabase
+import org.openjwc.client.data.repository.CourseRepository
+import org.openjwc.client.data.repository.SettingsRepository
 import org.openjwc.client.log.Logger
+import org.openjwc.client.navigation3.Navigator
+import org.openjwc.client.ui.component.settings.AppBackButton
+import org.openjwc.client.ui.theme.blurEffect
+import org.openjwc.client.viewmodels.TimetableViewModel
+import org.openjwc.client.viewmodels.TimetableViewModelFactory
 
 private const val TAG = "ImportWebView"
 private const val BRIDGE_NAME = "AndroidBridge"
 private const val JS_FILE_NAME = "timetable_extractor.js"
 
-/**
- * 具名桥接类：确保 JS 注解可见性与混淆安全性
- */
 @Suppress("unused")
 class WebAppInterface(
     private val onData: (String) -> Unit,
@@ -60,9 +78,6 @@ class WebAppInterface(
     }
 }
 
-/**
- * Assets 读取辅助扩展
- */
 fun Context.readAssetFile(fileName: String): String {
     return try {
         assets.open(fileName).bufferedReader().use { it.readText() }
@@ -73,14 +88,22 @@ fun Context.readAssetFile(fileName: String): String {
 }
 
 @SuppressLint("SetJavaScriptEnabled", "JavascriptInterface")
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
-fun ImportWebViewScreen(
-    onDismiss: () -> Unit,
-    onDataAcquired: (String) -> Unit
-) {
+fun ImportWebViewScreen(navigator: Navigator) {
+    val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior(rememberTopAppBarState())
     val context = LocalContext.current
     val appContext = context.applicationContext
+
+    val db = remember { AppDatabase.getDatabase(context) }
+    val settingsDataSource = remember { SettingsDataSource(context) }
+    val authDataSource = remember { AuthDataSource(context) }
+    val settingsRepository = remember { SettingsRepository(settingsDataSource, CachedDataSource(context), authDataSource, context) }
+    val courseRepository = remember { CourseRepository(db.courseDao(), db.tableDao()) }
+    val timetableViewModel: TimetableViewModel = viewModel(
+        factory = TimetableViewModelFactory(courseRepository, settingsRepository)
+    )
+
     var webViewInstance by remember { mutableStateOf<WebView?>(null) }
 
     val extractorJs = remember { context.readAssetFile(JS_FILE_NAME) }
@@ -90,15 +113,34 @@ fun ImportWebViewScreen(
         WebAppInterface(
             onData = { json ->
                 webViewInstance?.post {
-                    onDataAcquired(json)
+                    timetableViewModel.handleImportedJson(json)
                 }
             },
             onError = { message ->
                 webViewInstance?.post {
-                    Toast.makeText(appContext, "导入失败: $message", Toast.LENGTH_LONG).show()
+                    Toast.makeText(appContext, "Import failed: $message", Toast.LENGTH_LONG).show()
                 }
             }
         )
+    }
+
+    LaunchedEffect(Unit) {
+        snapshotFlow { timetableViewModel.pendingImport }.collect { import ->
+            if (import != null) {
+                timetableViewModel.confirmImport(import.metadata)
+                navigator.pop()
+            }
+        }
+    }
+
+    LaunchedEffect(Unit) {
+        snapshotFlow { timetableViewModel.importErrorMessage }.collect { msg ->
+            if (msg != null) {
+                webViewInstance?.post {
+                    Toast.makeText(appContext, "Import failed: $msg", Toast.LENGTH_LONG).show()
+                }
+            }
+        }
     }
 
     DisposableEffect(Unit) {
@@ -115,30 +157,47 @@ fun ImportWebViewScreen(
     }
 
     Scaffold(
-        modifier = Modifier.fillMaxSize(),
         topBar = {
-            TopAppBar(
+            LargeFlexibleTopAppBar(
+                modifier = Modifier.blurEffect(),
                 title = { Text(stringResource(R.string.login_title)) },
-                navigationIcon = {
-                    IconButton(onClick = onDismiss) { Icon(Icons.Default.Close, null) }
-                }
+                navigationIcon = { AppBackButton(onClick = { navigator.pop() }) },
+                scrollBehavior = scrollBehavior,
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = Color.Transparent,
+                    scrolledContainerColor = Color.Transparent
+                )
             )
         },
         floatingActionButton = {
             ExtendedFloatingActionButton(
                 onClick = {
                     if (extractorJs.isBlank()) {
-                        Logger.e(TAG, "JS_ERROR: Extractor script is empty")
-                        Toast.makeText(appContext, "错误：无法加载提取脚本", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(appContext, "Error: Cannot load extractor script", Toast.LENGTH_SHORT).show()
                         return@ExtendedFloatingActionButton
                     }
                     Toast.makeText(appContext, appContext.getString(R.string.extracting_timetable), Toast.LENGTH_SHORT).show()
                     webViewInstance?.evaluateJavascript(extractorJs, null)
                 },
-                icon = { Icon(Icons.Default.Check, null) },
-                text = { Text(stringResource(R.string.click_me_when_you_see_the_timetable)) }
+                icon = {
+                    if (timetableViewModel.isImporting) {
+                        CircularWavyProgressIndicator(
+                            modifier = Modifier.size(24.dp),
+                            color = Color.White
+                        )
+                    } else {
+                        Icon(Icons.TwoTone.Check, null)
+                    }
+                },
+                text = {
+                    Text(
+                        if (timetableViewModel.isImporting) stringResource(R.string.uploading)
+                        else stringResource(R.string.click_me_when_you_see_the_timetable)
+                    )
+                }
             )
-        }
+        },
+        containerColor = Color.Transparent
     ) { innerPadding ->
         Box(modifier = Modifier.padding(innerPadding).fillMaxSize()) {
             AndroidView(
@@ -162,6 +221,12 @@ fun ImportWebViewScreen(
                 },
                 modifier = Modifier.fillMaxSize()
             )
+
+            if (timetableViewModel.isImporting) {
+                CircularWavyProgressIndicator(
+                    modifier = Modifier.align(Alignment.Center)
+                )
+            }
         }
     }
 }

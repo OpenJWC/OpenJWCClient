@@ -25,6 +25,13 @@ import org.openjwc.client.net.models.NetworkResult
 import org.openjwc.client.net.models.ReviewedNoticesData
 import org.openjwc.client.net.models.UploadedNotice
 
+data class PagingState(
+    val items: List<FetchedNotice> = emptyList(),
+    val currentPage: Int = 1,
+    val isEnd: Boolean = false,
+    val error: String? = null
+)
+
 class NewsViewModel(
     repository: SettingsRepository,
     private val newsRepository: NewsRepository,
@@ -32,10 +39,7 @@ class NewsViewModel(
 ) : ViewModel() {
     private val tag = "NewsViewModel"
 
-    private val _newsCache = mutableStateMapOf<String, List<FetchedNotice>>()
-    private val _pageMap = mutableMapOf<String, Int>()
-    private val _isEndMap = mutableStateMapOf<String, Boolean>()
-    private val _errorMap = mutableStateMapOf<String, String?>()
+    private val _pagingStates = mutableStateMapOf<String, PagingState>()
 
     val freshDays: StateFlow<Int?> = repository.userSettings
         .map { it.freshDays }
@@ -95,9 +99,9 @@ class NewsViewModel(
     var uiEvent = Channel<UiEvent>(Channel.BUFFERED)
         private set
     var reviewedNoticesError = MutableStateFlow<String?>(null)
-    fun getNewsState(label: String): List<FetchedNotice> = _newsCache[label] ?: emptyList()
-    fun getError(label: String): String? = _errorMap[label]
-    fun isEnd(label: String): Boolean = _isEndMap[label] ?: false
+    fun getNewsState(label: String): List<FetchedNotice> = _pagingStates[label]?.items ?: emptyList()
+    fun getError(label: String): String? = _pagingStates[label]?.error
+    fun isEnd(label: String): Boolean = _pagingStates[label]?.isEnd ?: false
 
     fun loadLabels() {
         viewModelScope.launch {
@@ -111,9 +115,6 @@ class NewsViewModel(
 
                     is NetworkResult.Failure -> {
                         labelError.value = "加载错误(${result.code}): ${result.msg}"
-                        if (result.code == 401) {
-                            authRepository.clearSession()
-                        }
                     }
 
                     is NetworkResult.Error -> {
@@ -131,7 +132,7 @@ class NewsViewModel(
 
     private fun executeLoadNews(label: String, page: Int, size: Int, isRefresh: Boolean) {
         if (isRefresh) isRefreshing.value = true else isLoading.value = true
-        _errorMap[label] = null
+        _pagingStates[label] = (_pagingStates[label] ?: PagingState()).copy(error = null)
 
         viewModelScope.launch {
             try {
@@ -140,30 +141,41 @@ class NewsViewModel(
                 when (result) {
                     is NetworkResult.Success -> {
                         val newData = result.response.data.fetchedNotices
-                        _isEndMap[label] = newData.size < size
+                        val isEnd = newData.size < size
 
                         if (isRefresh || page == 1) {
-                            _newsCache[label] = newData
-                            _pageMap[label] = 1
+                            _pagingStates[label] = PagingState(
+                                items = newData,
+                                currentPage = 1,
+                                isEnd = isEnd
+                            )
                         } else {
-                            val currentList = _newsCache[label] ?: emptyList()
-                            _newsCache[label] = (currentList + newData).distinctBy { it.id }
-                            _pageMap[label] = page
+                            val current = _pagingStates[label] ?: PagingState()
+                            _pagingStates[label] = current.copy(
+                                items = (current.items + newData).distinctBy { it.id },
+                                currentPage = page,
+                                isEnd = isEnd
+                            )
                         }
                     }
 
                     is NetworkResult.Failure -> {
-                        _errorMap[label] = "加载错误(${result.code}): ${result.msg}"
-                        if (result.code == 401) {
-                            authRepository.clearSession()
-                        }
+                        _pagingStates[label] = (_pagingStates[label] ?: PagingState()).copy(
+                            error = "加载错误(${result.code}): ${result.msg}"
+                        )
                     }
 
-                    is NetworkResult.Error -> _errorMap[label] = result.msg
+                    is NetworkResult.Error -> {
+                        _pagingStates[label] = (_pagingStates[label] ?: PagingState()).copy(
+                            error = result.msg
+                        )
+                    }
                 }
             } catch (e: Exception) {
                 Logger.e(tag, "executeLoad Error", e)
-                _errorMap[label] = e.localizedMessage ?: "未知错误"
+                _pagingStates[label] = (_pagingStates[label] ?: PagingState()).copy(
+                    error = e.localizedMessage ?: "未知错误"
+                )
             } finally {
                 isLoading.value = false
                 isRefreshing.value = false
@@ -184,7 +196,6 @@ class NewsViewModel(
 
                     is NetworkResult.Failure -> {
                         uploadError.value = "加载错误(${result.code}): ${result.msg}"
-                        if (result.code == 401) authRepository.clearSession()
                     }
 
                     is NetworkResult.Error -> {
@@ -212,7 +223,6 @@ class NewsViewModel(
                     is NetworkResult.Failure -> {
                         reviewedNoticesError.value =
                             "加载错误(${result.code}): ${result.msg}"
-                        if (result.code == 401) authRepository.clearSession()
                     }
 
                     is NetworkResult.Error -> reviewedNoticesError.value = result.msg
@@ -225,13 +235,13 @@ class NewsViewModel(
     }
 
     fun loadCategory(label: String, isRefresh: Boolean = false) {
-        if (!isRefresh && _newsCache.containsKey(label)) return
+        if (!isRefresh && _pagingStates.containsKey(label)) return
         executeLoadNews(label, page = 1, size = 20, isRefresh = isRefresh)
     }
 
     fun loadNextPage(label: String) {
         if (isLoading.value || isRefreshing.value || isEnd(label)) return
-        val nextPage = (_pageMap[label] ?: 1) + 1
+        val nextPage = (_pagingStates[label]?.currentPage ?: 1) + 1
         executeLoadNews(label, page = nextPage, size = 20, isRefresh = false)
     }
 

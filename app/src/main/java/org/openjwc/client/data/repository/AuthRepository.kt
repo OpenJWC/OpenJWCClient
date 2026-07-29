@@ -93,7 +93,6 @@ class AuthRepository(
     }
 
     suspend fun deviceUnbind(uuid: String): NetworkResult<DevicesUnbindSuccessResponse> {
-        if (!authDataSource.authSession.first().isLoggedIn) return NetworkResult.Failure(401,"Not logged in")
         val settings = settingsDataSource.userSettings.first()
         try {
             val apiService =
@@ -110,7 +109,6 @@ class AuthRepository(
     }
 
     suspend fun deviceQuery(): NetworkResult<SuccessResponse<DevicesQueryResponseData>> {
-        if (!authDataSource.authSession.first().isLoggedIn) return NetworkResult.Failure(401,"Not logged in")
         val settings = settingsDataSource.userSettings.first()
         try {
             val apiService =
