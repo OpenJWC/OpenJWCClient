@@ -2,6 +2,8 @@ package org.openjwc.client.ui.me.settings
 
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.twotone.BugReport
@@ -55,6 +57,7 @@ fun SettingsScreen(navigator: Navigator) {
             modifier = Modifier
                 .fillMaxSize()
                 .nestedScroll(scrollBehavior.nestedScrollConnection)
+                .verticalScroll(rememberScrollState())
                 .padding(innerPadding)
                 .blurSource()
         ) {

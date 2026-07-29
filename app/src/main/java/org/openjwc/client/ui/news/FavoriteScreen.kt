@@ -3,6 +3,8 @@ package org.openjwc.client.ui.news
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -75,7 +77,8 @@ fun FavoriteScreen(navigator: Navigator) {
                 modifier = Modifier
                     .fillMaxSize()
                     .nestedScroll(scrollBehavior.nestedScrollConnection)
-                    .padding(innerPadding)
+                    .verticalScroll(rememberScrollState())
+                .padding(innerPadding)
                     .blurSource()
                     .padding(32.dp),
             ) {
@@ -103,7 +106,8 @@ fun FavoriteScreen(navigator: Navigator) {
                 modifier = Modifier
                     .fillMaxSize()
                     .nestedScroll(scrollBehavior.nestedScrollConnection)
-                    .padding(innerPadding)
+                    .verticalScroll(rememberScrollState())
+                .padding(innerPadding)
                     .blurSource()
                     .padding(horizontal = 12.dp, vertical = 4.dp)
             ) {

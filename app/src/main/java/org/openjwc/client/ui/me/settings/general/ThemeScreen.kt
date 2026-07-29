@@ -9,11 +9,14 @@ import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.twotone.AutoAwesome
 import androidx.compose.material.icons.twotone.BlurOn
 import androidx.compose.material.icons.twotone.Brightness6
 import androidx.compose.material.icons.twotone.FormatPaint
+import androidx.compose.material.icons.twotone.Opacity
 import androidx.compose.material.icons.twotone.Palette
 import androidx.compose.material.icons.twotone.Wallpaper
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
@@ -78,6 +81,7 @@ fun ThemeScreen(navigator: Navigator) {
             modifier = Modifier
                 .fillMaxSize()
                 .nestedScroll(scrollBehavior.nestedScrollConnection)
+                .verticalScroll(rememberScrollState())
                 .padding(innerPadding)
                 .blurSource()
         ) {
@@ -153,22 +157,24 @@ fun ThemeScreen(navigator: Navigator) {
                             onClick = { BackgroundManager.clearCustomBackground(context) }
                         ) {}
                     }
-                }
-                item {
-                    SettingsSwitchWidget(
-                        icon = Icons.TwoTone.BlurOn,
-                        title = "Enable Blur",
-                        checked = ThemeConfig.isEnableBlur,
-                        onCheckedChange = { BackgroundManager.saveEnableBlur(context, it) }
-                    )
-                }
-                item {
-                    SettingsSwitchWidget(
-                        icon = Icons.TwoTone.BlurOn,
-                        title = "Experimental Blur",
-                        checked = ThemeConfig.isEnableBlurExp,
-                        onCheckedChange = { BackgroundManager.saveEnableBlurExp(context, it) }
-                    )
+                    item {
+                        SettingsChooseWidget(
+                            icon = Icons.TwoTone.Opacity,
+                            title = "Background Dim",
+                            items = (0..10).map { "${it * 10}%" },
+                            selectedIndex = (ThemeConfig.backgroundDim * 10f).toInt().coerceIn(0, 10),
+                            onSelectedIndexChange = { BackgroundManager.saveBackgroundDim(context, it / 10f) }
+                        )
+                    }
+                    item {
+                        SettingsSwitchWidget(
+                            icon = Icons.TwoTone.BlurOn,
+                            title = "Background Blur",
+                            description = "Apply Gaussian blur to wallpaper",
+                            checked = ThemeConfig.isEnableBlur,
+                            onCheckedChange = { BackgroundManager.saveEnableBlur(context, it) }
+                        )
+                    }
                 }
             }
 
