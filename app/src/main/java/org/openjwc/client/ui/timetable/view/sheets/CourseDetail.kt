@@ -62,7 +62,7 @@ fun CourseDetailSheet(
     ModalBottomSheet(
         onDismissRequest = onDismissRequest,
         sheetState = sheetState,
-        containerColor = MaterialTheme.colorScheme.surface,
+        containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
         dragHandle = dragHandle,
         modifier = Modifier
             .widthIn(max = 640.dp)

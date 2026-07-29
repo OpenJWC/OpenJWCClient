@@ -8,6 +8,8 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.text.input.OutputTransformation
 import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
@@ -59,12 +61,7 @@ import org.openjwc.client.viewmodels.NavEvent
 
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
-fun LoginScreen(navigator: Navigator) {
-    val context = LocalContext.current
-    val authDataSource = remember { AuthDataSource(context) }
-    val settingsDataSource = remember { SettingsDataSource(context) }
-    val authRepository = remember { AuthRepository(authDataSource, settingsDataSource) }
-    val authViewModel: AuthViewModel = viewModel(factory = AuthViewModelFactory(authRepository))
+fun LoginScreen(navigator: Navigator, authViewModel: AuthViewModel) {
 
     val isLoggingIn by authViewModel.isLoggingIn.collectAsState()
     val loginResult by authViewModel.loginResult.collectAsState()
@@ -102,12 +99,12 @@ fun LoginScreen(navigator: Navigator) {
                 navigationIcon = { AppBackButton(onClick = { navigator.pop() }) },
                 scrollBehavior = scrollBehavior,
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.surface,
+                    containerColor = Color.Transparent,
                     scrolledContainerColor = MaterialTheme.colorScheme.surface
                 )
             )
         },
-        containerColor = MaterialTheme.colorScheme.surface
+        containerColor = Color.Transparent
     ) { innerPadding ->
         Column(
             modifier = Modifier
@@ -125,10 +122,13 @@ fun LoginScreen(navigator: Navigator) {
                     )
                 }
                 item {
+                    val pwdTransform = if (passwordVisible) null
+                    else OutputTransformation { replace(0, length, "•".repeat(length)) }
                     SettingsTextFieldWidget(
                         state = passwordState,
                         title = stringResource(R.string.password),
                         error = passwordError,
+                        outputTransformation = pwdTransform,
                         trailingContent = {
                             IconButton(
                                 onClick = { passwordVisible = !passwordVisible },

@@ -23,13 +23,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
-import androidx.lifecycle.viewmodel.compose.viewModel
 import org.openjwc.client.R
-import org.openjwc.client.data.datastore.AuthDataSource
-import org.openjwc.client.data.datastore.CachedDataSource
-import org.openjwc.client.data.datastore.SettingsDataSource
-import org.openjwc.client.data.repository.AuthRepository
-import org.openjwc.client.data.repository.SettingsRepository
 import org.openjwc.client.navigation3.Navigator
 import org.openjwc.client.ui.component.settings.AppBackButton
 import org.openjwc.client.ui.component.settings.SegmentedColumn
@@ -37,20 +31,12 @@ import org.openjwc.client.ui.component.settings.SettingsChooseWidget
 import org.openjwc.client.utils.changeAppLanguage
 import org.openjwc.client.utils.languages
 import org.openjwc.client.viewmodels.SettingsViewModel
-import org.openjwc.client.viewmodels.SettingsViewModelFactory
 
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
-fun LanguageScreen(navigator: Navigator) {
+fun LanguageScreen(navigator: Navigator, settingsViewModel: SettingsViewModel) {
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior(rememberTopAppBarState())
     val context = LocalContext.current
-
-    val settingsDataSource = remember { SettingsDataSource(context) }
-    val authDataSource = remember { AuthDataSource(context) }
-    val cachedDataSource = remember { CachedDataSource(context) }
-    val settingsRepository = remember { SettingsRepository(settingsDataSource, cachedDataSource, authDataSource, context) }
-    val authRepository = remember { AuthRepository(authDataSource, settingsDataSource) }
-    val settingsViewModel: SettingsViewModel = viewModel(factory = SettingsViewModelFactory(settingsRepository, authRepository))
 
     val settings by settingsViewModel.settings.collectAsStateWithLifecycle()
     val currentLanguageCode = settings.languageCode
@@ -66,12 +52,12 @@ fun LanguageScreen(navigator: Navigator) {
                 navigationIcon = { AppBackButton(onClick = { navigator.pop() }) },
                 scrollBehavior = scrollBehavior,
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.surface,
+                    containerColor = Color.Transparent,
                     scrolledContainerColor = MaterialTheme.colorScheme.surface
                 )
             )
         },
-        containerColor = MaterialTheme.colorScheme.surface
+        containerColor = Color.Transparent
     ) { innerPadding ->
         Column(
             modifier = Modifier

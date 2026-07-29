@@ -26,39 +26,19 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
-import androidx.lifecycle.viewmodel.compose.viewModel
 import org.openjwc.client.R
-import org.openjwc.client.data.datastore.AuthDataSource
-import org.openjwc.client.data.datastore.CachedDataSource
-import org.openjwc.client.data.datastore.SettingsDataSource
-import org.openjwc.client.data.db.AppDatabase
-import org.openjwc.client.data.repository.AuthRepository
-import org.openjwc.client.data.repository.CourseRepository
-import org.openjwc.client.data.repository.SettingsRepository
 import org.openjwc.client.navigation3.Navigator
 import org.openjwc.client.ui.component.settings.AppBackButton
 import org.openjwc.client.ui.component.settings.SegmentedColumn
 import org.openjwc.client.ui.component.settings.SettingsSwitchWidget
 import org.openjwc.client.viewmodels.TimetableViewModel
-import org.openjwc.client.viewmodels.TimetableViewModelFactory
 import org.openjwc.client.viewmodels.SettingsViewModel
-import org.openjwc.client.viewmodels.SettingsViewModelFactory
 
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
-fun TimetablePrefsScreen(navigator: Navigator) {
+fun TimetablePrefsScreen(navigator: Navigator, settingsViewModel: SettingsViewModel, timetableViewModel: TimetableViewModel) {
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior(rememberTopAppBarState())
     val context = LocalContext.current
-
-    val database = remember { AppDatabase.getDatabase(context) }
-    val settingsDataSource = remember { SettingsDataSource(context) }
-    val authDataSource = remember { AuthDataSource(context) }
-    val cachedDataSource = remember { CachedDataSource(context) }
-    val settingsRepository = remember { SettingsRepository(settingsDataSource, cachedDataSource, authDataSource, context) }
-    val courseRepository = remember { CourseRepository(database.courseDao(), database.tableDao()) }
-    val authRepository = remember { AuthRepository(authDataSource, settingsDataSource) }
-    val timetableViewModel: TimetableViewModel = viewModel(factory = TimetableViewModelFactory(courseRepository, settingsRepository))
-    val settingsViewModel: SettingsViewModel = viewModel(factory = SettingsViewModelFactory(settingsRepository, authRepository))
 
     val prefs by timetableViewModel.displayPrefs.collectAsStateWithLifecycle()
     val showTimeline = prefs.showTimeline
@@ -73,12 +53,12 @@ fun TimetablePrefsScreen(navigator: Navigator) {
                 navigationIcon = { AppBackButton(onClick = { navigator.pop() }) },
                 scrollBehavior = scrollBehavior,
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.surface,
+                    containerColor = Color.Transparent,
                     scrolledContainerColor = MaterialTheme.colorScheme.surface
                 )
             )
         },
-        containerColor = MaterialTheme.colorScheme.surface
+        containerColor = Color.Transparent
     ) { innerPadding ->
         Column(
             modifier = Modifier

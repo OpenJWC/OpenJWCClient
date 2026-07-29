@@ -1,5 +1,6 @@
 package org.openjwc.client.ui.news
 
+import androidx.compose.ui.graphics.Color
 import android.content.Intent
 import android.net.Uri
 import androidx.compose.foundation.layout.Arrangement
@@ -15,7 +16,6 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.twotone.Attachment
 import androidx.compose.material.icons.twotone.Description
-import androidx.compose.material.icons.twotone.Link
 import androidx.compose.material.icons.twotone.OpenInNew
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.Icon
@@ -26,142 +26,75 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.rememberTopAppBarState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import dev.jeziellago.compose.markdowntext.MarkdownText
 import org.openjwc.client.R
-import org.openjwc.client.data.appPreferences
 import org.openjwc.client.navigation3.Navigator
 import org.openjwc.client.ui.component.settings.AppBackButton
 import org.openjwc.client.ui.component.settings.SettingsBaseWidget
 import org.openjwc.client.ui.component.settings.SettingsJumpPageWidget
+import org.openjwc.client.viewmodels.NewsViewModel
+import dev.jeziellago.compose.markdowntext.MarkdownText
 
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
-fun NewsDetailScreen(navigator: Navigator) {
+fun NewsDetailScreen(navigator: Navigator, newsViewModel: NewsViewModel) {
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior(rememberTopAppBarState())
     val context = LocalContext.current
-    val prefs = context.appPreferences
 
-    val noticeId = prefs.getString("news_detail_id", null)
-    val noticeTitle = prefs.getString("news_detail_title", stringResource(R.string.news_not_found))
-        ?: stringResource(R.string.news_not_found)
-    val noticeDate = prefs.getString("news_detail_date", "") ?: ""
-    val noticeContent = prefs.getString("news_detail_content", "") ?: ""
-    val noticeDetailUrl = prefs.getString("news_detail_url", "") ?: ""
-    val attachmentCount = prefs.getInt("news_detail_attachment_count", 0)
-    val attachments = remember {
-        (0 until attachmentCount).map { i ->
-            prefs.getString("news_detail_attachment_$i", "") ?: ""
-        }.filter { it.isNotBlank() }
-    }
+    val notice by newsViewModel.currentNewsToDisplay.collectAsState()
 
     fun openUrl(url: String) {
-        val intent = Intent(Intent.ACTION_VIEW, Uri.parse(url)).apply {
-            addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-        }
-        try {
-            context.startActivity(intent)
-        } catch (_: Exception) {}
+        try { context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(url)).apply { addFlags(Intent.FLAG_ACTIVITY_NEW_TASK) }) } catch (_: Exception) {}
     }
 
     Scaffold(
         topBar = {
             LargeFlexibleTopAppBar(
-                title = { Text(noticeTitle, maxLines = 1, overflow = TextOverflow.Ellipsis) },
+                title = { Text(notice?.title ?: stringResource(R.string.news_not_found), maxLines = 1, overflow = TextOverflow.Ellipsis) },
                 navigationIcon = { AppBackButton(onClick = { navigator.pop() }) },
                 scrollBehavior = scrollBehavior,
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.surface,
+                    containerColor = Color.Transparent,
                     scrolledContainerColor = MaterialTheme.colorScheme.surface
                 )
             )
         },
-        containerColor = MaterialTheme.colorScheme.surface
+        containerColor = Color.Transparent
     ) { innerPadding ->
-        if (noticeId == null) {
-            Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .nestedScroll(scrollBehavior.nestedScrollConnection)
-                    .padding(innerPadding)
-                    .padding(32.dp),
-            ) {
-                Icon(
-                    imageVector = Icons.TwoTone.Description,
-                    contentDescription = null,
-                    modifier = Modifier.size(80.dp),
-                    tint = MaterialTheme.colorScheme.outlineVariant
-                )
-                Spacer(modifier = Modifier.height(16.dp))
-                Text(
-                    text = stringResource(R.string.news_empty_egg),
-                    style = MaterialTheme.typography.bodyLarge,
-                    color = MaterialTheme.colorScheme.outline
-                )
+        if (notice == null) {
+            Column(Modifier.fillMaxSize().nestedScroll(scrollBehavior.nestedScrollConnection).padding(innerPadding).padding(32.dp)) {
+                Icon(Icons.TwoTone.Description, null, Modifier.size(80.dp), tint = MaterialTheme.colorScheme.outlineVariant)
+                Spacer(Modifier.height(16.dp))
+                Text(stringResource(R.string.news_empty_egg), style = MaterialTheme.typography.bodyLarge, color = MaterialTheme.colorScheme.outline)
             }
         } else {
+            val n = notice!!
             Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .nestedScroll(scrollBehavior.nestedScrollConnection)
-                    .padding(innerPadding)
-                    .verticalScroll(rememberScrollState())
-                    .padding(16.dp),
+                modifier = Modifier.fillMaxSize().nestedScroll(scrollBehavior.nestedScrollConnection).padding(innerPadding).verticalScroll(rememberScrollState()).padding(16.dp),
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
-                if (noticeDate.isNotBlank()) {
-                    Text(
-                        text = noticeDate,
-                        style = MaterialTheme.typography.labelMedium,
-                        color = MaterialTheme.colorScheme.outline
-                    )
-                }
+                if (n.date.isNotBlank()) Text(n.date, style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.outline)
+                if (n.contentText != null && n.contentText.isNotBlank()) MarkdownText(markdown = n.contentText, isTextSelectable = true)
+                else Text(stringResource(R.string.no_detail_view_original), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.outline)
 
-                if (noticeContent.isNotBlank()) {
-                    MarkdownText(
-                        markdown = noticeContent,
-                        isTextSelectable = true
-                    )
-                } else {
-                    Text(
-                        text = stringResource(R.string.no_detail_view_original),
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.outline
-                    )
-                }
-
-                if (attachments.isNotEmpty()) {
-                    Spacer(modifier = Modifier.height(8.dp))
-                    Text(
-                        text = stringResource(R.string.attachment_list_count, attachments.size),
-                        style = MaterialTheme.typography.titleMedium,
-                        modifier = Modifier.padding(bottom = 8.dp)
-                    )
-                    attachments.forEach { url ->
-                        SettingsBaseWidget(
-                            icon = Icons.TwoTone.Attachment,
-                            title = url.substringAfterLast("/").ifBlank { url },
-                            modifier = Modifier.fillMaxWidth()
-                        ) { openUrl(url) }
+                val urls = n.attachmentUrls.orEmpty().filter { it.isNotBlank() }
+                if (urls.isNotEmpty()) {
+                    Spacer(Modifier.height(8.dp))
+                    Text(stringResource(R.string.attachment_list_count, urls.size), style = MaterialTheme.typography.titleMedium, modifier = Modifier.padding(bottom = 8.dp))
+                    urls.forEach { url ->
+                        SettingsBaseWidget(icon = Icons.TwoTone.Attachment, title = url.substringAfterLast("/").ifBlank { url }, modifier = Modifier.fillMaxWidth(), onClick = { openUrl(url) }) {}
                     }
                 }
-
-                if (noticeDetailUrl.isNotBlank()) {
-                    SettingsJumpPageWidget(
-                        icon = Icons.TwoTone.OpenInNew,
-                        title = stringResource(R.string.view_in_browser),
-                        onClick = { _ -> openUrl(noticeDetailUrl) }
-                    )
+                if (n.detailUrl.isNotBlank()) {
+                    SettingsJumpPageWidget(icon = Icons.TwoTone.OpenInNew, title = stringResource(R.string.view_in_browser), onClick = { openUrl(n.detailUrl) })
                 }
             }
         }

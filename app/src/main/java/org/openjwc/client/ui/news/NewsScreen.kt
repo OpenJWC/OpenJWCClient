@@ -1,5 +1,6 @@
 package org.openjwc.client.ui.news
 
+import androidx.compose.ui.graphics.Color
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -33,12 +34,14 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import org.openjwc.client.navigation3.Navigator
 import kotlinx.coroutines.launch
 import org.openjwc.client.R
+import org.openjwc.client.data.appPreferences
 import org.openjwc.client.navigation.Screen
 import org.openjwc.client.net.models.FetchedNotice
 import org.openjwc.client.net.models.toNoticeEntity
@@ -83,7 +86,7 @@ fun NewsScreen(
             }
         } else {
             Column(Modifier.fillMaxSize()) {
-                SecondaryScrollableTabRow(selectedTabIndex = pagerState.currentPage, containerColor = MaterialTheme.colorScheme.surface, edgePadding = 16.dp, divider = {},
+                SecondaryScrollableTabRow(selectedTabIndex = pagerState.currentPage, containerColor = Color.Transparent, edgePadding = 16.dp, divider = {},
                     indicator = { TabRowDefaults.SecondaryIndicator(Modifier.tabIndicatorOffset(pagerState.currentPage), color = MaterialTheme.colorScheme.primary) }) {
                     tabs.forEachIndexed { index, label ->
                         val selected = pagerState.currentPage == index

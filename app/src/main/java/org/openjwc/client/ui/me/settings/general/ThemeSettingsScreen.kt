@@ -45,12 +45,12 @@ fun ThemeSettingsScreen(navigator: Navigator) {
                 navigationIcon = { AppBackButton(onClick = { navigator.pop() }) },
                 scrollBehavior = scrollBehavior,
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.surface,
+                    containerColor = Color.Transparent,
                     scrolledContainerColor = MaterialTheme.colorScheme.surface
                 )
             )
         },
-        containerColor = MaterialTheme.colorScheme.surface
+        containerColor = Color.Transparent
     ) { innerPadding ->
         Column(
             modifier = Modifier

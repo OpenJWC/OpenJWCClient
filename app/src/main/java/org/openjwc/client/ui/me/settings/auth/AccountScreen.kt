@@ -62,14 +62,7 @@ import org.openjwc.client.viewmodels.SettingsViewModelFactory
 
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
-fun AccountScreen(navigator: Navigator) {
-    val context = LocalContext.current
-    val authDataSource = remember { AuthDataSource(context) }
-    val settingsDataSource = remember { SettingsDataSource(context) }
-    val authRepository = remember { AuthRepository(authDataSource, settingsDataSource) }
-    val settingsRepository = remember { SettingsRepository(settingsDataSource, CachedDataSource(context), authDataSource, context) }
-    val authViewModel: AuthViewModel = viewModel(factory = AuthViewModelFactory(authRepository))
-    val settingsViewModel: SettingsViewModel = viewModel(factory = SettingsViewModelFactory(settingsRepository, authRepository))
+fun AccountScreen(navigator: Navigator, authViewModel: AuthViewModel, settingsViewModel: SettingsViewModel) {
 
     val authSession by authViewModel.authSession.collectAsStateWithLifecycle()
     val deviceResult by settingsViewModel.deviceResult.collectAsStateWithLifecycle()
@@ -114,12 +107,12 @@ fun AccountScreen(navigator: Navigator) {
                 navigationIcon = { AppBackButton(onClick = { navigator.pop() }) },
                 scrollBehavior = scrollBehavior,
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.surface,
+                    containerColor = Color.Transparent,
                     scrolledContainerColor = MaterialTheme.colorScheme.surface
                 )
             )
         },
-        containerColor = MaterialTheme.colorScheme.surface
+        containerColor = Color.Transparent
     ) { innerPadding ->
         Column(
             modifier = Modifier

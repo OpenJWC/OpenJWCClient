@@ -44,7 +44,7 @@ fun TableSelectSheet(
         sheetState = sheetState,
         onDismissRequest = onDismissRequest,
         dragHandle = { BottomSheetDefaults.DragHandle() },
-        containerColor = MaterialTheme.colorScheme.surface
+        containerColor = MaterialTheme.colorScheme.surfaceContainerHigh
     ) {
         LazyColumn(
             modifier = Modifier
@@ -82,7 +82,7 @@ fun TableSelectSheet(
                             )
                         }
                     },
-                    colors = ListItemDefaults.colors(containerColor = MaterialTheme.colorScheme.surface),
+                    colors = ListItemDefaults.colors(containerColor = Color.Transparent),
                     modifier = Modifier.clickable {
                         onTableSelect(table)
                         onDismissRequest()
@@ -110,7 +110,7 @@ fun TableSelectSheet(
                             tint = MaterialTheme.colorScheme.primary
                         )
                     },
-                    colors = ListItemDefaults.colors(containerColor = MaterialTheme.colorScheme.surface),
+                    colors = ListItemDefaults.colors(containerColor = Color.Transparent),
                     modifier = Modifier.clickable {
                         onDismissRequest()
                         onImport()
@@ -130,7 +130,7 @@ fun TableSelectSheet(
                             tint = MaterialTheme.colorScheme.primary
                         )
                     },
-                    colors = ListItemDefaults.colors(containerColor = MaterialTheme.colorScheme.surface),
+                    colors = ListItemDefaults.colors(containerColor = Color.Transparent),
                     modifier = Modifier.clickable {
                         onDismissRequest()
                         onCreateNew()

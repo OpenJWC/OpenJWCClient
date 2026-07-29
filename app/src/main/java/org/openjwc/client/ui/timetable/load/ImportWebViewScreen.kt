@@ -44,19 +44,11 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
-import androidx.lifecycle.viewmodel.compose.viewModel
 import org.openjwc.client.R
-import org.openjwc.client.data.datastore.AuthDataSource
-import org.openjwc.client.data.datastore.CachedDataSource
-import org.openjwc.client.data.datastore.SettingsDataSource
-import org.openjwc.client.data.db.AppDatabase
-import org.openjwc.client.data.repository.CourseRepository
-import org.openjwc.client.data.repository.SettingsRepository
 import org.openjwc.client.log.Logger
 import org.openjwc.client.navigation3.Navigator
 import org.openjwc.client.ui.component.settings.AppBackButton
 import org.openjwc.client.viewmodels.TimetableViewModel
-import org.openjwc.client.viewmodels.TimetableViewModelFactory
 
 private const val TAG = "ImportWebView"
 private const val BRIDGE_NAME = "AndroidBridge"
@@ -92,19 +84,10 @@ fun Context.readAssetFile(fileName: String): String {
 @SuppressLint("SetJavaScriptEnabled", "JavascriptInterface")
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
-fun ImportWebViewScreen(navigator: Navigator) {
+fun ImportWebViewScreen(navigator: Navigator, timetableViewModel: TimetableViewModel) {
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior(rememberTopAppBarState())
     val context = LocalContext.current
     val appContext = context.applicationContext
-
-    val db = remember { AppDatabase.getDatabase(context) }
-    val settingsDataSource = remember { SettingsDataSource(context) }
-    val authDataSource = remember { AuthDataSource(context) }
-    val settingsRepository = remember { SettingsRepository(settingsDataSource, CachedDataSource(context), authDataSource, context) }
-    val courseRepository = remember { CourseRepository(db.courseDao(), db.tableDao()) }
-    val timetableViewModel: TimetableViewModel = viewModel(
-        factory = TimetableViewModelFactory(courseRepository, settingsRepository)
-    )
 
     var webViewInstance by remember { mutableStateOf<WebView?>(null) }
 
@@ -165,7 +148,7 @@ fun ImportWebViewScreen(navigator: Navigator) {
                 navigationIcon = { AppBackButton(onClick = { navigator.pop() }) },
                 scrollBehavior = scrollBehavior,
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.surface,
+                    containerColor = Color.Transparent,
                     scrolledContainerColor = MaterialTheme.colorScheme.surface
                 )
             )
@@ -198,10 +181,9 @@ fun ImportWebViewScreen(navigator: Navigator) {
                 }
             )
         },
-        containerColor = MaterialTheme.colorScheme.surface
+        containerColor = Color.Transparent
     ) { innerPadding ->
-        Box(modifier = Modifier.verticalScroll(rememberScrollState())
-                .padding(innerPadding).fillMaxSize()) {
+        Box(modifier = Modifier.fillMaxSize().padding(innerPadding)) {
             AndroidView(
                 factory = { ctx ->
                     WebView(ctx).apply {

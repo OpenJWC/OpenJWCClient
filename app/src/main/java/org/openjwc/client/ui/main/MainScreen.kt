@@ -47,18 +47,9 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.lifecycle.viewmodel.compose.viewModel
 import kotlinx.coroutines.launch
 import org.openjwc.client.R
-import org.openjwc.client.data.datastore.AuthDataSource
-import org.openjwc.client.data.datastore.CachedDataSource
-import org.openjwc.client.data.datastore.SettingsDataSource
-import org.openjwc.client.data.db.AppDatabase
-import org.openjwc.client.data.repository.AuthRepository
-import org.openjwc.client.data.repository.ChatRepository
-import org.openjwc.client.data.repository.CourseRepository
-import org.openjwc.client.data.repository.NewsRepository
-import org.openjwc.client.data.repository.SettingsRepository
+import org.openjwc.client.data.models.ChatMetadata
 import org.openjwc.client.navigation.MainTab
 import org.openjwc.client.navigation.Screen
 import org.openjwc.client.navigation3.Navigator
@@ -71,38 +62,26 @@ import org.openjwc.client.ui.timetable.view.TimetableScreen
 import org.openjwc.client.ui.util.LocalHandlePageChange
 import org.openjwc.client.ui.util.LocalSelectedPage
 import org.openjwc.client.viewmodels.ChatViewModel
-import org.openjwc.client.viewmodels.ChatViewModelFactory
 import org.openjwc.client.viewmodels.MainViewModel
-import org.openjwc.client.viewmodels.MainViewModelFactory
 import org.openjwc.client.viewmodels.NewsViewModel
-import org.openjwc.client.viewmodels.NewsViewModelFactory
+import org.openjwc.client.viewmodels.SettingsViewModel
 import org.openjwc.client.viewmodels.TimetableViewModel
-import org.openjwc.client.viewmodels.TimetableViewModelFactory
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
 @Composable
-fun MainScreen(navigator: Navigator) {
+fun MainScreen(
+    navigator: Navigator,
+    mainViewModel: MainViewModel,
+    chatViewModel: ChatViewModel,
+    newsViewModel: NewsViewModel,
+    timetableViewModel: TimetableViewModel,
+    settingsViewModel: SettingsViewModel
+) {
     val tabs = MainTab.entries
     val coroutineScope = rememberCoroutineScope()
     val context = LocalContext.current
     val windowSizeClass = calculateWindowSizeClass(context as Activity)
     val useNavRail = windowSizeClass.widthSizeClass != WindowWidthSizeClass.Compact
-
-    val database = remember { AppDatabase.getDatabase(context) }
-    val settingsDataSource = remember { SettingsDataSource(context) }
-    val authDataSource = remember { AuthDataSource(context) }
-    val cachedDataSource = remember { CachedDataSource(context) }
-
-    val settingsRepository = remember { SettingsRepository(settingsDataSource, cachedDataSource, authDataSource, context) }
-    val chatRepository = remember { ChatRepository(database.chatDao(), settingsDataSource, authDataSource) }
-    val newsRepository = remember { NewsRepository(database.newsDao(), settingsDataSource, authDataSource) }
-    val authRepository = remember { AuthRepository(authDataSource, settingsDataSource) }
-    val courseRepository = remember { CourseRepository(database.courseDao(), database.tableDao()) }
-
-    val mainViewModel: MainViewModel = viewModel(factory = MainViewModelFactory(settingsRepository))
-    val chatViewModel: ChatViewModel = viewModel(factory = ChatViewModelFactory(chatRepository))
-    val newsViewModel: NewsViewModel = viewModel(factory = NewsViewModelFactory(settingsRepository, newsRepository, authRepository))
-    val timetableViewModel: TimetableViewModel = viewModel(factory = TimetableViewModelFactory(courseRepository, settingsRepository))
 
     val currentTab by mainViewModel.currentTab.collectAsState()
     val selectedPage = tabs.indexOf(currentTab).coerceAtLeast(0)
@@ -117,17 +96,18 @@ fun MainScreen(navigator: Navigator) {
     val metadata by chatViewModel.currentSessionMetadata.collectAsState()
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
     var showEditMetadataDialog by remember { mutableStateOf(false) }
+    var metadataToEdit by remember { mutableStateOf<ChatMetadata?>(null) }
 
     if (showEditMetadataDialog) {
         EditMetadataDialog(
             onDismiss = { showEditMetadataDialog = false },
             onConfirm = { newTitle ->
-                showEditMetadataDialog = false
-                chatViewModel.currentSessionMetadata.value?.let {
+                metadataToEdit?.let {
                     chatViewModel.updateMetadata(it.copy(title = newTitle))
                 }
+                showEditMetadataDialog = false
             },
-            initialTitle = chatViewModel.currentSessionMetadata.value?.title ?: ""
+            initialTitle = metadataToEdit?.title ?: ""
         )
     }
 
@@ -150,7 +130,7 @@ fun MainScreen(navigator: Navigator) {
                     coroutineScope.launch { drawerState.close() }
                 },
                 onDeleteSession = { id -> chatViewModel.deleteSession(id) },
-                onUpdateSessionMetadata = { showEditMetadataDialog = true },
+                onUpdateSessionMetadata = { meta -> metadataToEdit = meta; showEditMetadataDialog = true },
                 modifier = Modifier.fillMaxSize()
             )
         }
@@ -212,7 +192,7 @@ fun MainScreen(navigator: Navigator) {
                                 }
                             },
                             colors = TopAppBarDefaults.topAppBarColors(
-                                containerColor = MaterialTheme.colorScheme.surface,
+                                containerColor = Color.Transparent,
                                 scrolledContainerColor = MaterialTheme.colorScheme.surface
                             ),
                             windowInsets = TopAppBarDefaults.windowInsets.only(WindowInsetsSides.Top)
@@ -223,13 +203,14 @@ fun MainScreen(navigator: Navigator) {
                             MainNavigationBar(isBottomBar = true)
                         }
                     },
-                    containerColor = MaterialTheme.colorScheme.surface
+                    containerColor = Color.Transparent
                 ) { innerPadding ->
                     Box(Modifier.fillMaxSize().padding(innerPadding)) {
                         when (selectedPage) {
                             0 -> ChatMainContent(
                                 chatViewModel = chatViewModel,
                                 mainViewModel = mainViewModel,
+                                newsViewModel = newsViewModel,
                                 windowSizeClass = windowSizeClass,
                                 contentPadding = PaddingValues(top = 0.dp)
                             )

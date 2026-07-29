@@ -46,7 +46,7 @@ fun ChatInputBar(
 ) {
     Surface(
         modifier = modifier,
-        shape = RoundedCornerShape(topStart = 20.dp, topEnd = 20.dp),
+        shape = RoundedCornerShape(20.dp),
         color = MaterialTheme.colorScheme.surfaceContainerHigh,
         shadowElevation = 0.dp
     ) {

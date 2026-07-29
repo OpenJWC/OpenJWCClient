@@ -1,5 +1,6 @@
 package org.openjwc.client.ui.timetable.edit.components
 
+import androidx.compose.ui.graphics.Color
 import androidx.compose.foundation.clickable
 import androidx.compose.material3.Icon
 import androidx.compose.material3.ListItem

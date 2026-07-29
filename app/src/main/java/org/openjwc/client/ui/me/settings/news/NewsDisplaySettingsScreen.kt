@@ -27,32 +27,18 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.viewmodel.compose.viewModel
 import org.openjwc.client.R
-import org.openjwc.client.data.datastore.AuthDataSource
-import org.openjwc.client.data.datastore.CachedDataSource
-import org.openjwc.client.data.datastore.SettingsDataSource
-import org.openjwc.client.data.repository.AuthRepository
-import org.openjwc.client.data.repository.SettingsRepository
 import org.openjwc.client.navigation3.Navigator
 import org.openjwc.client.ui.component.settings.AppBackButton
 import org.openjwc.client.ui.component.settings.SegmentedColumn
 import org.openjwc.client.ui.component.settings.SettingsTextFieldWidget
 import org.openjwc.client.viewmodels.SettingsViewModel
-import org.openjwc.client.viewmodels.SettingsViewModelFactory
 
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
-fun NewsDisplaySettingsScreen(navigator: Navigator) {
+fun NewsDisplaySettingsScreen(navigator: Navigator, settingsViewModel: SettingsViewModel) {
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior(rememberTopAppBarState())
     val context = LocalContext.current
-
-    val settingsDataSource = remember { SettingsDataSource(context) }
-    val authDataSource = remember { AuthDataSource(context) }
-    val cachedDataSource = remember { CachedDataSource(context) }
-    val settingsRepository = remember { SettingsRepository(settingsDataSource, cachedDataSource, authDataSource, context) }
-    val authRepository = remember { AuthRepository(authDataSource, settingsDataSource) }
-    val settingsViewModel: SettingsViewModel = viewModel(factory = SettingsViewModelFactory(settingsRepository, authRepository))
 
     val settings by settingsViewModel.settings.collectAsStateWithLifecycle()
     val savedFreshDays = settings.freshDays
@@ -82,12 +68,12 @@ fun NewsDisplaySettingsScreen(navigator: Navigator) {
                 navigationIcon = { AppBackButton(onClick = { navigator.pop() }) },
                 scrollBehavior = scrollBehavior,
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.surface,
+                    containerColor = Color.Transparent,
                     scrolledContainerColor = MaterialTheme.colorScheme.surface
                 )
             )
         },
-        containerColor = MaterialTheme.colorScheme.surface
+        containerColor = Color.Transparent
     ) { innerPadding ->
         Column(
             modifier = Modifier

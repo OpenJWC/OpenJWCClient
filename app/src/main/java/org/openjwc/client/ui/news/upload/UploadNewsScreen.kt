@@ -50,15 +50,7 @@ import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.viewmodel.compose.viewModel
 import org.openjwc.client.R
-import org.openjwc.client.data.datastore.AuthDataSource
-import org.openjwc.client.data.datastore.CachedDataSource
-import org.openjwc.client.data.datastore.SettingsDataSource
-import org.openjwc.client.data.db.AppDatabase
-import org.openjwc.client.data.repository.AuthRepository
-import org.openjwc.client.data.repository.NewsRepository
-import org.openjwc.client.data.repository.SettingsRepository
 import org.openjwc.client.navigation3.Navigator
 import org.openjwc.client.net.models.UploadedNotice
 import org.openjwc.client.net.models.UploadedNoticeContent
@@ -69,23 +61,14 @@ import org.openjwc.client.ui.component.settings.SettingsSwitchWidget
 import org.openjwc.client.ui.component.settings.SettingsTextFieldWidget
 import org.openjwc.client.viewmodels.NavEvent
 import org.openjwc.client.viewmodels.NewsViewModel
-import org.openjwc.client.viewmodels.NewsViewModelFactory
 import java.time.Instant
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
-fun UploadNewsScreen(navigator: Navigator) {
+fun UploadNewsScreen(navigator: Navigator, newsViewModel: NewsViewModel) {
     val context = LocalContext.current
-    val authDataSource = remember { AuthDataSource(context) }
-    val settingsDataSource = remember { SettingsDataSource(context) }
-    val settingsRepository = remember { SettingsRepository(settingsDataSource, CachedDataSource(context), authDataSource, context) }
-    val authRepository = remember { AuthRepository(authDataSource, settingsDataSource) }
-    val db = remember { AppDatabase.getDatabase(context) }
-    val newsRepository = remember { NewsRepository(db.newsDao(), settingsDataSource, authDataSource) }
-    val newsViewModel: NewsViewModel = viewModel(factory = NewsViewModelFactory(settingsRepository, newsRepository, authRepository))
-
     val uploadError by newsViewModel.uploadError.collectAsState()
     var isUploading by remember { mutableStateOf(false) }
 
@@ -117,7 +100,11 @@ fun UploadNewsScreen(navigator: Navigator) {
 
     val titleError = if (titleState.text.isBlank()) "Required" else ""
     val labelError = if (labelState.text.isBlank()) "Required" else ""
-    val detailUrlError = if (detailUrlState.text.isBlank()) "Required" else ""
+    val detailUrlError = when {
+        detailUrlState.text.isBlank() -> "Required"
+        !detailUrlState.text.toString().startsWith("http://") && !detailUrlState.text.toString().startsWith("https://") -> "Must be a valid URL"
+        else -> ""
+    }
     val contentError = if (contentState.text.isBlank()) "Required" else ""
     val dateError = if (dateState.text.isBlank()) "Required" else ""
     val canSubmit = titleError.isEmpty() && labelError.isEmpty() && dateError.isEmpty() &&
@@ -149,11 +136,11 @@ fun UploadNewsScreen(navigator: Navigator) {
                 navigationIcon = { AppBackButton(onClick = { navigator.pop() }) },
                 scrollBehavior = scrollBehavior,
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.surface, scrolledContainerColor = MaterialTheme.colorScheme.surface
+                    containerColor = Color.Transparent, scrolledContainerColor = MaterialTheme.colorScheme.surface
                 )
             )
         },
-        containerColor = MaterialTheme.colorScheme.surface
+        containerColor = Color.Transparent
     ) { innerPadding ->
         Column(
             modifier = Modifier
@@ -171,9 +158,8 @@ fun UploadNewsScreen(navigator: Navigator) {
                         state = dateState,
                         title = stringResource(R.string.date),
                         error = dateError,
-                        leadingContent = {
-                            Icon(Icons.TwoTone.DateRange, null, Modifier.size(20.dp), tint = MaterialTheme.colorScheme.onSurfaceVariant)
-                        },
+                        readOnly = true,
+                        onClick = { showDatePicker = true },
                         trailingContent = {
                             IconButton(onClick = { showDatePicker = true }, modifier = Modifier.size(32.dp)) {
                                 Icon(Icons.TwoTone.DateRange, null, Modifier.size(18.dp))

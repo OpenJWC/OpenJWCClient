@@ -1,5 +1,6 @@
 package org.openjwc.client.ui.timetable.edit
 
+import androidx.compose.ui.graphics.Color
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -47,7 +48,7 @@ fun TimetableActionSheet(
     ModalBottomSheet(
         sheetState = sheetState,
         onDismissRequest = onDismissRequest,
-        containerColor = MaterialTheme.colorScheme.surface
+        containerColor = Color.Transparent
     ) {
         // 定义操作类型枚举，方便维护
         Column(

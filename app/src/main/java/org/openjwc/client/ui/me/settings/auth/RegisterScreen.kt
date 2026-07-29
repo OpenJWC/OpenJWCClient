@@ -55,12 +55,7 @@ import org.openjwc.client.viewmodels.NavEvent
 
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
-fun RegisterScreen(navigator: Navigator) {
-    val context = LocalContext.current
-    val authDataSource = remember { AuthDataSource(context) }
-    val settingsDataSource = remember { SettingsDataSource(context) }
-    val authRepository = remember { AuthRepository(authDataSource, settingsDataSource) }
-    val authViewModel: AuthViewModel = viewModel(factory = AuthViewModelFactory(authRepository))
+fun RegisterScreen(navigator: Navigator, authViewModel: AuthViewModel) {
 
     val isRegistering by authViewModel.isRegistering.collectAsState()
     val registerResult by authViewModel.registerResult.collectAsState()
@@ -115,12 +110,12 @@ fun RegisterScreen(navigator: Navigator) {
                 navigationIcon = { AppBackButton(onClick = { navigator.pop() }) },
                 scrollBehavior = scrollBehavior,
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.surface,
+                    containerColor = Color.Transparent,
                     scrolledContainerColor = MaterialTheme.colorScheme.surface
                 )
             )
         },
-        containerColor = MaterialTheme.colorScheme.surface
+        containerColor = Color.Transparent
     ) { innerPadding ->
         Column(
             modifier = Modifier

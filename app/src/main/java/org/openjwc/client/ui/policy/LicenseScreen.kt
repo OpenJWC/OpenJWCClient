@@ -16,10 +16,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.nestedscroll.nestedScroll
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import dev.jeziellago.compose.markdowntext.MarkdownText
 import org.openjwc.client.R
 import org.openjwc.client.navigation3.Navigator
 import org.openjwc.client.ui.component.settings.AppBackButton
@@ -28,42 +26,30 @@ import org.openjwc.client.ui.component.settings.AppBackButton
 @Composable
 fun LicenseScreen(navigator: Navigator) {
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior(rememberTopAppBarState())
-    val context = LocalContext.current
-
-    val licenseText = try {
-        context.assets.open("LICENSE").bufferedReader().use { it.readText() }
-    } catch (_: Exception) {
-        "MIT License"
-    }
-
-    val markdownText = "```\n" + licenseText + "\n```"
 
     Scaffold(
         topBar = {
             LargeFlexibleTopAppBar(
-                title = { Text(stringResource(R.string.license)) },
+                title = { Text("License") },
                 navigationIcon = { AppBackButton(onClick = { navigator.pop() }) },
                 scrollBehavior = scrollBehavior,
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.surface,
+                    containerColor = Color.Transparent,
                     scrolledContainerColor = MaterialTheme.colorScheme.surface
                 )
             )
         },
-        containerColor = MaterialTheme.colorScheme.surface
+        containerColor = Color.Transparent
     ) { innerPadding ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .nestedScroll(scrollBehavior.nestedScrollConnection)
                 .padding(innerPadding)
-                .padding(horizontal = 20.dp, vertical = 16.dp)
                 .verticalScroll(rememberScrollState())
+                .padding(16.dp)
         ) {
-            MarkdownText(
-                markdown = markdownText,
-                isTextSelectable = true
-            )
+            Text(stringResource(R.string.license))
         }
     }
 }

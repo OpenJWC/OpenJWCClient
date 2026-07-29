@@ -40,7 +40,17 @@ import androidx.navigation3.ui.NavDisplay
 import androidx.navigationevent.compose.NavigationBackHandler
 import androidx.navigationevent.compose.NavigationEventState
 import androidx.navigationevent.compose.rememberNavigationEventState
+import androidx.lifecycle.viewmodel.compose.viewModel
 import kotlinx.coroutines.launch
+import org.openjwc.client.data.datastore.AuthDataSource
+import org.openjwc.client.data.datastore.CachedDataSource
+import org.openjwc.client.data.datastore.SettingsDataSource
+import org.openjwc.client.data.db.AppDatabase
+import org.openjwc.client.data.repository.AuthRepository
+import org.openjwc.client.data.repository.ChatRepository
+import org.openjwc.client.data.repository.CourseRepository
+import org.openjwc.client.data.repository.NewsRepository
+import org.openjwc.client.data.repository.SettingsRepository
 import org.openjwc.client.navigation.Screen
 import org.openjwc.client.ui.me.settings.SettingsScreen
 import org.openjwc.client.ui.me.settings.general.ThemeScreen
@@ -61,6 +71,18 @@ import org.openjwc.client.ui.news.NewsDetailScreen
 import org.openjwc.client.ui.news.upload.UploadNewsScreen
 import org.openjwc.client.ui.timetable.load.ImportWebViewScreen
 import org.openjwc.client.ui.me.settings.timetable.TimetablePrefsScreen
+import org.openjwc.client.viewmodels.ChatViewModel
+import org.openjwc.client.viewmodels.ChatViewModelFactory
+import org.openjwc.client.viewmodels.MainViewModel
+import org.openjwc.client.viewmodels.MainViewModelFactory
+import org.openjwc.client.viewmodels.NewsViewModel
+import org.openjwc.client.viewmodels.NewsViewModelFactory
+import org.openjwc.client.viewmodels.SettingsViewModel
+import org.openjwc.client.viewmodels.SettingsViewModelFactory
+import org.openjwc.client.viewmodels.TimetableViewModel
+import org.openjwc.client.viewmodels.TimetableViewModelFactory
+import org.openjwc.client.viewmodels.AuthViewModel
+import org.openjwc.client.viewmodels.AuthViewModelFactory
 import org.openjwc.client.data.appPreferences
 import org.openjwc.client.ui.animation.predictiveback.AOSPCrossActivityAnimation
 import org.openjwc.client.ui.animation.predictiveback.KernelSUClassicPredictiveBackAnimation
@@ -84,6 +106,24 @@ fun NavContainer() {
     val navigator = rememberNavigator(Screen.Main)
     val context = LocalContext.current
     val coroutineScope = rememberCoroutineScope()
+
+    // Shared ViewModels — created once at Activity scope
+    val database = remember { AppDatabase.getDatabase(context) }
+    val settingsDataSource = remember { SettingsDataSource(context) }
+    val authDataSource = remember { AuthDataSource(context) }
+    val cachedDataSource = remember { CachedDataSource(context) }
+    val settingsRepository = remember { SettingsRepository(settingsDataSource, cachedDataSource, authDataSource, context) }
+    val authRepository = remember { AuthRepository(authDataSource, settingsDataSource) }
+    val chatRepository = remember { ChatRepository(database.chatDao(), settingsDataSource, authDataSource) }
+    val newsRepository = remember { NewsRepository(database.newsDao(), settingsDataSource, authDataSource) }
+    val courseRepository = remember { CourseRepository(database.courseDao(), database.tableDao()) }
+
+    val mainViewModel: MainViewModel = viewModel(factory = MainViewModelFactory(settingsRepository))
+    val chatViewModel: ChatViewModel = viewModel(factory = ChatViewModelFactory(chatRepository))
+    val newsViewModel: NewsViewModel = viewModel(factory = NewsViewModelFactory(settingsRepository, newsRepository, authRepository))
+    val timetableViewModel: TimetableViewModel = viewModel(factory = TimetableViewModelFactory(courseRepository, settingsRepository))
+    val settingsViewModel: SettingsViewModel = viewModel(factory = SettingsViewModelFactory(settingsRepository, authRepository))
+    val authViewModel: AuthViewModel = viewModel(factory = AuthViewModelFactory(authRepository))
 
     val animType = ThemeConfig.predictiveBackAnimation
     val exitDir = ThemeConfig.predictiveBackExitDirection
@@ -201,26 +241,26 @@ fun NavContainer() {
             }
         ),
         entryProvider = entryProvider {
-            entry<Screen.Main> { MainScreen(navigator) }
+            entry<Screen.Main> { MainScreen(navigator, mainViewModel, chatViewModel, newsViewModel, timetableViewModel, settingsViewModel) }
             entry<Screen.Settings> { SettingsScreen(navigator) }
             entry<Screen.Theme> { ThemeScreen(navigator) }
             entry<Screen.ThemeSettings> { ThemeSettingsScreen(navigator) }
             entry<Screen.About> { AboutScreen(navigator) }
-            entry<Screen.Host> { HostScreen(navigator) }
-            entry<Screen.Login> { LoginScreen(navigator) }
-            entry<Screen.Register> { RegisterScreen(navigator) }
-            entry<Screen.Account> { AccountScreen(navigator) }
-            entry<Screen.Language> { LanguageScreen(navigator) }
-            entry<Screen.Review> { ReviewedNoticesScreen(navigator) }
-            entry<Screen.NewsSettings> { NewsDisplaySettingsScreen(navigator) }
+            entry<Screen.Host> { HostScreen(navigator, settingsViewModel) }
+            entry<Screen.Login> { LoginScreen(navigator, authViewModel) }
+            entry<Screen.Register> { RegisterScreen(navigator, authViewModel) }
+            entry<Screen.Account> { AccountScreen(navigator, authViewModel, settingsViewModel) }
+            entry<Screen.Language> { LanguageScreen(navigator, settingsViewModel) }
+            entry<Screen.Review> { ReviewedNoticesScreen(navigator, newsViewModel) }
+            entry<Screen.NewsSettings> { NewsDisplaySettingsScreen(navigator, settingsViewModel) }
             entry<Screen.Policy> { PolicyScreen(navigator) }
             entry<Screen.License> { LicenseScreen(navigator) }
             entry<Screen.Log> { LogScreen(navigator) }
-            entry<Screen.Favorite> { FavoriteScreen(navigator) }
-            entry<Screen.NewsDetail> { NewsDetailScreen(navigator) }
-            entry<Screen.UploadNews> { UploadNewsScreen(navigator) }
-            entry<Screen.Load> { ImportWebViewScreen(navigator) }
-            entry<Screen.TimetablePrefs> { TimetablePrefsScreen(navigator) }
+            entry<Screen.Favorite> { FavoriteScreen(navigator, newsViewModel) }
+            entry<Screen.NewsDetail> { NewsDetailScreen(navigator, newsViewModel) }
+            entry<Screen.UploadNews> { UploadNewsScreen(navigator, newsViewModel) }
+            entry<Screen.Load> { ImportWebViewScreen(navigator, timetableViewModel) }
+            entry<Screen.TimetablePrefs> { TimetablePrefsScreen(navigator, settingsViewModel, timetableViewModel) }
         },
     )
 

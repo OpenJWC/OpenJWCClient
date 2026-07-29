@@ -10,8 +10,11 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.AttachFile
 import androidx.compose.material.icons.filled.ContentCopy
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.MoreVert
@@ -39,6 +42,7 @@ import org.openjwc.client.R
 import org.openjwc.client.data.models.ChatMessage
 import org.openjwc.client.data.models.Role
 import org.openjwc.client.ui.theme.CardConfig
+import dev.jeziellago.compose.markdowntext.MarkdownText
 
 @Composable
 fun MessageBubble(
@@ -73,11 +77,31 @@ fun MessageBubble(
             modifier = Modifier.fillMaxWidth(maxWidthFraction).padding(vertical = 2.dp)
         ) {
             Column(modifier = Modifier.padding(12.dp)) {
-                Text(
-                    text = message.text,
-                    style = MaterialTheme.typography.bodyLarge,
-                    color = if (isUser) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurface
-                )
+                if (message.attachmentTitles.isNotEmpty() && isUser) {
+                    message.attachmentTitles.forEach { title ->
+                        Row(
+                            modifier = Modifier.padding(bottom = 4.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Icon(Icons.Default.AttachFile, null, Modifier.size(14.dp), tint = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.6f))
+                            Spacer(Modifier.width(4.dp))
+                            Text(title, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.8f), maxLines = 1, overflow = TextOverflow.Ellipsis)
+                        }
+                    }
+                    Spacer(Modifier.height(4.dp))
+                }
+                if (isUser) {
+                    Text(
+                        text = message.text,
+                        style = MaterialTheme.typography.bodyLarge,
+                        color = MaterialTheme.colorScheme.onPrimaryContainer
+                    )
+                } else {
+                    MarkdownText(
+                        markdown = message.text,
+                        isTextSelectable = true
+                    )
+                }
                 if (isLoading) {
                     Spacer(Modifier.height(8.dp))
                     CircularProgressIndicator(modifier = Modifier.size(16.dp), strokeWidth = 2.dp)
