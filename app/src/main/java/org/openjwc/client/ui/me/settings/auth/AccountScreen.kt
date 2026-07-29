@@ -63,7 +63,41 @@ import org.openjwc.client.viewmodels.SettingsViewModelFactory
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun AccountScreen(navigator: Navigator, authViewModel: AuthViewModel, settingsViewModel: SettingsViewModel) {
+    val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior(rememberTopAppBarState())
 
+    Scaffold(
+        topBar = {
+            LargeFlexibleTopAppBar(
+                title = { Text(stringResource(R.string.account_management)) },
+                navigationIcon = { AppBackButton(onClick = { navigator.pop() }) },
+                scrollBehavior = scrollBehavior,
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = Color.Transparent,
+                    scrolledContainerColor = MaterialTheme.colorScheme.surface
+                )
+            )
+        },
+        containerColor = Color.Transparent
+    ) { innerPadding ->
+        AccountContent(
+            navigator = navigator,
+            authViewModel = authViewModel,
+            settingsViewModel = settingsViewModel,
+            modifier = Modifier
+                .fillMaxSize()
+                .nestedScroll(scrollBehavior.nestedScrollConnection)
+                .padding(innerPadding)
+        )
+    }
+}
+
+@Composable
+fun AccountContent(
+    navigator: Navigator,
+    authViewModel: AuthViewModel,
+    settingsViewModel: SettingsViewModel,
+    modifier: Modifier = Modifier
+) {
     val authSession by authViewModel.authSession.collectAsStateWithLifecycle()
     val deviceResult by settingsViewModel.deviceResult.collectAsStateWithLifecycle()
     val isLoadingDevices by settingsViewModel.isLoadingDeviceResult.collectAsStateWithLifecycle()
@@ -98,152 +132,133 @@ fun AccountScreen(navigator: Navigator, authViewModel: AuthViewModel, settingsVi
         )
     }
 
-    val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior(rememberTopAppBarState())
-
-    Scaffold(
-        topBar = {
-            LargeFlexibleTopAppBar(
-                title = { Text(stringResource(R.string.account_management)) },
-                navigationIcon = { AppBackButton(onClick = { navigator.pop() }) },
-                scrollBehavior = scrollBehavior,
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = Color.Transparent,
-                    scrolledContainerColor = MaterialTheme.colorScheme.surface
-                )
-            )
-        },
-        containerColor = Color.Transparent
-    ) { innerPadding ->
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .nestedScroll(scrollBehavior.nestedScrollConnection)
-                .padding(innerPadding)
-                .verticalScroll(rememberScrollState())
-        ) {
-            SegmentedColumn(title = stringResource(R.string.account)) {
-                if (authSession.isLoggedIn && !authSession.username.isNullOrBlank()) {
-                    item {
-                        SettingsBaseWidget(
-                            icon = Icons.TwoTone.AccountCircle,
-                            title = authSession.username ?: "",
-                            description = authSession.email ?: ""
-                        ) {}
-                    }
-                    item {
-                        SettingsBaseWidget(
-                            icon = Icons.TwoTone.PhonelinkSetup,
-                            title = stringResource(R.string.device_management),
-                            onClick = { showDevices = !showDevices }
-                        )
-                    }
-                    item {
-                        SettingsBaseWidget(
-                            icon = Icons.TwoTone.Logout,
-                            title = stringResource(R.string.logout),
-                            onClick = { authViewModel.logout() }
-                        )
-                    }
-                } else {
-                    item {
-                        SettingsBaseWidget(
-                            icon = Icons.TwoTone.Person,
-                            title = stringResource(R.string.not_logged_in),
-                            iconPlaceholder = false
-                        ) {}
-                    }
+    Column(
+        modifier = modifier
+            .verticalScroll(rememberScrollState())
+            .padding(bottom = 32.dp)
+    ) {
+        SegmentedColumn(title = stringResource(R.string.account)) {
+            if (authSession.isLoggedIn && !authSession.username.isNullOrBlank()) {
+                item {
+                    SettingsBaseWidget(
+                        icon = Icons.TwoTone.AccountCircle,
+                        title = authSession.username ?: "",
+                        description = authSession.email ?: ""
+                    ) {}
+                }
+                item {
+                    SettingsBaseWidget(
+                        icon = Icons.TwoTone.PhonelinkSetup,
+                        title = stringResource(R.string.device_management),
+                        onClick = { showDevices = !showDevices }
+                    )
+                }
+                item {
+                    SettingsBaseWidget(
+                        icon = Icons.TwoTone.Logout,
+                        title = stringResource(R.string.logout),
+                        onClick = { authViewModel.logout() }
+                    )
+                }
+            } else {
+                item {
+                    SettingsBaseWidget(
+                        icon = Icons.TwoTone.Person,
+                        title = stringResource(R.string.not_logged_in),
+                        iconPlaceholder = false
+                    ) {}
                 }
             }
+        }
 
-            AnimatedVisibility(visible = showDevices && authSession.isLoggedIn) {
-                Column {
-                    if (isLoadingDevices) {
+        AnimatedVisibility(visible = showDevices && authSession.isLoggedIn) {
+            Column {
+                if (isLoadingDevices) {
+                    SegmentedColumn(title = stringResource(R.string.device_management)) {
+                        item {
+                            SettingsBaseWidget(title = stringResource(R.string.loading)) {}
+                        }
+                    }
+                } else when (val result = deviceResult) {
+                    is NetworkResult.Success -> {
+                        val devices = result.response.data.deviceQueries
+                        SegmentedColumn(title = stringResource(R.string.device_management)) {
+                            if (devices.isEmpty()) {
+                                item {
+                                    SettingsBaseWidget(title = stringResource(R.string.no_bound_devices)) {}
+                                }
+                            } else {
+                                devices.forEach { device ->
+                                    val isCurrent = device.deviceUUID == authSession.uuid
+                                    item {
+                                        SettingsBaseWidget(
+                                            icon = if (isCurrent) Icons.TwoTone.PhonelinkSetup else Icons.TwoTone.Smartphone,
+                                            title = device.deviceName,
+                                            description = if (isCurrent) stringResource(R.string.current_device) else null,
+                                            onClick = if (!isCurrent) {
+                                                { deviceToUnbind = device }
+                                            } else null
+                                        )
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+                    is NetworkResult.Failure -> {
                         SegmentedColumn(title = stringResource(R.string.device_management)) {
                             item {
-                                SettingsBaseWidget(title = stringResource(R.string.loading)) {}
-                            }
-                        }
-                    } else when (val result = deviceResult) {
-                        is NetworkResult.Success -> {
-                            val devices = result.response.data.deviceQueries
-                            SegmentedColumn(title = stringResource(R.string.device_management)) {
-                                if (devices.isEmpty()) {
-                                    item {
-                                        SettingsBaseWidget(title = stringResource(R.string.no_bound_devices)) {}
-                                    }
-                                } else {
-                                    devices.forEach { device ->
-                                        val isCurrent = device.deviceUUID == authSession.uuid
-                                        item {
-                                            SettingsBaseWidget(
-                                                icon = if (isCurrent) Icons.TwoTone.PhonelinkSetup else Icons.TwoTone.Smartphone,
-                                                title = device.deviceName,
-                                                description = if (isCurrent) stringResource(R.string.current_device) else null,
-                                                onClick = if (!isCurrent) { { deviceToUnbind = device } } else null
-                                            )
-                                        }
-                                    }
-                                }
-                            }
-                        }
-
-                        is NetworkResult.Failure -> {
-                            SegmentedColumn(title = stringResource(R.string.device_management)) {
-                                item {
-                                    SettingsBaseWidget(
-                                        title = stringResource(R.string.query_devices_failed_with_code, result.code, result.msg)
-                                    ) {}
-                                }
-                            }
-                        }
-
-                        is NetworkResult.Error -> {
-                            SegmentedColumn(title = stringResource(R.string.device_management)) {
-                                item {
-                                    SettingsBaseWidget(
-                                        title = stringResource(R.string.query_devices_failed, result.msg)
-                                    ) {}
-                                }
+                                SettingsBaseWidget(
+                                    title = stringResource(R.string.query_devices_failed_with_code, result.code, result.msg)
+                                ) {}
                             }
                         }
                     }
-                    Spacer(modifier = Modifier.height(8.dp))
-                }
-            }
 
-            if (!authSession.isLoggedIn) {
-                Button(
-                    onClick = { navigator.push(Screen.Login) },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 32.dp, vertical = 8.dp)
-                ) {
-                    Text(stringResource(R.string.login))
+                    is NetworkResult.Error -> {
+                        SegmentedColumn(title = stringResource(R.string.device_management)) {
+                            item {
+                                SettingsBaseWidget(
+                                    title = stringResource(R.string.query_devices_failed, result.msg)
+                                ) {}
+                            }
+                        }
+                    }
                 }
-                Button(
-                    onClick = { navigator.push(Screen.Register) },
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = MaterialTheme.colorScheme.secondaryContainer,
-                        contentColor = MaterialTheme.colorScheme.onSecondaryContainer
-                    ),
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 32.dp)
-                ) {
-                    Text(stringResource(R.string.create_account))
-                }
+                Spacer(modifier = Modifier.height(8.dp))
             }
+        }
 
-            if (showDevices && authSession.isLoggedIn) {
-                Text(
-                    text = stringResource(R.string.local_device_id, authSession.uuid),
-                    style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.outline,
-                    modifier = Modifier.padding(horizontal = 32.dp, vertical = 8.dp)
-                )
+        if (!authSession.isLoggedIn) {
+            Button(
+                onClick = { navigator.push(Screen.Login) },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 32.dp, vertical = 8.dp)
+            ) {
+                Text(stringResource(R.string.login))
             }
+            Button(
+                onClick = { navigator.push(Screen.Register) },
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = MaterialTheme.colorScheme.secondaryContainer,
+                    contentColor = MaterialTheme.colorScheme.onSecondaryContainer
+                ),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 32.dp)
+            ) {
+                Text(stringResource(R.string.create_account))
+            }
+        }
 
-            Spacer(modifier = Modifier.height(32.dp))
+        if (showDevices && authSession.isLoggedIn) {
+            Text(
+                text = stringResource(R.string.local_device_id, authSession.uuid),
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.outline,
+                modifier = Modifier.padding(horizontal = 32.dp, vertical = 8.dp)
+            )
         }
     }
 }

@@ -23,6 +23,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.unit.dp
 import org.openjwc.client.data.appPreferences
 import org.openjwc.client.navigation3.Navigator
 import org.openjwc.client.ui.component.settings.AppBackButton
@@ -36,7 +38,6 @@ import org.openjwc.client.ui.theme.ThemeConfig
 @Composable
 fun ThemeSettingsScreen(navigator: Navigator) {
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior(rememberTopAppBarState())
-    val context = LocalContext.current
 
     Scaffold(
         topBar = {
@@ -52,62 +53,72 @@ fun ThemeSettingsScreen(navigator: Navigator) {
         },
         containerColor = Color.Transparent
     ) { innerPadding ->
-        Column(
+        ThemeSettingsContent(
             modifier = Modifier
                 .fillMaxSize()
                 .nestedScroll(scrollBehavior.nestedScrollConnection)
-                .verticalScroll(rememberScrollState())
                 .padding(innerPadding)
-        ) {
-            SegmentedColumn(title = "Accessibility") {
-                item {
-                    SettingsSwitchWidget(
-                        icon = Icons.TwoTone.Contrast,
-                        title = "High Contrast Mode",
-                        checked = ThemeConfig.isHighContrastMode,
-                        onCheckedChange = { BackgroundManager.saveEnableHighContrastMode(context, it) }
-                    )
-                }
-            }
+        )
+    }
+}
 
-            SegmentedColumn(title = "Predictive Back Animation") {
-                item {
-                    SettingsChooseWidget(
-                        icon = Icons.TwoTone.Swipe,
-                        title = "Animation Type",
-                        items = listOf("AOSP", "Scale", "KernelSU Classic", "MIUIX", "None"),
-                        selectedIndex = when (ThemeConfig.predictiveBackAnimation) {
-                            "AOSP" -> 0
-                            "Scale" -> 1
-                            "KernelSUClassic" -> 2
-                            "MIUIX" -> 3
-                            else -> 4
-                        },
-                        onSelectedIndexChange = { index ->
-                            val value = listOf("AOSP", "Scale", "KernelSUClassic", "MIUIX", "None")[index]
-                            context.appPreferences.putString("predictive_back_animation", value)
-                            ThemeConfig.predictiveBackAnimation = value
-                        }
-                    )
-                }
-                item {
-                    SettingsChooseWidget(
-                        icon = Icons.TwoTone.OpenInFull,
-                        title = "Exit Direction",
-                        items = listOf("Follow Gesture", "Always Right", "Always Left"),
-                        selectedIndex = when (ThemeConfig.predictiveBackExitDirection) {
-                            "FOLLOW_GESTURE" -> 0
-                            "ALWAYS_RIGHT" -> 1
-                            else -> 2
-                        },
-                        onSelectedIndexChange = { index ->
-                            val value = listOf("FOLLOW_GESTURE", "ALWAYS_RIGHT", "ALWAYS_LEFT")[index]
-                            context.appPreferences.putString("predictive_back_exit_direction", value)
-                            ThemeConfig.predictiveBackExitDirection = value
-                        }
-                    )
-                }
+@Composable
+fun ThemeSettingsContent(modifier: Modifier = Modifier) {
+    val context = LocalContext.current
+    Column(
+        modifier = modifier
+            .verticalScroll(rememberScrollState())
+            .padding(bottom = 32.dp)
+    ) {
+        SegmentedColumn(title = "Accessibility") {
+            item {
+                SettingsSwitchWidget(
+                    icon = Icons.TwoTone.Contrast,
+                    title = "High Contrast Mode",
+                    checked = ThemeConfig.isHighContrastMode,
+                    onCheckedChange = { BackgroundManager.saveEnableHighContrastMode(context, it) }
+                )
+            }
+        }
+
+        SegmentedColumn(title = "Predictive Back Animation") {
+            item {
+                SettingsChooseWidget(
+                    icon = Icons.TwoTone.Swipe,
+                    title = "Animation Type",
+                    items = listOf("AOSP", "Scale", "KernelSU Classic", "MIUIX", "None"),
+                    selectedIndex = when (ThemeConfig.predictiveBackAnimation) {
+                        "AOSP" -> 0
+                        "Scale" -> 1
+                        "KernelSUClassic" -> 2
+                        "MIUIX" -> 3
+                        else -> 4
+                    },
+                    onSelectedIndexChange = { index ->
+                        val value = listOf("AOSP", "Scale", "KernelSUClassic", "MIUIX", "None")[index]
+                        context.appPreferences.putString("predictive_back_animation", value)
+                        ThemeConfig.predictiveBackAnimation = value
+                    }
+                )
+            }
+            item {
+                SettingsChooseWidget(
+                    icon = Icons.TwoTone.OpenInFull,
+                    title = "Exit Direction",
+                    items = listOf("FOLLOW_GESTURE", "ALWAYS_RIGHT", "ALWAYS_LEFT"),
+                    selectedIndex = when (ThemeConfig.predictiveBackExitDirection) {
+                        "FOLLOW_GESTURE" -> 0
+                        "ALWAYS_RIGHT" -> 1
+                        else -> 2
+                    },
+                    onSelectedIndexChange = { index ->
+                        val value = listOf("FOLLOW_GESTURE", "ALWAYS_RIGHT", "ALWAYS_LEFT")[index]
+                        context.appPreferences.putString("predictive_back_exit_direction", value)
+                        ThemeConfig.predictiveBackExitDirection = value
+                    }
+                )
             }
         }
     }
 }
+

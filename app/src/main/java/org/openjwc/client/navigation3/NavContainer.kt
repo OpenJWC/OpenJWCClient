@@ -188,8 +188,8 @@ fun NavContainer() {
                                 content.contentKey,
                                 navigator.current()
                             )
-                            .background(MaterialTheme.colorScheme.surfaceContainer)
                     ) {
+                        Box(Modifier.fillMaxSize().background(MaterialTheme.colorScheme.surfaceContainer))
                         val surfaceContainer = MaterialTheme.colorScheme.surfaceContainer
 
                         CompositionLocalProvider(
@@ -208,33 +208,15 @@ fun NavContainer() {
                                                     coordinates.isAttached
                                                 }
                                         }
-                                        .paint(
-                                            painter = it,
-                                            contentScale = ContentScale.Crop,
-                                        )
+                                        .paint(painter = it, contentScale = ContentScale.Crop)
                                         .drawWithContent {
                                             drawContent()
-                                            drawRect(
-                                                color = surfaceContainer.copy(
-                                                    alpha = ThemeConfig.backgroundDim
-                                                )
-                                            )
+                                            drawRect(color = surfaceContainer.copy(alpha = ThemeConfig.backgroundDim))
                                         }
                                 )
                             }
 
-                            // 优化 2：预测性返回缩放动画只作用在 Content Wrapper 上
-                            Box(
-                                modifier = Modifier
-                                    .fillMaxSize()
-                                    .predictiveBackAnimationDecorator(
-                                        gestureState?.transitionState,
-                                        content.contentKey,
-                                        navigator.current()
-                                    )
-                            ) {
-                                content.Content()
-                            }
+                            content.Content()
                         }
                     }
                 }
@@ -242,7 +224,7 @@ fun NavContainer() {
         ),
         entryProvider = entryProvider {
             entry<Screen.Main> { MainScreen(navigator, mainViewModel, chatViewModel, newsViewModel, timetableViewModel, settingsViewModel) }
-            entry<Screen.Settings> { SettingsScreen(navigator) }
+            entry<Screen.Settings> { SettingsScreen(navigator, settingsViewModel, authViewModel, newsViewModel, timetableViewModel) }
             entry<Screen.Theme> { ThemeScreen(navigator) }
             entry<Screen.ThemeSettings> { ThemeSettingsScreen(navigator) }
             entry<Screen.About> { AboutScreen(navigator) }

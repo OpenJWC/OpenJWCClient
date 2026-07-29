@@ -28,6 +28,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -44,9 +45,7 @@ import org.openjwc.client.ui.component.settings.AppBackButton
 @Composable
 fun LogScreen(navigator: Navigator) {
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior(rememberTopAppBarState())
-    var clear by remember { mutableStateOf(0) }
-
-    val logs = remember(clear) { Logger.logHistory.toList() }
+    var clear by remember { mutableIntStateOf(0) }
 
     Scaffold(
         topBar = {
@@ -67,16 +66,30 @@ fun LogScreen(navigator: Navigator) {
         },
         containerColor = Color.Transparent
     ) { innerPadding ->
-        LazyColumn(
+        LogContent(
+            navigator = navigator,
+            clear = clear,
             modifier = Modifier
                 .fillMaxSize()
                 .nestedScroll(scrollBehavior.nestedScrollConnection)
                 .padding(innerPadding)
-                .padding(horizontal = 12.dp, vertical = 4.dp)
-        ) {
-            items(items = logs, key = { it.id }) { log ->
-                LogItemWidget(log)
-            }
+        )
+    }
+}
+
+@Composable
+fun LogContent(
+    navigator: Navigator,
+    modifier: Modifier = Modifier,
+    clear: Int = 0,
+) {
+    val logs = remember(clear) { Logger.logHistory.toList() }
+    LazyColumn(
+        modifier = modifier
+            .padding(horizontal = 12.dp, vertical = 4.dp)
+    ) {
+        items(items = logs, key = { it.id }) { log ->
+            LogItemWidget(log)
         }
     }
 }
@@ -126,3 +139,4 @@ private fun LogItemWidget(log: Logger.LogEntry) {
         )
     }
 }
+

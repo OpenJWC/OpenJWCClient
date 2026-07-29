@@ -46,8 +46,38 @@ import org.openjwc.client.viewmodels.SettingsViewModel
 @Composable
 fun HostScreen(navigator: Navigator, settingsViewModel: SettingsViewModel) {
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior(rememberTopAppBarState())
-    val context = LocalContext.current
 
+    Scaffold(
+        topBar = {
+            LargeFlexibleTopAppBar(
+                title = { Text(stringResource(R.string.network_config)) },
+                navigationIcon = { AppBackButton(onClick = { navigator.pop() }) },
+                scrollBehavior = scrollBehavior,
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = Color.Transparent,
+                    scrolledContainerColor = MaterialTheme.colorScheme.surface
+                )
+            )
+        },
+        containerColor = Color.Transparent
+    ) { innerPadding ->
+        HostContent(
+            navigator = navigator,
+            settingsViewModel = settingsViewModel,
+            modifier = Modifier
+                .fillMaxSize()
+                .nestedScroll(scrollBehavior.nestedScrollConnection)
+                .padding(innerPadding)
+        )
+    }
+}
+
+@Composable
+fun HostContent(
+    navigator: Navigator,
+    settingsViewModel: SettingsViewModel,
+    modifier: Modifier = Modifier
+) {
     val settings by settingsViewModel.settings.collectAsStateWithLifecycle()
 
     val hostState = remember { TextFieldState(settings.host) }
@@ -55,13 +85,15 @@ fun HostScreen(navigator: Navigator, settingsViewModel: SettingsViewModel) {
     var useHttp by remember { mutableStateOf(settings.useHttp) }
 
     val currentProxy = settings.proxy
-    var proxyType by remember { mutableIntStateOf(
-        when (currentProxy) {
-            is Proxy.HttpProxy -> 1
-            is Proxy.SocksProxy -> 2
-            else -> 0
-        }
-    ) }
+    var proxyType by remember {
+        mutableIntStateOf(
+            when (currentProxy) {
+                is Proxy.HttpProxy -> 1
+                is Proxy.SocksProxy -> 2
+                else -> 0
+            }
+        )
+    }
     val proxyHost = when (currentProxy) {
         is Proxy.HttpProxy -> currentProxy.host
         is Proxy.SocksProxy -> currentProxy.host
@@ -76,7 +108,6 @@ fun HostScreen(navigator: Navigator, settingsViewModel: SettingsViewModel) {
     val proxyPortState = remember { TextFieldState(proxyPort) }
 
     val showProxyFields = proxyType != 0
-    val scrollState = rememberScrollState()
 
     val hostError = if (hostState.text.isBlank()) "Required" else ""
     val portError = run {
@@ -111,92 +142,76 @@ fun HostScreen(navigator: Navigator, settingsViewModel: SettingsViewModel) {
         navigator.pop()
     }
 
-    Scaffold(
-        topBar = {
-            LargeFlexibleTopAppBar(
-                title = { Text(stringResource(R.string.network_config)) },
-                navigationIcon = { AppBackButton(onClick = { navigator.pop() }) },
-                scrollBehavior = scrollBehavior,
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = Color.Transparent,
-                    scrolledContainerColor = MaterialTheme.colorScheme.surface
+    Column(
+        modifier = modifier
+            .verticalScroll(rememberScrollState())
+            .padding(bottom = 32.dp)
+    ) {
+        SegmentedColumn(title = stringResource(R.string.server_config)) {
+            item {
+                SettingsTextFieldWidget(
+                    state = hostState,
+                    title = "Host URL",
+                    error = hostError,
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Uri)
                 )
-            )
-        },
-        containerColor = Color.Transparent
-    ) { innerPadding ->
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .nestedScroll(scrollBehavior.nestedScrollConnection)
-                .verticalScroll(scrollState)
-                .padding(innerPadding)
-        ) {
-            SegmentedColumn(title = stringResource(R.string.server_config)) {
+            }
+            item {
+                SettingsTextFieldWidget(
+                    state = portState,
+                    title = "Port",
+                    error = portError,
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
+                )
+            }
+            item {
+                SettingsChooseWidget(
+                    icon = Icons.TwoTone.Http,
+                    title = "Protocol",
+                    items = listOf("HTTP", "HTTPS"),
+                    selectedIndex = if (useHttp) 0 else 1,
+                    onSelectedIndexChange = { useHttp = it == 0 }
+                )
+            }
+        }
+
+        SegmentedColumn(title = "Proxy") {
+            item {
+                SettingsChooseWidget(
+                    icon = Icons.TwoTone.LinkOff,
+                    title = "Proxy Type",
+                    items = listOf("None", "HTTP Proxy", "SOCKS Proxy"),
+                    selectedIndex = proxyType,
+                    onSelectedIndexChange = { proxyType = it }
+                )
+            }
+            if (showProxyFields) {
                 item {
                     SettingsTextFieldWidget(
-                        state = hostState,
-                        title = "Host URL",
-                        error = hostError,
+                        state = proxyHostState,
+                        title = "Proxy Host",
+                        error = if (proxyHostState.text.isBlank()) "Required" else "",
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Uri)
                     )
                 }
                 item {
                     SettingsTextFieldWidget(
-                        state = portState,
-                        title = "Port",
-                        error = portError,
+                        state = proxyPortState,
+                        title = "Proxy Port",
+                        error = proxyPortError,
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
                     )
                 }
-                item {
-                    SettingsChooseWidget(
-                        icon = Icons.TwoTone.Http,
-                        title = "Protocol",
-                        items = listOf("HTTP", "HTTPS"),
-                        selectedIndex = if (useHttp) 0 else 1,
-                        onSelectedIndexChange = { useHttp = it == 0 }
-                    )
-                }
             }
+        }
 
-            SegmentedColumn(title = "Proxy") {
-                item {
-                    SettingsChooseWidget(
-                        icon = Icons.TwoTone.LinkOff,
-                        title = "Proxy Type",
-                        items = listOf("None", "HTTP Proxy", "SOCKS Proxy"),
-                        selectedIndex = proxyType,
-                        onSelectedIndexChange = { proxyType = it }
-                    )
-                }
-                if (showProxyFields) {
-                    item {
-                        SettingsTextFieldWidget(
-                            state = proxyHostState,
-                            title = "Proxy Host",
-                            error = if (proxyHostState.text.isBlank()) "Required" else "",
-                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Uri)
-                        )
-                    }
-                    item {
-                        SettingsTextFieldWidget(
-                            state = proxyPortState,
-                            title = "Proxy Port",
-                            error = proxyPortError,
-                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
-                        )
-                    }
-                }
-            }
-
-            Button(
-                onClick = { save() },
-                enabled = isValid,
-                modifier = Modifier.fillMaxWidth().padding(horizontal = 32.dp, vertical = 16.dp)
-            ) {
-                Text(stringResource(R.string.save))
-            }
+        Button(
+            onClick = { save() },
+            enabled = isValid,
+            modifier = Modifier.fillMaxWidth().padding(horizontal = 32.dp, vertical = 16.dp)
+        ) {
+            Text(stringResource(R.string.save))
         }
     }
 }
+

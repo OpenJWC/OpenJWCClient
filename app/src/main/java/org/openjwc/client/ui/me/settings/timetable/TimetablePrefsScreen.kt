@@ -26,6 +26,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.unit.dp
 import org.openjwc.client.R
 import org.openjwc.client.navigation3.Navigator
 import org.openjwc.client.ui.component.settings.AppBackButton
@@ -38,13 +39,6 @@ import org.openjwc.client.viewmodels.SettingsViewModel
 @Composable
 fun TimetablePrefsScreen(navigator: Navigator, settingsViewModel: SettingsViewModel, timetableViewModel: TimetableViewModel) {
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior(rememberTopAppBarState())
-    val context = LocalContext.current
-
-    val prefs by timetableViewModel.displayPrefs.collectAsStateWithLifecycle()
-    val showTimeline = prefs.showTimeline
-    val showDate = prefs.showDate
-    val showPeriodTime = prefs.showPeriodTime
-    val showNonCurrentWeek = prefs.showNonCurrentWeek
 
     Scaffold(
         topBar = {
@@ -60,51 +54,68 @@ fun TimetablePrefsScreen(navigator: Navigator, settingsViewModel: SettingsViewMo
         },
         containerColor = Color.Transparent
     ) { innerPadding ->
-        Column(
+        TimetableContent(
+            settingsViewModel = settingsViewModel,
+            timetableViewModel = timetableViewModel,
             modifier = Modifier
                 .fillMaxSize()
                 .nestedScroll(scrollBehavior.nestedScrollConnection)
-                .verticalScroll(rememberScrollState())
                 .padding(innerPadding)
-        ) {
-            SegmentedColumn {
-                item {
-                    SettingsSwitchWidget(
-                        icon = Icons.TwoTone.Timeline,
-                        title = stringResource(R.string.show_timeline),
-                        description = stringResource(R.string.show_timeline_desc),
-                        checked = showTimeline,
-                        onCheckedChange = { settingsViewModel.updateShowTimeline(it) }
-                    )
-                }
-                item {
-                    SettingsSwitchWidget(
-                        icon = Icons.TwoTone.CalendarMonth,
-                        title = stringResource(R.string.show_date_header),
-                        description = stringResource(R.string.show_date_header_desc),
-                        checked = showDate,
-                        onCheckedChange = { settingsViewModel.updateShowDate(it) }
-                    )
-                }
-                item {
-                    SettingsSwitchWidget(
-                        icon = Icons.TwoTone.Schedule,
-                        title = stringResource(R.string.show_period_time),
-                        description = stringResource(R.string.show_period_time_desc),
-                        checked = showPeriodTime,
-                        onCheckedChange = { settingsViewModel.updateShowPeriodTime(it) }
-                    )
-                }
-                item {
-                    SettingsSwitchWidget(
-                        icon = Icons.TwoTone.VisibilityOff,
-                        title = stringResource(R.string.show_non_current_week),
-                        description = stringResource(R.string.show_non_current_week_desc),
-                        checked = showNonCurrentWeek,
-                        onCheckedChange = { settingsViewModel.updateShowNonCurrentWeek(it) }
-                    )
-                }
+        )
+    }
+}
+
+@Composable
+fun TimetableContent(
+    settingsViewModel: SettingsViewModel,
+    timetableViewModel: TimetableViewModel,
+    modifier: Modifier = Modifier
+) {
+    val prefs by timetableViewModel.displayPrefs.collectAsStateWithLifecycle()
+
+    Column(
+        modifier = modifier
+            .verticalScroll(rememberScrollState())
+            .padding(bottom = 32.dp)
+    ) {
+        SegmentedColumn {
+            item {
+                SettingsSwitchWidget(
+                    icon = Icons.TwoTone.Timeline,
+                    title = stringResource(R.string.show_timeline),
+                    description = stringResource(R.string.show_timeline_desc),
+                    checked = prefs.showTimeline,
+                    onCheckedChange = { settingsViewModel.updateShowTimeline(it) }
+                )
+            }
+            item {
+                SettingsSwitchWidget(
+                    icon = Icons.TwoTone.CalendarMonth,
+                    title = stringResource(R.string.show_date_header),
+                    description = stringResource(R.string.show_date_header_desc),
+                    checked = prefs.showDate,
+                    onCheckedChange = { settingsViewModel.updateShowDate(it) }
+                )
+            }
+            item {
+                SettingsSwitchWidget(
+                    icon = Icons.TwoTone.Schedule,
+                    title = stringResource(R.string.show_period_time),
+                    description = stringResource(R.string.show_period_time_desc),
+                    checked = prefs.showPeriodTime,
+                    onCheckedChange = { settingsViewModel.updateShowPeriodTime(it) }
+                )
+            }
+            item {
+                SettingsSwitchWidget(
+                    icon = Icons.TwoTone.VisibilityOff,
+                    title = stringResource(R.string.show_non_current_week),
+                    description = stringResource(R.string.show_non_current_week_desc),
+                    checked = prefs.showNonCurrentWeek,
+                    onCheckedChange = { settingsViewModel.updateShowNonCurrentWeek(it) }
+                )
             }
         }
     }
 }
+

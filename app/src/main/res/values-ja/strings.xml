@@ -108,7 +108,7 @@
     <string name="delete">削除</string>
     <string name="bottom">一番下</string>
 
-    <string name="about">について</string>
+    <string name="about">アプリについて</string>
     <string name="version_label">バージョン %1$s</string>
     <string name="introduction">紹介</string>
     <string name="check_for_updates">アップデートを確認</string>

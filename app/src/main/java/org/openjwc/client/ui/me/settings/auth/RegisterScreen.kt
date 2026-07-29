@@ -56,7 +56,39 @@ import org.openjwc.client.viewmodels.NavEvent
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun RegisterScreen(navigator: Navigator, authViewModel: AuthViewModel) {
+    val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior(rememberTopAppBarState())
 
+    Scaffold(
+        topBar = {
+            LargeFlexibleTopAppBar(
+                title = { Text(stringResource(R.string.create_account)) },
+                navigationIcon = { AppBackButton(onClick = { navigator.pop() }) },
+                scrollBehavior = scrollBehavior,
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = Color.Transparent,
+                    scrolledContainerColor = MaterialTheme.colorScheme.surface
+                )
+            )
+        },
+        containerColor = Color.Transparent
+    ) { innerPadding ->
+        RegisterContent(
+            navigator = navigator,
+            authViewModel = authViewModel,
+            modifier = Modifier
+                .fillMaxSize()
+                .nestedScroll(scrollBehavior.nestedScrollConnection)
+                .padding(innerPadding)
+        )
+    }
+}
+
+@Composable
+fun RegisterContent(
+    navigator: Navigator,
+    authViewModel: AuthViewModel,
+    modifier: Modifier = Modifier
+) {
     val isRegistering by authViewModel.isRegistering.collectAsState()
     val registerResult by authViewModel.registerResult.collectAsState()
 
@@ -74,8 +106,6 @@ fun RegisterScreen(navigator: Navigator, authViewModel: AuthViewModel) {
         is NetworkResult.Error -> r.msg
         else -> null
     }
-
-    val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior(rememberTopAppBarState())
 
     val usernameState = remember { TextFieldState() }
     val emailState = remember { TextFieldState() }
@@ -101,93 +131,76 @@ fun RegisterScreen(navigator: Navigator, authViewModel: AuthViewModel) {
 
     val canRegister = usernameError.isEmpty() && emailError.isEmpty() &&
             passwordError.isEmpty() && confirmPasswordError.isEmpty()
-    val scrollState = rememberScrollState()
 
-    Scaffold(
-        topBar = {
-            LargeFlexibleTopAppBar(
-                title = { Text(stringResource(R.string.create_account)) },
-                navigationIcon = { AppBackButton(onClick = { navigator.pop() }) },
-                scrollBehavior = scrollBehavior,
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = Color.Transparent,
-                    scrolledContainerColor = MaterialTheme.colorScheme.surface
+    Column(
+        modifier = modifier
+            .verticalScroll(rememberScrollState())
+            .padding(bottom = 32.dp)
+    ) {
+        SegmentedColumn {
+            item {
+                SettingsTextFieldWidget(
+                    state = usernameState,
+                    title = stringResource(R.string.username),
+                    error = usernameError
                 )
+            }
+            item {
+                SettingsTextFieldWidget(
+                    state = emailState,
+                    title = stringResource(R.string.email),
+                    error = emailError
+                )
+            }
+            item {
+                SettingsTextFieldWidget(
+                    state = passwordState,
+                    title = stringResource(R.string.password),
+                    error = passwordError
+                )
+            }
+            item {
+                SettingsTextFieldWidget(
+                    state = confirmPasswordState,
+                    title = stringResource(R.string.confirm_password),
+                    error = confirmPasswordError
+                )
+            }
+        }
+
+        AnimatedVisibility(visible = registerError != null) {
+            Text(
+                text = registerError ?: "",
+                color = MaterialTheme.colorScheme.error,
+                style = MaterialTheme.typography.bodySmall,
+                modifier = Modifier.padding(horizontal = 32.dp, vertical = 4.dp)
             )
-        },
-        containerColor = Color.Transparent
-    ) { innerPadding ->
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .nestedScroll(scrollBehavior.nestedScrollConnection)
-                .verticalScroll(scrollState)
-                .padding(innerPadding)
-        ) {
-            SegmentedColumn {
-                item {
-                    SettingsTextFieldWidget(
-                        state = usernameState,
-                        title = stringResource(R.string.username),
-                        error = usernameError
-                    )
-                }
-                item {
-                    SettingsTextFieldWidget(
-                        state = emailState,
-                        title = stringResource(R.string.email),
-                        error = emailError
-                    )
-                }
-                item {
-                    SettingsTextFieldWidget(
-                        state = passwordState,
-                        title = stringResource(R.string.password),
-                        error = passwordError
-                    )
-                }
-                item {
-                    SettingsTextFieldWidget(
-                        state = confirmPasswordState,
-                        title = stringResource(R.string.confirm_password),
-                        error = confirmPasswordError
-                    )
-                }
-            }
+        }
 
-            AnimatedVisibility(visible = registerError != null) {
-                Text(
-                    text = registerError ?: "",
-                    color = MaterialTheme.colorScheme.error,
-                    style = MaterialTheme.typography.bodySmall,
-                    modifier = Modifier.padding(horizontal = 32.dp, vertical = 4.dp)
+        Button(
+            onClick = {
+                authViewModel.register(
+                    usernameState.text.toString().trim(),
+                    passwordState.text.toString().trim(),
+                    emailState.text.toString().trim()
                 )
-            }
-
-            Button(
-                onClick = {
-                    authViewModel.register(
-                        usernameState.text.toString().trim(),
-                        passwordState.text.toString().trim(),
-                        emailState.text.toString().trim()
-                    )
-                },
-                enabled = canRegister && !isRegistering,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 32.dp, vertical = 16.dp)
-            ) {
-                if (isRegistering) {
-                    CircularWavyProgressIndicator(
-                        modifier = Modifier.size(24.dp),
-                        color = MaterialTheme.colorScheme.onPrimary,
-                    )
-                    Spacer(modifier = Modifier.width(12.dp))
-                    Text(stringResource(R.string.creating_account))
-                } else {
-                    Text(stringResource(R.string.create_account))
-                }
+            },
+            enabled = canRegister && !isRegistering,
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 32.dp, vertical = 16.dp)
+        ) {
+            if (isRegistering) {
+                CircularWavyProgressIndicator(
+                    modifier = Modifier.size(24.dp),
+                    color = MaterialTheme.colorScheme.onPrimary,
+                )
+                Spacer(modifier = Modifier.width(12.dp))
+                Text(stringResource(R.string.creating_account))
+            } else {
+                Text(stringResource(R.string.create_account))
             }
         }
     }
 }
+

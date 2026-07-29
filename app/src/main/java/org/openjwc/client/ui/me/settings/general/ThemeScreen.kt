@@ -54,11 +54,6 @@ import org.openjwc.client.ui.theme.saveAndApplyCustomBackground
 @Composable
 fun ThemeScreen(navigator: Navigator) {
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior(rememberTopAppBarState())
-    val context = LocalContext.current
-
-    val imagePicker = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri: Uri? ->
-        uri?.let { context.saveAndApplyCustomBackground(it) }
-    }
 
     Scaffold(
         topBar = {
@@ -74,106 +69,120 @@ fun ThemeScreen(navigator: Navigator) {
         },
         containerColor = Color.Transparent
     ) { innerPadding ->
-        Column(
+        ThemeContent(
+            navigator = navigator,
             modifier = Modifier
                 .fillMaxSize()
                 .nestedScroll(scrollBehavior.nestedScrollConnection)
-                .verticalScroll(rememberScrollState())
                 .padding(innerPadding)
-        ) {
-            SegmentedColumn(title = stringResource(R.string.display_mode)) {
-                item {
-                    SettingsChooseWidget(
-                        icon = Icons.TwoTone.Brightness6,
-                        title = stringResource(R.string.display_mode),
-                        items = listOf(stringResource(R.string.follow_system), stringResource(R.string.light), stringResource(R.string.dark)),
-                        selectedIndex = when (ThemeConfig.forceDarkMode) { null -> 0; false -> 1; true -> 2 },
-                        onSelectedIndexChange = { ThemeManager.saveThemeMode(context, when (it) { 0 -> null; 1 -> false; else -> true }) }
-                    )
-                }
-            }
+        )
+    }
+}
 
-            SegmentedColumn(title = stringResource(R.string.color_theme)) {
-                item {
-                    SettingsSwitchWidget(
-                        icon = Icons.TwoTone.AutoAwesome,
-                        title = stringResource(R.string.dynamic_color),
-                        checked = ThemeConfig.useDynamicColor,
-                        onCheckedChange = { ThemeManager.saveDynamicColorState(context, it) }
-                    )
-                }
+@Composable
+fun ThemeContent(navigator: Navigator, modifier: Modifier = Modifier) {
+    val context = LocalContext.current
+    val imagePicker = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri: Uri? ->
+        uri?.let { context.saveAndApplyCustomBackground(it) }
+    }
+    Column(
+        modifier = modifier
+            .verticalScroll(rememberScrollState())
+            .padding(bottom = 32.dp)
+    ) {
+        SegmentedColumn(title = stringResource(R.string.display_mode)) {
+            item {
+                SettingsChooseWidget(
+                    icon = Icons.TwoTone.Brightness6,
+                    title = stringResource(R.string.display_mode),
+                    items = listOf(stringResource(R.string.follow_system), stringResource(R.string.light), stringResource(R.string.dark)),
+                    selectedIndex = when (ThemeConfig.forceDarkMode) { null -> 0; false -> 1; true -> 2 },
+                    onSelectedIndexChange = { ThemeManager.saveThemeMode(context, when (it) { 0 -> null; 1 -> false; else -> true }) }
+                )
             }
+        }
 
-            if (!ThemeConfig.useDynamicColor) {
-                SegmentedColumn(title = stringResource(R.string.seed_color)) {
-                    item {
-                        SettingsBaseWidget(
-                            icon = Icons.TwoTone.Palette,
-                            title = stringResource(R.string.select_seed_color),
-                        ) {}
-                    }
-                    item {
-                        SettingsBaseWidget(
-                            iconPlaceholder = false,
-                            title = null,
-                            foreContent = {
-                                FlowRow(
-                                    horizontalArrangement = Arrangement.spacedBy(6.dp),
-                                    verticalArrangement = Arrangement.spacedBy(2.dp)
-                                ) {
-                                    ThemeSeedColors.all.forEach { color ->
-                                        ColorItem(
-                                            color = color,
-                                            isSelected = color.toArgb() == ThemeConfig.seedColor,
-                                            onClick = { ThemeManager.saveSeedColor(context, color.toArgb()) }
-                                        )
-                                    }
+        SegmentedColumn(title = stringResource(R.string.color_theme)) {
+            item {
+                SettingsSwitchWidget(
+                    icon = Icons.TwoTone.AutoAwesome,
+                    title = stringResource(R.string.dynamic_color),
+                    checked = ThemeConfig.useDynamicColor,
+                    onCheckedChange = { ThemeManager.saveDynamicColorState(context, it) }
+                )
+            }
+        }
+
+        if (!ThemeConfig.useDynamicColor) {
+            SegmentedColumn(title = stringResource(R.string.seed_color)) {
+                item {
+                    SettingsBaseWidget(
+                        icon = Icons.TwoTone.Palette,
+                        title = stringResource(R.string.select_seed_color),
+                    ) {}
+                }
+                item {
+                    SettingsBaseWidget(
+                        iconPlaceholder = false,
+                        title = null,
+                        foreContent = {
+                            FlowRow(
+                                horizontalArrangement = Arrangement.spacedBy(6.dp),
+                                verticalArrangement = Arrangement.spacedBy(2.dp)
+                            ) {
+                                ThemeSeedColors.all.forEach { color ->
+                                    ColorItem(
+                                        color = color,
+                                        isSelected = color.toArgb() == ThemeConfig.seedColor,
+                                        onClick = { ThemeManager.saveSeedColor(context, color.toArgb()) }
+                                    )
                                 }
                             }
-                        ) {}
-                    }
+                        }
+                    ) {}
                 }
             }
+        }
 
-            SegmentedColumn(title = stringResource(R.string.background)) {
+        SegmentedColumn(title = stringResource(R.string.background)) {
+            item {
+                SettingsBaseWidget(
+                    icon = Icons.TwoTone.Wallpaper,
+                    title = stringResource(R.string.custom_background),
+                    onClick = { imagePicker.launch("image/*") }
+                ) {
+                    Icon(Icons.TwoTone.FormatPaint, null, modifier = Modifier.size(24.dp))
+                }
+            }
+            if (ThemeConfig.customBackgroundUri != null) {
                 item {
                     SettingsBaseWidget(
                         icon = Icons.TwoTone.Wallpaper,
-                        title = stringResource(R.string.custom_background),
-                        onClick = { imagePicker.launch("image/*") }
-                    ) {
-                        Icon(Icons.TwoTone.FormatPaint, null, modifier = Modifier.size(24.dp))
-                    }
+                        title = "Clear Background",
+                        onClick = { BackgroundManager.clearCustomBackground(context) }
+                    ) {}
                 }
-                if (ThemeConfig.customBackgroundUri != null) {
-                    item {
-                        SettingsBaseWidget(
-                            icon = Icons.TwoTone.Wallpaper,
-                            title = "Clear Background",
-                            onClick = { BackgroundManager.clearCustomBackground(context) }
-                        ) {}
-                    }
-                    item {
-                        SettingsChooseWidget(
-                            icon = Icons.TwoTone.Opacity,
-                            title = "Background Dim",
-                            items = (0..10).map { "${it * 10}%" },
-                            selectedIndex = (ThemeConfig.backgroundDim * 10f).toInt().coerceIn(0, 10),
-                            onSelectedIndexChange = { BackgroundManager.saveBackgroundDim(context, it / 10f) }
-                        )
-                    }
-                }
-            }
-
-            SegmentedColumn {
                 item {
-                    SettingsJumpPageWidget(
-                        icon = Icons.TwoTone.Palette,
-                        title = stringResource(R.string.advanced_theme),
-                        onClick = { navigator.push(Screen.ThemeSettings) }
+                    SettingsChooseWidget(
+                        icon = Icons.TwoTone.Opacity,
+                        title = "Background Dim",
+                        items = (0..10).map { "${it * 10}%" },
+                        selectedIndex = (ThemeConfig.backgroundDim * 10f).toInt().coerceIn(0, 10),
+                        onSelectedIndexChange = { BackgroundManager.saveBackgroundDim(context, it / 10f) }
                     )
                 }
             }
         }
+
+        SegmentedColumn {
+            item {
+                SettingsJumpPageWidget(
+                    icon = Icons.TwoTone.Palette,
+                    title = stringResource(R.string.advanced_theme),
+                    onClick = { navigator.push(Screen.ThemeSettings) }
+                )
+            }
+        }
     }
 }
+

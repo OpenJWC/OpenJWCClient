@@ -38,12 +38,41 @@ import org.openjwc.client.viewmodels.SettingsViewModel
 @Composable
 fun NewsDisplaySettingsScreen(navigator: Navigator, settingsViewModel: SettingsViewModel) {
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior(rememberTopAppBarState())
-    val context = LocalContext.current
 
+    Scaffold(
+        topBar = {
+            LargeFlexibleTopAppBar(
+                title = { Text(stringResource(R.string.news_display_settings)) },
+                navigationIcon = { AppBackButton(onClick = { navigator.pop() }) },
+                scrollBehavior = scrollBehavior,
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = Color.Transparent,
+                    scrolledContainerColor = MaterialTheme.colorScheme.surface
+                )
+            )
+        },
+        containerColor = Color.Transparent
+    ) { innerPadding ->
+        NewsContent(
+            navigator = navigator,
+            settingsViewModel = settingsViewModel,
+            modifier = Modifier
+                .fillMaxSize()
+                .nestedScroll(scrollBehavior.nestedScrollConnection)
+                .padding(innerPadding)
+        )
+    }
+}
+
+@Composable
+fun NewsContent(
+    navigator: Navigator,
+    settingsViewModel: SettingsViewModel,
+    modifier: Modifier = Modifier
+) {
     val settings by settingsViewModel.settings.collectAsStateWithLifecycle()
     val savedFreshDays = settings.freshDays
     val freshDaysState = remember { TextFieldState(savedFreshDays.toString()) }
-    val scrollState = rememberScrollState()
 
     val freshDaysError = run {
         val d = freshDaysState.text.toString().toIntOrNull()
@@ -61,45 +90,29 @@ fun NewsDisplaySettingsScreen(navigator: Navigator, settingsViewModel: SettingsV
         navigator.pop()
     }
 
-    Scaffold(
-        topBar = {
-            LargeFlexibleTopAppBar(
-                title = { Text(stringResource(R.string.news_display_settings)) },
-                navigationIcon = { AppBackButton(onClick = { navigator.pop() }) },
-                scrollBehavior = scrollBehavior,
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = Color.Transparent,
-                    scrolledContainerColor = MaterialTheme.colorScheme.surface
+    Column(
+        modifier = modifier
+            .verticalScroll(rememberScrollState())
+            .padding(bottom = 32.dp)
+    ) {
+        SegmentedColumn(title = stringResource(R.string.highlight_fresh_news)) {
+            item {
+                SettingsTextFieldWidget(
+                    state = freshDaysState,
+                    title = stringResource(R.string.fresh_threshold_days),
+                    error = freshDaysError,
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
                 )
-            )
-        },
-        containerColor = Color.Transparent
-    ) { innerPadding ->
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .nestedScroll(scrollBehavior.nestedScrollConnection)
-                .verticalScroll(scrollState)
-                .padding(innerPadding)
-        ) {
-            SegmentedColumn(title = stringResource(R.string.highlight_fresh_news)) {
-                item {
-                    SettingsTextFieldWidget(
-                        state = freshDaysState,
-                        title = stringResource(R.string.fresh_threshold_days),
-                        error = freshDaysError,
-                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
-                    )
-                }
             }
+        }
 
-            Button(
-                onClick = { save() },
-                enabled = isValid,
-                modifier = Modifier.fillMaxWidth().padding(horizontal = 32.dp, vertical = 16.dp)
-            ) {
-                Text(stringResource(R.string.save))
-            }
+        Button(
+            onClick = { save() },
+            enabled = isValid,
+            modifier = Modifier.fillMaxWidth().padding(horizontal = 32.dp, vertical = 16.dp)
+        ) {
+            Text(stringResource(R.string.save))
         }
     }
 }
+

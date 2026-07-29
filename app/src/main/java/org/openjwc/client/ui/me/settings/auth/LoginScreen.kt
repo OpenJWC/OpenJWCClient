@@ -62,7 +62,39 @@ import org.openjwc.client.viewmodels.NavEvent
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun LoginScreen(navigator: Navigator, authViewModel: AuthViewModel) {
+    val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior(rememberTopAppBarState())
 
+    Scaffold(
+        topBar = {
+            LargeFlexibleTopAppBar(
+                title = { Text(stringResource(R.string.login)) },
+                navigationIcon = { AppBackButton(onClick = { navigator.pop() }) },
+                scrollBehavior = scrollBehavior,
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = Color.Transparent,
+                    scrolledContainerColor = MaterialTheme.colorScheme.surface
+                )
+            )
+        },
+        containerColor = Color.Transparent
+    ) { innerPadding ->
+        LoginContent(
+            navigator = navigator,
+            authViewModel = authViewModel,
+            modifier = Modifier
+                .fillMaxSize()
+                .nestedScroll(scrollBehavior.nestedScrollConnection)
+                .padding(innerPadding)
+        )
+    }
+}
+
+@Composable
+fun LoginContent(
+    navigator: Navigator,
+    authViewModel: AuthViewModel,
+    modifier: Modifier = Modifier
+) {
     val isLoggingIn by authViewModel.isLoggingIn.collectAsState()
     val loginResult by authViewModel.loginResult.collectAsState()
 
@@ -81,8 +113,6 @@ fun LoginScreen(navigator: Navigator, authViewModel: AuthViewModel) {
         else -> null
     }
 
-    val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior(rememberTopAppBarState())
-
     val usernameState = remember { TextFieldState() }
     val passwordState = remember { TextFieldState() }
     var passwordVisible by remember { mutableStateOf(false) }
@@ -90,104 +120,86 @@ fun LoginScreen(navigator: Navigator, authViewModel: AuthViewModel) {
     val canLogin = usernameState.text.isNotBlank() && passwordState.text.isNotBlank()
     val usernameError = if (usernameState.text.isBlank()) "Required" else ""
     val passwordError = if (passwordState.text.isBlank()) "Required" else ""
-    val scrollState = rememberScrollState()
 
-    Scaffold(
-        topBar = {
-            LargeFlexibleTopAppBar(
-                title = { Text(stringResource(R.string.login)) },
-                navigationIcon = { AppBackButton(onClick = { navigator.pop() }) },
-                scrollBehavior = scrollBehavior,
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = Color.Transparent,
-                    scrolledContainerColor = MaterialTheme.colorScheme.surface
+    Column(
+        modifier = modifier
+            .verticalScroll(rememberScrollState())
+            .padding(bottom = 32.dp)
+    ) {
+        SegmentedColumn {
+            item {
+                SettingsTextFieldWidget(
+                    state = usernameState,
+                    title = stringResource(R.string.account),
+                    error = usernameError
                 )
-            )
-        },
-        containerColor = Color.Transparent
-    ) { innerPadding ->
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .nestedScroll(scrollBehavior.nestedScrollConnection)
-                .verticalScroll(scrollState)
-                .padding(innerPadding)
-        ) {
-            SegmentedColumn {
-                item {
-                    SettingsTextFieldWidget(
-                        state = usernameState,
-                        title = stringResource(R.string.account),
-                        error = usernameError
-                    )
-                }
-                item {
-                    val pwdTransform = if (passwordVisible) null
-                    else OutputTransformation { replace(0, length, "•".repeat(length)) }
-                    SettingsTextFieldWidget(
-                        state = passwordState,
-                        title = stringResource(R.string.password),
-                        error = passwordError,
-                        outputTransformation = pwdTransform,
-                        trailingContent = {
-                            IconButton(
-                                onClick = { passwordVisible = !passwordVisible },
-                                enabled = !isLoggingIn
-                            ) {
-                                Icon(
-                                    imageVector = if (passwordVisible) Icons.TwoTone.VisibilityOff else Icons.TwoTone.Visibility,
-                                    contentDescription = null
-                                )
-                            }
+            }
+            item {
+                val pwdTransform = if (passwordVisible) null
+                else OutputTransformation { replace(0, length, "•".repeat(length)) }
+                SettingsTextFieldWidget(
+                    state = passwordState,
+                    title = stringResource(R.string.password),
+                    error = passwordError,
+                    outputTransformation = pwdTransform,
+                    trailingContent = {
+                        IconButton(
+                            onClick = { passwordVisible = !passwordVisible },
+                            enabled = !isLoggingIn
+                        ) {
+                            Icon(
+                                imageVector = if (passwordVisible) Icons.TwoTone.VisibilityOff else Icons.TwoTone.Visibility,
+                                contentDescription = null
+                            )
                         }
-                    )
-                }
-            }
-
-            if (loginError != null) {
-                Text(
-                    text = loginError,
-                    color = MaterialTheme.colorScheme.error,
-                    style = MaterialTheme.typography.bodySmall,
-                    modifier = Modifier
-                        .align(Alignment.Start)
-                        .padding(start = 32.dp, top = 4.dp)
+                    }
                 )
             }
+        }
 
-            Button(
-                onClick = {
-                    authViewModel.login(
-                        usernameState.text.toString().trim(),
-                        passwordState.text.toString().trim()
-                    )
-                },
-                enabled = canLogin && !isLoggingIn,
+        if (loginError != null) {
+            Text(
+                text = loginError,
+                color = MaterialTheme.colorScheme.error,
+                style = MaterialTheme.typography.bodySmall,
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 32.dp, vertical = 8.dp)
-            ) {
-                if (isLoggingIn) {
-                    CircularWavyProgressIndicator(
-                        modifier = Modifier.size(24.dp),
-                        color = MaterialTheme.colorScheme.onPrimary,
-                    )
-                    Spacer(modifier = Modifier.width(12.dp))
-                    Text(stringResource(R.string.logging_in))
-                } else {
-                    Text(stringResource(R.string.login))
-                }
-            }
+                    .padding(start = 32.dp, top = 4.dp)
+            )
+        }
 
-            TextButton(
-                onClick = { navigator.push(Screen.Register) },
-                enabled = !isLoggingIn,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 32.dp)
-            ) {
-                Text(stringResource(R.string.no_account_register_now))
+        Button(
+            onClick = {
+                authViewModel.login(
+                    usernameState.text.toString().trim(),
+                    passwordState.text.toString().trim()
+                )
+            },
+            enabled = canLogin && !isLoggingIn,
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 32.dp, vertical = 8.dp)
+        ) {
+            if (isLoggingIn) {
+                CircularWavyProgressIndicator(
+                    modifier = Modifier.size(24.dp),
+                    color = MaterialTheme.colorScheme.onPrimary,
+                )
+                Spacer(modifier = Modifier.width(12.dp))
+                Text(stringResource(R.string.logging_in))
+            } else {
+                Text(stringResource(R.string.login))
             }
+        }
+
+        TextButton(
+            onClick = { navigator.push(Screen.Register) },
+            enabled = !isLoggingIn,
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 32.dp)
+        ) {
+            Text(stringResource(R.string.no_account_register_now))
         }
     }
 }
+
