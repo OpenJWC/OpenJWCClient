@@ -275,8 +275,8 @@ fun SegmentedColumn(
             }
         ) { measurables, constraints ->
             val safe = constraints.copy(
-                maxWidth = if (constraints.hasBoundedWidth) constraints.maxWidth else 0,
-                maxHeight = if (constraints.hasBoundedHeight) constraints.maxHeight else 0
+                maxWidth = if (constraints.maxWidth > 16777215) 0 else constraints.maxWidth,
+                maxHeight = if (constraints.maxHeight > 16777215) 0 else constraints.maxHeight
             )
             val placeables = measurables.map { it.measure(safe) }
             var currentY = 0f
