@@ -1,35 +1,32 @@
 package org.openjwc.client.ui.timetable.edit.courses
 
-import android.util.Log
-import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.input.TextFieldLineLimits
+import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -37,7 +34,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -47,8 +44,11 @@ import org.openjwc.client.R
 import org.openjwc.client.data.models.Course
 import org.openjwc.client.data.models.SemesterConfig
 import org.openjwc.client.data.models.TableMetadata
-import org.openjwc.client.log.Logger
+import org.openjwc.client.ui.component.settings.SegmentedColumn
+import org.openjwc.client.ui.component.settings.SettingsTextFieldWidget
 import org.openjwc.client.ui.theme.courseBackgroundColors
+import org.openjwc.client.ui.timetable.edit.components.CardItem
+import org.openjwc.client.ui.timetable.edit.components.WarningBox
 import org.openjwc.client.viewmodels.EditCourseViewModel
 import java.time.DayOfWeek
 
@@ -89,6 +89,14 @@ fun EditCourseDialog(
     }
     var showCustomWeekPicker by remember { mutableStateOf(false) }
 
+    // 文本字段唯一事实来源，保存时才写回 ViewModel
+    val nameState = remember { TextFieldState(viewModel.name) }
+    val teacherState = remember { TextFieldState(viewModel.teacher) }
+    val locationState = remember { TextFieldState(viewModel.location) }
+    val noteState = remember { TextFieldState(viewModel.note) }
+
+    val nameError = if (nameState.text.isBlank()) stringResource(R.string.table_name_cannot_be_empty) else ""
+
     if (showCustomWeekPicker) {
         CustomWeekPickerDialog(
             totalWeeks = tableMetadata.semesterConfig.weeks,
@@ -108,100 +116,160 @@ fun EditCourseDialog(
         BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
             val isWideScreen = maxWidth > 600.dp
             val surfaceModifier = if (isWideScreen) {
-                Modifier.fillMaxHeight().width(420.dp).align(Alignment.CenterEnd)
+                Modifier.fillMaxHeight().width(460.dp).align(Alignment.CenterEnd)
             } else {
-                Modifier.fillMaxWidth(0.92f).heightIn(max = maxHeight * 0.85f).align(Alignment.Center)
+                Modifier.fillMaxWidth(0.94f).heightIn(max = maxHeight * 0.9f).align(Alignment.Center)
             }
 
             Surface(
                 modifier = surfaceModifier,
                 shape = if (isWideScreen) RoundedCornerShape(topStart = 28.dp, bottomStart = 28.dp) else RoundedCornerShape(28.dp),
-                color = MaterialTheme.colorScheme.surface,
-                tonalElevation = 6.dp
+                color = MaterialTheme.colorScheme.surfaceContainer,
+                tonalElevation = 0.dp
             ) {
                 Scaffold(
-                    modifier = Modifier.animateContentSize(),
+                    containerColor = Color.Transparent,
                     topBar = {
                         TopAppBar(
-                            title = { Text(if (currentCourseId == 0L) stringResource(R.string.add_new_course) else stringResource(R.string.edit_course)) },
-                            navigationIcon = { IconButton(onClick = onDismiss) { Icon(Icons.Default.Close, null) } },
+                            title = {
+                                Text(
+                                    text = if (currentCourseId == 0L) stringResource(R.string.add_new_course) else stringResource(R.string.edit_course),
+                                    style = MaterialTheme.typography.titleLarge
+                                )
+                            },
+                            navigationIcon = {
+                                IconButton(onClick = onDismiss) { Icon(Icons.Default.Close, null) }
+                            },
                             actions = {
                                 TextButton(
                                     onClick = {
-                                        val result = viewModel.getResultCourse()
-                                        Logger.e("重构检查", "准备发往数据库的 ID: ${result.id}, 名字: ${result.name}")
-                                        onSave(result)},
-                                    enabled = viewModel.canSave
+                                        // 写回 ViewModel（保留名称自动配色逻辑）
+                                        viewModel.onNameChange(nameState.text.toString())
+                                        viewModel.teacher = teacherState.text.toString()
+                                        viewModel.location = locationState.text.toString()
+                                        viewModel.note = noteState.text.toString()
+                                        onSave(viewModel.getResultCourse())
+                                    },
+                                    enabled = nameState.text.isNotBlank() && !viewModel.isTimeConflict
                                 ) {
-                                    Text(if (viewModel.isTimeConflict) stringResource(R.string.time_conflict) else stringResource(R.string.save))
+                                    Text(
+                                        if (viewModel.isTimeConflict) stringResource(R.string.time_conflict)
+                                        else stringResource(R.string.save),
+                                        fontWeight = androidx.compose.ui.text.font.FontWeight.SemiBold
+                                    )
                                 }
-                            }
+                            },
+                            colors = TopAppBarDefaults.topAppBarColors(
+                                containerColor = Color.Transparent,
+                                scrolledContainerColor = Color.Transparent
+                            )
                         )
                     }
                 ) { padding ->
                     Column(
                         modifier = Modifier
                             .padding(padding)
-                            .fillMaxWidth()
-                            .verticalScroll(rememberScrollState())
-                            .padding(horizontal = 20.dp, vertical = 10.dp),
-                        verticalArrangement = Arrangement.spacedBy(20.dp)
+                            .fillMaxSize()
                     ) {
-                        // 基础信息
-                        CourseBasicInfoFields(
-                            name = viewModel.name,
-                            onNameChange = { viewModel.onNameChange(it) },
-                            teacher = viewModel.teacher,
-                            onTeacherChange = { viewModel.teacher = it },
-                            location = viewModel.location,
-                            onLocationChange = { viewModel.location = it }
-                        )
-
-                        HorizontalDivider(modifier = Modifier.alpha(0.3f))
-
-                        // 时间选择
-                        CourseTimeSection(
-                            dayOfWeek = viewModel.dayOfWeek,
-                            onDayChange = { viewModel.dayOfWeek = it },
-                            startPeriod = viewModel.startPeriod,
-                            duration = viewModel.duration,
-                            maxPeriods = tableMetadata.semesterConfig.periods.size,
-                            onPeriodChange = { s, d ->
-                                viewModel.startPeriod = s
-                                viewModel.duration = d
-                            },
-                            conflictingCourses = viewModel.conflictingCourses
-                        )
-
-                        // 颜色选择
-                        ColorPickerRow(
-                            selectedIndex = viewModel.colorIndex,
-                            presetColors = courseBackgroundColors
-                        ) { index ->
-                            viewModel.colorIndex = index
-                            viewModel.hasManuallyChangedColor = true
+                        Column(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .weight(1f, fill = false)
+                                .verticalScroll(rememberScrollState())
+                                .padding(vertical = 16.dp),
+                            verticalArrangement = Arrangement.spacedBy(16.dp)
+                        ) {
+                        // —— 基本信息 ——
+                        SegmentedColumn(title = stringResource(R.string.basic_information)) {
+                            CourseBasicInfoFields(
+                                nameState = nameState,
+                                teacherState = teacherState,
+                                locationState = locationState
+                            )
                         }
 
-                        HorizontalDivider(modifier = Modifier.alpha(0.3f))
+                        // —— 上课时间 ——
+                        SegmentedColumn(title = stringResource(R.string.class_time)) {
+                            item {
+                                CardItem {
+                                    CourseTimeSection(
+                                        dayOfWeek = viewModel.dayOfWeek,
+                                        onDayChange = { viewModel.dayOfWeek = it },
+                                        startPeriod = viewModel.startPeriod,
+                                        duration = viewModel.duration,
+                                        maxPeriods = tableMetadata.semesterConfig.periods.size,
+                                        onPeriodChange = { s, d ->
+                                            viewModel.startPeriod = s
+                                            viewModel.duration = d
+                                        },
+                                        conflictingCourses = viewModel.conflictingCourses
+                                    )
+                                }
+                            }
+                        }
 
-                        // 周次规则
-                        CourseWeekRuleSection(
-                            weekRule = viewModel.weekRule,
-                            totalWeeks = tableMetadata.semesterConfig.weeks,
-                            onRuleChange = { viewModel.weekRule = it },
-                            onCustomClick = { showCustomWeekPicker = true }
-                        )
+                        // 时间冲突提示
+                        if (viewModel.conflictingCourses.isNotEmpty()) {
+                            val conflictValue = when (viewModel.conflictingCourses.size) {
+                                1 -> viewModel.conflictingCourses.first().name
+                                2 -> viewModel.conflictingCourses.first().name + ", " + viewModel.conflictingCourses.last().name
+                                else -> {
+                                    val firstName = viewModel.conflictingCourses.first().name + ", " + viewModel.conflictingCourses[1].name
+                                    val remainingCount = viewModel.conflictingCourses.size - 2
+                                    stringResource(R.string.course_conflict_format, firstName, remainingCount)
+                                }
+                            }
+                            WarningBox(
+                                stringResource(
+                                    R.string.course_already_existed_during_this_period,
+                                    conflictValue
+                                ),
+                                modifier = Modifier.padding(horizontal = 16.dp)
+                            )
+                        }
 
-                        // 备注
-                        OutlinedTextField(
-                            value = viewModel.note,
-                            onValueChange = { viewModel.note = it },
-                            label = { Text(stringResource(R.string.notes)) },
-                            modifier = Modifier.fillMaxWidth().padding(top = 8.dp),
-                            minLines = 3
-                        )
+                        // —— 课程颜色 ——
+                        SegmentedColumn(title = stringResource(R.string.course_color)) {
+                            item {
+                                CardItem {
+                                    ColorPickerRow(
+                                        selectedIndex = viewModel.colorIndex,
+                                        presetColors = courseBackgroundColors
+                                    ) { index ->
+                                        viewModel.colorIndex = index
+                                        viewModel.hasManuallyChangedColor = true
+                                    }
+                                }
+                            }
+                        }
 
-                        Spacer(Modifier.height(40.dp))
+                        // —— 周次规则 ——
+                        SegmentedColumn(title = stringResource(R.string.week_range)) {
+                            item {
+                                CardItem {
+                                    CourseWeekRuleSection(
+                                        weekRule = viewModel.weekRule,
+                                        totalWeeks = tableMetadata.semesterConfig.weeks,
+                                        onRuleChange = { viewModel.weekRule = it },
+                                        onCustomClick = { showCustomWeekPicker = true }
+                                    )
+                                }
+                            }
+                        }
+
+                        // —— 备注 ——
+                        SegmentedColumn(title = stringResource(R.string.notes)) {
+                            item {
+                                SettingsTextFieldWidget(
+                                    state = noteState,
+                                    title = "",
+                                    useLabelAsPlaceholder = true,
+                                    placeholder = stringResource(R.string.notes_hint),
+                                    lineLimits = TextFieldLineLimits.MultiLine(minHeightInLines = 3, maxHeightInLines = 8)
+                                )
+                            }
+                        }
+                        }
                     }
                 }
             }

@@ -1,15 +1,14 @@
 package org.openjwc.client.ui.timetable.edit.components
 
-import androidx.compose.ui.graphics.Color
-import androidx.compose.foundation.clickable
-import androidx.compose.material3.Icon
-import androidx.compose.material3.ListItem
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
+import org.openjwc.client.ui.component.settings.SettingsBaseWidget
 
+/**
+ * MD3E 风格的课表操作条目，基于 [SettingsBaseWidget]。
+ * 危险操作（isDanger=true）使用错误色。
+ */
 @Composable
 fun ActionItem(
     title: String,
@@ -18,21 +17,16 @@ fun ActionItem(
     isDanger: Boolean = false,
     onClick: () -> Unit
 ) {
-    val contentColor = if (isDanger) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurface
-    val subColor = if (isDanger) MaterialTheme.colorScheme.error.copy(alpha = 0.8f) else MaterialTheme.colorScheme.onSurfaceVariant
-    ListItem(
-        headlineContent = { Text(title, color = contentColor) },
-        supportingContent = { Text(subtitle, color = subColor) },
-        leadingContent = {
-            Icon(
-                imageVector = icon,
-                contentDescription = null,
-                tint = if (isDanger) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurfaceVariant
-            )
-        },
-        colors = androidx.compose.material3.ListItemDefaults.colors(
-            containerColor = androidx.compose.ui.graphics.Color.Transparent
+    SettingsBaseWidget(
+        icon = icon,
+        iconColor = if (isDanger) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurfaceVariant,
+        title = title,
+        titleStyle = MaterialTheme.typography.titleMedium.copy(
+            color = if (isDanger) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurface
         ),
-        modifier = Modifier.clickable { onClick() }
+        description = subtitle,
+        descriptionColor = if (isDanger) MaterialTheme.colorScheme.error.copy(alpha = 0.8f)
+        else MaterialTheme.colorScheme.onSurfaceVariant,
+        onClick = { onClick() }
     )
 }

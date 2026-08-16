@@ -1,17 +1,27 @@
 package org.openjwc.client.ui.timetable.view.grid
 
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.spring
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
@@ -60,10 +70,17 @@ fun CourseBlock(
     isCurrentWeek: Boolean = true,
     onClick: (Course) -> Unit = {}
 ) {
+    val interactionSource = remember { MutableInteractionSource() }
+    val isPressed by interactionSource.collectIsPressedAsState()
+    val scale by animateFloatAsState(
+        targetValue = if (isPressed) 0.97f else 1f,
+        animationSpec = spring(stiffness = 800f, dampingRatio = 0.5f),
+        label = "courseBlockScale"
+    )
+
     val containerColor = if (isCurrentWeek) {
         course.color
     } else {
-        // 使用 MaterialTheme 的表面色或灰色，带一点原色的影子
         MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.8f)
     }
 
@@ -75,19 +92,27 @@ fun CourseBlock(
 
     BoxWithConstraints(
         modifier = modifier
-            .padding(2.dp) // 网格间距
-            .clip(RoundedCornerShape(6.dp)) // 课表卡片圆角不宜过大
+            .padding(2.dp)
+            .graphicsLayer {
+                scaleX = scale
+                scaleY = scale
+            }
+            .clip(RoundedCornerShape(10.dp))
             .background(containerColor)
-            .clickable { onClick(course) }
+            .clickable(
+                interactionSource = interactionSource,
+                indication = null,
+                onClick = { onClick(course) }
+            )
     ) {
         val blockHeight = maxHeight
         val isShort = blockHeight < 80.dp
         Column(
-            modifier = Modifier.padding(if (isShort) 4.dp else 8.dp)
+            modifier = Modifier
+                .padding(if (isShort) 4.dp else 8.dp)
+                .align(Alignment.TopStart)
         ) {
-            // 课程名称 - 加粗突出
             Text(
-                modifier = Modifier.padding(bottom = 8.dp),
                 text = course.name,
                 color = contentColor,
                 style = MaterialTheme.typography.titleSmall,
@@ -97,24 +122,24 @@ fun CourseBlock(
             )
 
             if (!isShort) {
-                // 老师名字 - 较小字体
                 if (course.teacher.isNotBlank()) {
+                    Spacer(Modifier.size(2.dp))
                     Text(
                         text = course.teacher,
                         color = contentColor.copy(alpha = 0.9f),
                         style = MaterialTheme.typography.bodySmall,
                         maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
                     )
                 }
-
-                // 上课地点 - 较小字体
                 if (course.location.isNotBlank()) {
+                    Spacer(Modifier.size(2.dp))
                     Text(
                         text = "@" + course.location,
                         color = contentColor.copy(alpha = 0.9f),
                         style = MaterialTheme.typography.bodySmall,
                         maxLines = 1,
-                        overflow = TextOverflow.Ellipsis
+                        overflow = TextOverflow.Ellipsis,
                     )
                 }
             }

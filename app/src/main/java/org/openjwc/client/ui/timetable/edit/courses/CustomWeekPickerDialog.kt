@@ -13,12 +13,13 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -33,6 +34,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import org.openjwc.client.R
+import org.openjwc.client.ui.component.WarningCard
 
 @Preview
 @Composable
@@ -51,29 +53,26 @@ fun CustomWeekPickerDialog(
     onDismiss: () -> Unit,
     onConfirm: (Set<Int>) -> Unit
 ) {
-    var tempWeeks by remember { mutableStateOf(initialWeeks) }
+    var tempWeeks by remember(initialWeeks) { mutableStateOf(initialWeeks) }
 
     AlertDialog(
         onDismissRequest = onDismiss,
         title = { Text(stringResource(R.string.select_class_weeks)) },
         text = {
-
-            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                // 1. 修复后的网格
-                Surface(color = MaterialTheme.colorScheme.errorContainer, shape = RoundedCornerShape(8.dp), modifier = Modifier.fillMaxWidth()) {
-                    if (tempWeeks.isEmpty()) {
-                    Text(
-                        text = stringResource(R.string.one_week_at_least),
-                        modifier = Modifier.padding(12.dp),
-                        color = MaterialTheme.colorScheme.onErrorContainer,
-                        style = MaterialTheme.typography.bodySmall
-                    )}
+            Column(
+                verticalArrangement = androidx.compose.foundation.layout.Arrangement.spacedBy(8.dp),
+                modifier = Modifier.verticalScroll(rememberScrollState())
+            ) {
+                if (tempWeeks.isEmpty()) {
+                    WarningCard(
+                        message = stringResource(R.string.one_week_at_least),
+                        color = MaterialTheme.colorScheme.errorContainer
+                    )
                 }
                 WeekGrid(
                     totalWeeks = totalWeeks,
                     selectedWeeks = tempWeeks,
                     onWeekToggle = { weekNum ->
-                        // 逻辑：如果已存在则移除，不存在则添加
                         tempWeeks = if (tempWeeks.contains(weekNum)) {
                             tempWeeks - weekNum
                         } else {
@@ -84,11 +83,10 @@ fun CustomWeekPickerDialog(
 
                 HorizontalDivider(modifier = Modifier.padding(vertical = 4.dp))
 
-                // 2. 快捷操作区
+                // 快捷操作区
                 FlowRow(
                     modifier = Modifier.fillMaxWidth(),
-                    // 间距建议稍微调小，防止总周数多时内容太拥挤
-                    horizontalArrangement = Arrangement.spacedBy(4.dp)
+                    horizontalArrangement = androidx.compose.foundation.layout.Arrangement.spacedBy(4.dp)
                 ) {
                     TextButton(onClick = { tempWeeks = (1..totalWeeks).toSet() }) {
                         Text(stringResource(R.string.select_all))
@@ -108,7 +106,6 @@ fun CustomWeekPickerDialog(
         confirmButton = {
             Button(
                 onClick = { onConfirm(tempWeeks) },
-                // 💡 只有当选中的周次集合不为空时，按钮才可用
                 enabled = tempWeeks.isNotEmpty()
             ) {
                 Text(stringResource(R.string.confirm))

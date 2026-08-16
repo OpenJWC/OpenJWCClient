@@ -69,7 +69,7 @@ class MainViewModel(
         )
 
 
-    private val _updateEvent = Channel<GitHubRelease>()
+    private var _updateEvent = Channel<GitHubRelease>()
     val updateEvent = _updateEvent.receiveAsFlow()
 
     var updateRelease = MutableStateFlow<GitHubRelease?>(null)
@@ -77,6 +77,8 @@ class MainViewModel(
 
     var showUpdateDialog = MutableStateFlow(false)
         private set
+
+    private var checkUpdateJob: kotlinx.coroutines.Job? = null
 
     fun updateThemeColor(color: ColorType) {
         Logger.d(label, "Update theme color to $color")
@@ -100,28 +102,34 @@ class MainViewModel(
     }
 
     fun checkUpdate(showToast: Boolean = true) {
-        viewModelScope.launch {
-            val proxy = repository.getSettingsSnapshot().proxy
-            val service = CheckUpdateClient.getService(proxy)
+        checkUpdateJob?.cancel()
+        checkUpdateJob = viewModelScope.launch {
+            try {
+                val proxy = repository.getSettingsSnapshot().proxy
+                val service = CheckUpdateClient.getService(proxy)
 
-            when (val result = service.getLatestRelease()) {
-                is NetworkResult.Success -> {
-                    val input = result.response.name
-                    val regex = Regex("""Version Code:\s*(\d+)""")
-                    val versionCode = regex.find(input)?.groupValues?.get(1)?.toIntOrNull() ?: 0
+                when (val result = service.getLatestRelease()) {
+                    is NetworkResult.Success -> {
+                        val input = result.response.name
+                        val regex = Regex("""Version Code:\s*(\d+)""")
+                        val versionCode = regex.find(input)?.groupValues?.get(1)?.toIntOrNull() ?: 0
 
-                    if (BuildConfig.VERSION_CODE < versionCode) {
-                        Logger.d(label, "发现新版本: ${result.response.tagName}")
-                        updateRelease.value = result.response
-                        _updateEvent.send(result.response)
-                    } else {
-                        if(showToast) uiEvent.send(UiEvent.ShowToast(UiText.StringResource(R.string.already_latest_version)))
+                        if (BuildConfig.VERSION_CODE < versionCode) {
+                            Logger.d(label, "发现新版本: ${result.response.tagName}")
+                            updateRelease.value = result.response
+                            showUpdateDialog.value = true
+                            _updateEvent.send(result.response)
+                        } else {
+                            if(showToast) uiEvent.send(UiEvent.ShowToast(UiText.StringResource(R.string.already_latest_version)))
+                        }
+                    }
+                    else -> {
+                        Logger.d(label, "检查更新失败")
+                        if (showToast) uiEvent.send(UiEvent.ShowToast(UiText.StringResource(R.string.check_update_failed)))
                     }
                 }
-                else -> {
-                    Logger.d(label, "检查更新失败")
-                    uiEvent.send(UiEvent.ShowToast(UiText.StringResource(R.string.check_update_failed)))
-                }
+            } catch (e: Exception) {
+                Logger.e(label, "checkUpdate error", e)
             }
         }
     }

@@ -40,15 +40,17 @@
 # 第七条 联系与反馈\n\n
 如您对本协议有任何疑问或建议，欢迎通过项目开源平台提交反馈。对于具体的服务器运行、数据存储等问题，请直接联系为您提供服务的私有化部署管理员。
     </string>
-    <string name="license" tools:ignore="TypographyOther">MIT License</string>
+    <string name="license">MIT License</string>
     <string name="confirm">确定</string>
     <string name="cancel">取消</string>
+    <string name="ok">确定</string>
     <string name="upload_news">投稿资讯</string>
     <string name="back">返回</string>
     <string name="uploading">上传中…</string>
     <string name="loading">加载中…</string>
     <string name="submit_upload">提交上传</string>
     <string name="basic_information">基本信息</string>
+    <string name="course_color">课程颜色</string>
     <string name="title">标题</string>
     <string name="label">标签</string>
     <string name="date">日期</string>
@@ -141,7 +143,7 @@
     <string name="not_logged_in">您尚未登录</string>
     <string name="refetch_categories">重新获取分类</string>
     <string name="register">注册</string>
-    <string name="reviewed_notices">已审阅通知</string>
+    <string name="reviewed_notices">投稿审核结果</string>
     <string name="login">登录</string>
     <string name="favorite">收藏</string>
     <string name="delete_favorite">删除收藏</string>
@@ -176,6 +178,23 @@
     <string name="introduction">简介</string>
     <string name="check_for_updates">检查更新</string>
     <string name="github">GitHub</string>
+    <string name="open_source_project">开源项目</string>
+
+    <string name="import_failed">导入失败：%1$s</string>
+    <string name="extractor_script_error">无法加载解析脚本</string>    <string name="mit_license">MIT 许可证</string>
+    <string name="select_a_setting">选择一个设置</string>
+    <string name="protocol">协议</string>
+    <string name="proxy_type">代理类型</string>
+    <string name="delete_session_confirm">确定要删除此会话吗？此操作不可撤销。</string>
+    <string name="review_result_hint">投稿审核结果会显示在这里</string>
+    <string name="clear_logs">清除日志</string>
+    <string name="no_chat_history">暂无聊天记录</string>
+    <string name="required">必填</string>
+    <string name="license_title">许可证</string>
+    <string name="predictive_back_animation">预测返回动画</string>
+    <string name="animation_type">动画类型</string>
+    <string name="exit_direction">退出方向</string>
+        <string name="clear_all_favorites">清除全部收藏</string>
     <string name="open_source_licenses">开源许可证</string>
 
     <string name="confirm_unbind">确认解绑</string>
@@ -250,6 +269,7 @@
     <string name="logout_failed_with_code">注销失败 (%1$d): %2$s</string>
     <string name="copy_success">复制成功</string>
     <string name="already_latest_version">当前版本已是最新</string>
+    <string name="check_update">检查更新</string>
     <string name="check_update_failed">检查更新失败</string>
     <string name="upload_success">上传成功</string>
     <string name="load_error">加载错误: %1$s</string>
@@ -265,6 +285,7 @@
     <!-- Timetable -->
     <string name="timetable">课程表</string>
     <string name="current_week">第 %d 周</string>
+    <string name="select_week">选择周次</string>
     <string name="period_index">第 %d 节</string>
     <string name="last_week">上一周</string>
     <string name="next_week">下一周</string>
@@ -293,6 +314,7 @@
     <string name="plan_from_scratch">从零开始规划你的日程</string>
     <string name="no_timetables_yet">还没有课表哦</string>
     <string name="import_timetable">导入课表</string>
+    <string name="import_hint">从教务处自动导入，或手动创建一份空白课表</string>
     <string name="starting_period">起始节次</string>
     <string name="lasting_periods">持续节数</string>
     <string name="every_week">每周</string>
@@ -335,12 +357,12 @@
     <string name="click_me_when_you_see_the_timetable">看到课表后点我导入</string>
     <string name="edit_semester_config">编辑课表配置</string>
     <string name="extracting_timetable">正在提取课表……</string>
+    <string name="page_load_failed">页面加载失败，请检查网络连接</string>
     <string name="login_title">登录东南大学教务处</string>
     <string name="period_count_too_small_warning">警告：当前设置的总节数 (%1$d) 小于已选课程的最大节次 (%2$d)。超出部分的课程将被隐藏！</string>
     <string name="edit_config_hint">修改周数、节次时间及开学日期</string>
     <string name="one_week_at_least">请至少选择一周</string>
     <string name="course_conflict_format">%1$s 以及其他 %2$d 门课程</string>
-    <string name="import_failed">导入失败: %1$s</string>
     <string name="widget_week_desc">本周课程</string>
     <string name="no_courses_today">今天没有课，休息一下</string>
     <string name="section_format">%1$d-%2$d节</string>

@@ -130,7 +130,7 @@ fun ChatHistoryList(
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
                     Icon(Icons.Default.ChatBubbleOutline, null, Modifier.size(48.dp), tint = MaterialTheme.colorScheme.outlineVariant)
                     Spacer(Modifier.height(12.dp))
-                    Text("No chat history", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.outline)
+                    Text(stringResource(R.string.no_chat_history), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.outline)
                 }
             }
         } else {
@@ -219,9 +219,9 @@ private fun ChatHistoryCard(
         AlertDialog(
             onDismissRequest = { showDeleteConfirm = false },
             title = { Text(stringResource(R.string.delete_session)) },
-            text = { Text("Delete \"${session.metadata.title.ifBlank { "Untitled" }}\"? This cannot be undone.") },
+            text = { Text(stringResource(R.string.delete_session_confirm)) },
             confirmButton = {
-                TextButton(onClick = { showDeleteConfirm = false; onDelete() }) { Text("Delete", color = MaterialTheme.colorScheme.error) }
+                TextButton(onClick = { showDeleteConfirm = false; onDelete() }) { Text(stringResource(R.string.delete), color = MaterialTheme.colorScheme.error) }
             },
             dismissButton = {
                 TextButton(onClick = { showDeleteConfirm = false }) { Text(stringResource(R.string.cancel)) }
@@ -257,7 +257,7 @@ fun ChatMainContent(
             onDismissRequest = { showNewsSheet = false },
             sheetState = sheetState,
             shape = RoundedCornerShape(topStart = 20.dp, topEnd = 20.dp),
-            containerColor = MaterialTheme.colorScheme.surfaceContainerHigh
+            containerColor = MaterialTheme.colorScheme.surfaceContainerLow
         ) {
             NewsAttachmentSheet(
                 newsViewModel = newsViewModel,
@@ -334,7 +334,7 @@ fun ChatList(
         val bubbleMaxFraction = 0.85f
 
         LazyColumn(state = listState, modifier = Modifier.fillMaxSize(), contentPadding = PaddingValues(vertical = 16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-            itemsIndexed(chatMessages) { index, message ->
+            itemsIndexed(chatMessages, key = { _, msg -> msg.messageId }) { index, message ->
                 val isLast = index == chatMessages.lastIndex
                 val isLoading = isLast && (sessionState is ChatSessionState.Loading || sessionState is ChatSessionState.ToolCalling || sessionState is ChatSessionState.Generating)
                 MessageBubble(message = message, isLoading = isLoading, onCopy = { onCopy(message) }, onShare = { onShare(message) }, onDelete = { onDelete(message) }, maxWidthFraction = bubbleMaxFraction)
@@ -342,7 +342,7 @@ fun ChatList(
         }
 
         AnimatedVisibility(visible = showBackToBottom, enter = fadeIn() + scaleIn(), exit = fadeOut() + scaleOut(), modifier = Modifier.align(Alignment.BottomEnd).padding(12.dp)) {
-            FloatingActionButton(onClick = { scope.launch { if (chatMessages.isNotEmpty()) listState.animateScrollToItem(chatMessages.size - 1) } }, containerColor = MaterialTheme.colorScheme.primary, shape = CircleShape) {
+            FloatingActionButton(onClick = { scope.launch { if (chatMessages.isNotEmpty()) listState.animateScrollToItem(chatMessages.size - 1) } }, shape = CircleShape) {
                 Icon(Icons.Default.ArrowDownward, stringResource(R.string.bottom))
             }
         }
@@ -369,14 +369,18 @@ private fun NewsAttachmentSheet(
     var selectedLabel by remember { mutableStateOf("") }
 
     Column(Modifier.fillMaxWidth().padding(horizontal = 16.dp)) {
-        Text("Attach News", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold, modifier = Modifier.padding(16.dp))
+        Text(stringResource(R.string.attach), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold, modifier = Modifier.padding(16.dp))
 
         if (labels.isEmpty()) {
             Box(Modifier.fillMaxWidth().padding(24.dp), contentAlignment = Alignment.Center) {
-                Text("Loading...", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.outline)
+                Text(stringResource(R.string.loading), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.outline)
             }
         } else {
-            if (selectedLabel.isEmpty()) selectedLabel = labels.first()
+            LaunchedEffect(labels) {
+                if (selectedLabel.isEmpty() || selectedLabel !in labels) {
+                    selectedLabel = labels.first()
+                }
+            }
 
             // Label tabs
             LazyColumn(Modifier.fillMaxWidth().height(48.dp)) {
@@ -405,7 +409,7 @@ private fun NewsAttachmentSheet(
 
             if (notices.isEmpty()) {
                 Box(Modifier.fillMaxWidth().padding(24.dp), contentAlignment = Alignment.Center) {
-                    Text("Loading...", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.outline)
+                    Text(stringResource(R.string.loading), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.outline)
                 }
             } else {
                 LazyColumn(modifier = Modifier.fillMaxWidth().heightIn(max = 400.dp)) {

@@ -26,9 +26,8 @@ import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.rememberTopAppBarState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -54,7 +53,7 @@ fun LogScreen(navigator: Navigator) {
                 navigationIcon = { AppBackButton(onClick = { navigator.pop() }) },
                 actions = {
                     IconButton(onClick = { Logger.logHistory.clear(); clear++ }) {
-                        Icon(Icons.TwoTone.DeleteSweep, "Clear logs")
+                        Icon(Icons.TwoTone.DeleteSweep, stringResource(R.string.clear_logs))
                     }
                 },
                 scrollBehavior = scrollBehavior,
@@ -83,12 +82,11 @@ fun LogContent(
     modifier: Modifier = Modifier,
     clear: Int = 0,
 ) {
-    val logs = remember(clear) { Logger.logHistory.toList() }
     LazyColumn(
         modifier = modifier
             .padding(horizontal = 12.dp, vertical = 4.dp)
     ) {
-        items(items = logs, key = { it.id }) { log ->
+        items(items = Logger.logHistory.toList(), key = { it.id }) { log ->
             LogItemWidget(log)
         }
     }

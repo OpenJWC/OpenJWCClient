@@ -14,8 +14,8 @@ object CheckUpdateClient {
     private val loggingInterceptor = okhttp3.logging.HttpLoggingInterceptor().apply {
         level = okhttp3.logging.HttpLoggingInterceptor.Level.HEADERS
     }
-    private val serviceCache = mutableMapOf<Proxy, CheckUpdateService>()
-    private val clientCache = mutableMapOf<Proxy, OkHttpClient>()
+    private val serviceCache = java.util.concurrent.ConcurrentHashMap<Proxy, CheckUpdateService>()
+    private val clientCache = java.util.concurrent.ConcurrentHashMap<Proxy, OkHttpClient>()
 
     private val json = Json {
         ignoreUnknownKeys = true
@@ -29,7 +29,7 @@ object CheckUpdateClient {
             is Proxy.HttpProxy -> java.net.Proxy(java.net.Proxy.Type.HTTP, java.net.InetSocketAddress(proxy.host, proxy.port))
             is Proxy.SocksProxy -> java.net.Proxy(java.net.Proxy.Type.SOCKS, java.net.InetSocketAddress(proxy.host, proxy.port))
         }
-        val okHttpClient = clientCache.getOrPut(proxy) {
+        val okHttpClient = clientCache.computeIfAbsent(proxy) {
             OkHttpClient.Builder()
                 .addInterceptor(loggingInterceptor)
                 .proxy(proxyArgument)
@@ -38,7 +38,7 @@ object CheckUpdateClient {
                 .build()
         }
 
-        return serviceCache.getOrPut(proxy) {
+        return serviceCache.computeIfAbsent(proxy) {
             Retrofit.Builder()
                 .baseUrl(baseUrl)
                 .client(okHttpClient)

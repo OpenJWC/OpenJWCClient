@@ -1,7 +1,7 @@
 package org.openjwc.client.ui.timetable.view.sheets
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -14,12 +14,15 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.CalendarMonth
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Place
+import androidx.compose.material.icons.filled.Schedule
+import androidx.compose.material.icons.filled.DeleteForever
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilledTonalButton
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
@@ -32,7 +35,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalLocale
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -41,6 +43,9 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import org.openjwc.client.R
 import org.openjwc.client.data.models.Course
+import org.openjwc.client.ui.component.settings.SegmentedColumn
+import org.openjwc.client.ui.component.settings.SettingsBaseWidget
+import org.openjwc.client.ui.timetable.edit.components.CardItem
 import java.time.DayOfWeek
 import java.time.format.TextStyle
 
@@ -62,7 +67,7 @@ fun CourseDetailSheet(
     ModalBottomSheet(
         onDismissRequest = onDismissRequest,
         sheetState = sheetState,
-        containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
+        containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
         dragHandle = dragHandle,
         modifier = Modifier
             .widthIn(max = 640.dp)
@@ -90,7 +95,7 @@ private val mockCourse = Course(
     dayOfWeek = DayOfWeek.MONDAY,
     startPeriod = 1,
     duration = 2,
-    color = Color.Red,
+    color = Color(0xFF415F91),
     weekRule = (1..16 step 2).toSet(),
     note = "带好计算器"
 )
@@ -118,9 +123,9 @@ fun CourseDetailContent(
     onDelete: () -> Unit
 ) {
     Column(
-        modifier = Modifier.background(
-            MaterialTheme.colorScheme.surface
-        )
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(bottom = 24.dp)
     ) {
         Heading(
             text = course.name,
@@ -129,23 +134,23 @@ fun CourseDetailContent(
 
         if (isWideScreen) {
             Row(
-                modifier = Modifier.padding(24.dp),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(32.dp)
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp),
+                verticalAlignment = Alignment.Top,
+                horizontalArrangement = Arrangement.spacedBy(24.dp)
             ) {
                 Column(
-                    modifier = Modifier
-                        .weight(1f)
-                        .padding(24.dp),
+                    modifier = Modifier.weight(1f),
                     verticalArrangement = Arrangement.spacedBy(16.dp)
                 ) {
                     InfoSection(course, totalWeeks)
                 }
                 Column(
                     modifier = Modifier
-                        .weight(1f)
-                        .padding(16.dp),
-                    verticalArrangement = Arrangement.spacedBy(16.dp),
+                        .width(200.dp)
+                        .padding(end = 16.dp),
+                    verticalArrangement = Arrangement.spacedBy(12.dp),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
                     ActionButtons(
@@ -157,16 +162,18 @@ fun CourseDetailContent(
             }
         } else {
             Column(
-                modifier = Modifier.padding(24.dp),
-                verticalArrangement = Arrangement.spacedBy(20.dp)
+                modifier = Modifier.fillMaxWidth(),
+                verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
                 InfoSection(course, totalWeeks)
-                Spacer(Modifier.height(24.dp))
-                ActionButtons(
-                    horizontally = true,
-                    onEdit = onEdit,
-                    onDelete = onDelete
-                )
+                Spacer(Modifier.height(8.dp))
+                Box(Modifier.padding(horizontal = 16.dp)) {
+                    ActionButtons(
+                        horizontally = true,
+                        onEdit = onEdit,
+                        onDelete = onDelete
+                    )
+                }
             }
         }
     }
@@ -177,35 +184,40 @@ fun Heading(
     text: String,
     isCurrentWeek: Boolean
 ) {
-    Column (
+    Column(
         modifier = Modifier
             .fillMaxWidth()
-            .heightIn(min = 100.dp)
-            .background(MaterialTheme.colorScheme.surface)
-            .padding(horizontal = 24.dp, vertical = 16.dp)
+            .padding(start = 16.dp, end = 16.dp, top = 8.dp, bottom = 16.dp)
     ) {
         if (!isCurrentWeek) {
             Surface(
                 color = MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.7f),
-                contentColor = MaterialTheme.colorScheme.error,
-                shape = MaterialTheme.shapes.extraSmall,
+                contentColor = MaterialTheme.colorScheme.onErrorContainer,
+                shape = CircleShape,
                 modifier = Modifier.padding(bottom = 8.dp)
             ) {
                 Text(
                     text = stringResource(R.string.not_in_current_week),
-                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp),
-                    style = MaterialTheme.typography.labelSmall,
+                    modifier = Modifier.padding(horizontal = 12.dp, vertical = 4.dp),
+                    style = MaterialTheme.typography.labelMedium,
                     fontWeight = FontWeight.Bold
                 )
             }
         }
-        Text(
-            text = text,
-            style = MaterialTheme.typography.headlineMedium,
-            fontWeight = FontWeight.Light,
-            color = MaterialTheme.colorScheme.onSurface,
-            modifier = Modifier.padding(vertical = 16.dp)
-        )
+
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            Column(Modifier.weight(1f)) {
+                Text(
+                    text = text,
+                    style = MaterialTheme.typography.headlineSmall,
+                    fontWeight = FontWeight.SemiBold,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+            }
+        }
     }
 }
 
@@ -214,81 +226,60 @@ fun InfoSection(
     course: Course,
     totalWeeks: Int
 ) {
-    Column(verticalArrangement = Arrangement.spacedBy(24.dp)) {
+    val weekDescription = course.weekRule.toDisplayText(
+        totalWeeks = totalWeeks,
+        everyWeekStr = stringResource(R.string.every_week),
+        oddWeeksStr = stringResource(R.string.odd_weeks),
+        evenWeeksStr = stringResource(R.string.even_weeks),
+        customWeeksStr = stringResource(R.string.week_number)
+    )
 
-        if (course.location.isNotBlank() || course.teacher.isNotBlank()) {
-            Row(modifier = Modifier.fillMaxWidth()) {
-                IconInfoRow(
+    val locale = LocalLocale.current.platformLocale
+    val periodDescription = stringResource(
+        R.string.custom_periods_format,
+        course.dayOfWeek.getDisplayName(TextStyle.SHORT, locale),
+        course.startPeriod,
+        course.startPeriod + course.duration - 1
+    )
+
+    Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
+        SegmentedColumn {
+            item {
+                SettingsBaseWidget(
                     icon = Icons.Default.Place,
+                    iconColor = course.color,
                     title = course.location.ifBlank { stringResource(R.string.location_not_specified) },
-                    subtitle = course.teacher.ifBlank { stringResource(R.string.teacher_not_specified) },
-                    color = course.color
+                    description = course.teacher.ifBlank { stringResource(R.string.teacher_not_specified) }
+                )
+            }
+            item {
+                SettingsBaseWidget(
+                    icon = Icons.Default.CalendarMonth,
+                    title = weekDescription,
+                    description = stringResource(R.string.week_number)
+                )
+            }
+            item {
+                SettingsBaseWidget(
+                    icon = Icons.Default.Schedule,
+                    title = periodDescription,
+                    description = stringResource(R.string.period_number)
                 )
             }
         }
 
+        // 备注：独立分组，与上方信息组同宽
         if (course.note.isNotBlank()) {
-            Surface(
-                color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f),
-                shape = MaterialTheme.shapes.small,
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Text(
-                    text = course.note,
-                    style = MaterialTheme.typography.bodyMedium,
-                    modifier = Modifier.padding(12.dp)
-                )
-            }
-        }
-
-        HorizontalDivider(thickness = 0.5.dp, color = MaterialTheme.colorScheme.outlineVariant)
-
-        val weekDescription = course.weekRule.toDisplayText(
-            totalWeeks = totalWeeks,
-            everyWeekStr = stringResource(R.string.every_week),
-            oddWeeksStr = stringResource(R.string.odd_weeks),
-            evenWeeksStr = stringResource(R.string.even_weeks)
-        )
-
-        val locale = LocalLocale.current.platformLocale
-        val periodDescription = stringResource(
-            R.string.custom_periods_format,
-            course.dayOfWeek.getDisplayName(TextStyle.SHORT, locale),
-            course.startPeriod,
-            course.startPeriod + course.duration - 1
-        )
-
-        val isWeekTooLong = weekDescription.length > 18
-        val isPeriodTooLong = periodDescription.length > 18
-
-        if (isWeekTooLong || isPeriodTooLong) {
-            Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
-                DetailItem(
-                    modifier = Modifier.fillMaxWidth(),
-                    label = stringResource(R.string.week_number),
-                    value = weekDescription
-                )
-                DetailItem(
-                    modifier = Modifier.fillMaxWidth(),
-                    label = stringResource(R.string.period_number),
-                    value = periodDescription
-                )
-            }
-        } else {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(16.dp)
-            ) {
-                DetailItem(
-                    modifier = Modifier.weight(1f),
-                    label = stringResource(R.string.week_number),
-                    value = weekDescription
-                )
-                DetailItem(
-                    modifier = Modifier.weight(1f),
-                    label = stringResource(R.string.period_number),
-                    value = periodDescription
-                )
+            SegmentedColumn {
+                item {
+                    CardItem {
+                        Text(
+                            text = course.note,
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                }
             }
         }
     }
@@ -314,43 +305,6 @@ fun DetailItem(modifier: Modifier, label: String, value: String) {
 }
 
 @Composable
-private fun IconInfoRow(
-    icon: ImageVector,
-    title: String,
-    subtitle: String,
-    color: Color
-) {
-    Row(verticalAlignment = Alignment.CenterVertically) {
-        Surface(
-            shape = CircleShape,
-            color = color.copy(alpha = 0.1f)
-        ) {
-            Icon(
-                imageVector = icon,
-                contentDescription = null,
-                modifier = Modifier
-                    .padding(8.dp)
-                    .size(20.dp),
-                tint = color
-            )
-        }
-        Spacer(Modifier.width(16.dp))
-        Column {
-            Text(
-                text = title,
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.Bold
-            )
-            Text(
-                text = subtitle,
-                style = MaterialTheme.typography.labelSmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-        }
-    }
-}
-
-@Composable
 fun ActionButtons(
     horizontally: Boolean,
     onEdit: () -> Unit,
@@ -364,47 +318,56 @@ fun ActionButtons(
             FilledTonalButton(
                 modifier = Modifier
                     .weight(1f)
-                    .height(50.dp), onClick = onEdit
+                    .height(52.dp),
+                onClick = onEdit
             ) {
+                Icon(Icons.Default.Edit, contentDescription = null, modifier = Modifier.size(18.dp))
+                Spacer(Modifier.width(8.dp))
                 Text(stringResource(R.string.edit_course), fontWeight = FontWeight.Bold)
             }
             Button(
                 modifier = Modifier
                     .weight(1f)
-                    .height(50.dp),
+                    .height(52.dp),
                 onClick = onDelete,
                 colors = ButtonDefaults.buttonColors(
                     containerColor = MaterialTheme.colorScheme.errorContainer,
-                    contentColor = MaterialTheme.colorScheme.error
+                    contentColor = MaterialTheme.colorScheme.onErrorContainer
                 )
             ) {
-                Text(stringResource(R.string.delete))
+                Icon(Icons.Default.DeleteForever, contentDescription = null, modifier = Modifier.size(18.dp))
+                Spacer(Modifier.width(8.dp))
+                Text(stringResource(R.string.delete), fontWeight = FontWeight.Bold)
             }
         }
     } else {
         Column(
-            verticalArrangement = Arrangement.SpaceEvenly,
+            verticalArrangement = Arrangement.spacedBy(12.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             FilledTonalButton(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(50.dp), onClick = onEdit
+                    .height(52.dp),
+                onClick = onEdit
             ) {
+                Icon(Icons.Default.Edit, contentDescription = null, modifier = Modifier.size(18.dp))
+                Spacer(Modifier.width(8.dp))
                 Text(stringResource(R.string.edit_course), fontWeight = FontWeight.Bold)
             }
-            Spacer(modifier = Modifier.padding(6.dp))
             Button(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(50.dp),
+                    .height(52.dp),
                 onClick = onDelete,
                 colors = ButtonDefaults.buttonColors(
                     containerColor = MaterialTheme.colorScheme.errorContainer,
-                    contentColor = MaterialTheme.colorScheme.error
+                    contentColor = MaterialTheme.colorScheme.onErrorContainer
                 )
             ) {
-                Text(stringResource(R.string.delete))
+                Icon(Icons.Default.DeleteForever, contentDescription = null, modifier = Modifier.size(18.dp))
+                Spacer(Modifier.width(8.dp))
+                Text(stringResource(R.string.delete), fontWeight = FontWeight.Bold)
             }
         }
     }
@@ -417,24 +380,22 @@ private fun Set<Int>.toDisplayText(
     totalWeeks: Int,
     everyWeekStr: String,
     oddWeeksStr: String,
-    evenWeeksStr: String
+    evenWeeksStr: String,
+    customWeeksStr: String = ""
 ): String {
     if (isEmpty()) return ""
     val sorted = this.toList().sorted()
 
-    // 判断是否为每周
     if (sorted.size >= totalWeeks && sorted.containsAll((1..totalWeeks).toList())) {
         return everyWeekStr
     }
 
-    // 判断单双周
     val oddWeeks = (1..totalWeeks).filter { it % 2 != 0 }
     val evenWeeks = (1..totalWeeks).filter { it % 2 == 0 }
 
     if (sorted == oddWeeks) return oddWeeksStr
     if (sorted == evenWeeks) return evenWeeksStr
 
-    // 格式化范围，如 "1-3, 5, 7-10 周"
     val ranges = mutableListOf<String>()
     if (sorted.isNotEmpty()) {
         var start = sorted[0]
@@ -450,5 +411,5 @@ private fun Set<Int>.toDisplayText(
         }
         ranges.add(if (start == end) "$start" else "$start-$end")
     }
-    return ranges.joinToString(", ") + " 周"
+    return ranges.joinToString(", ") + " " + customWeeksStr
 }

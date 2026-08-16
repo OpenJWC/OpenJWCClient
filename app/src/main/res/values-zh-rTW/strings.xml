@@ -40,37 +40,33 @@
 # 第七條 聯繫與反饋\n\n
 如您對本協議有任何疑問或建議，歡迎通過項目開源平台提交反饋。對於具體的服務器運行、數據存儲等問題，請直接聯繫為您提供服務的私有化部署管理員。
     </string>
-    <string name="license" tools:ignore="TypographyOther">
-MIT License\n
-\n
-Copyright (c) 2026 OpenJWC\n
-\n
-Permission is hereby granted, free of charge, to any person obtaining a copy\n
-of this software and associated documentation files (the "Software"), to deal\n
-in the Software without restriction, including without limitation the rights\n
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell\n
-copies of the Software, and to permit persons to whom the Software is\n
-furnished to do so, subject to the following conditions:\n
-\n
-The above copyright notice and this permission notice shall be included in all\n
-copies or substantial portions of the Software.\n
-\n
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\n
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\n
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\n
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\n
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\n
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE\n
-SOFTWARE.\n
-    </string>
+    <string name="license">MIT License</string>
     <string name="confirm">確定</string>
     <string name="cancel">取消</string>
+
+    <string name="custom_background">自訂背景</string>
+    <string name="theme_color">主題顏色</string>
+    <string name="accessibility">輔助功能</string>
+    <string name="high_contrast_mode">高對比度模式</string>
+    <string name="use_background_seed_color">使用背景圖片提取主題色</string>
+    <string name="enable_blur_experimental">啟用實驗性背景模糊</string>
+    <string name="enable_blur">啟用模糊效果</string>
+    <string name="advanced_theme">進階主題設定</string>
+    <string name="background">背景</string>
+    <string name="seed_color">種子顏色</string>
+    <string name="dark_mode">深色模式</string>
+    <string name="light_mode">淺色模式</string>
+    <string name="theme_mode">主題模式</string>
+    <string name="share">分享</string>
+    <string name="reviewed_notices">投稿審核結果</string>
+    <string name="register">註冊</string>    <string name="ok">確定</string>
     <string name="upload_news">投稿資訊</string>
     <string name="back">返回</string>
     <string name="uploading">上傳中…</string>
     <string name="loading">載入中…</string>
     <string name="submit_upload">提交上傳</string>
-    <string name="basic_information">基本信息</string>
+    <string name="basic_information">基本資訊</string>
+    <string name="course_color">課程顏色</string>
     <string name="title">標題</string>
     <string name="label">標籤</string>
     <string name="date">日期</string>
@@ -195,6 +191,23 @@ SOFTWARE.\n
     <string name="introduction">簡介</string>
     <string name="check_for_updates">檢查更新</string>
     <string name="github">GitHub</string>
+    <string name="open_source_project">開源專案</string>
+
+    <string name="import_failed">匯入失敗：%1$s</string>
+    <string name="extractor_script_error">無法載入解析腳本</string>    <string name="mit_license">MIT 授權</string>
+    <string name="select_a_setting">選擇一個設定</string>
+    <string name="protocol">協定</string>
+    <string name="proxy_type">代理類型</string>
+    <string name="delete_session_confirm">確定要刪除此對話嗎？此操作無法復原。</string>
+    <string name="review_result_hint">投稿審核結果會顯示在這裡</string>
+    <string name="clear_logs">清除日誌</string>
+    <string name="no_chat_history">暫無聊天記錄</string>
+    <string name="required">必填</string>
+    <string name="license_title">授權</string>
+    <string name="predictive_back_animation">預測返回動畫</string>
+    <string name="animation_type">動畫類型</string>
+    <string name="exit_direction">退出方向</string>
+        <string name="clear_all_favorites">清除全部收藏</string>
     <string name="open_source_licenses">開源許可證</string>
 
     <string name="confirm_unbind">確認解綁</string>
@@ -269,6 +282,7 @@ SOFTWARE.\n
     <string name="logout_failed_with_code">注銷失敗 (%1$d): %2$s</string>
     <string name="copy_success">複製成功</string>
     <string name="already_latest_version">當前版本已是最新</string>
+    <string name="check_update">檢查更新</string>
     <string name="check_update_failed">檢查更新失敗</string>
     <string name="upload_success">上傳成功</string>
     <string name="load_error">加載錯誤: %1$s</string>
@@ -284,6 +298,7 @@ SOFTWARE.\n
     <!-- Timetable -->
     <string name="timetable">課程表</string>
     <string name="current_week">第 %d 週</string>
+    <string name="select_week">選擇週次</string>
     <string name="period_index">第 %d 節</string>
     <string name="last_week">上一週</string>
     <string name="next_week">下一週</string>
@@ -312,6 +327,7 @@ SOFTWARE.\n
     <string name="plan_from_scratch">從零開始規劃你的日程</string>
     <string name="no_timetables_yet">還沒有課表哦</string>
     <string name="import_timetable">導入課表</string>
+    <string name="import_hint">從教務系統自動匯入，或手動建立空白課表</string>
     <string name="starting_period">起始節次</string>
     <string name="lasting_periods">持續節數</string>
     <string name="every_week">每週</string>
@@ -353,13 +369,13 @@ SOFTWARE.\n
     <string name="no_weeks_selected">未選擇星期</string>
     <string name="click_me_when_you_see_the_timetable">看到課表後點我導入</string>
     <string name="edit_semester_config">編輯課表配置</string>
-    <string name="extracting_timetable">正在提取課表……</string>
+    <string name="extracting_timetable">正在提取課表</string>
+    <string name="page_load_failed">頁面載入失敗，請檢查網路連線</string>
     <string name="login_title">登錄東南大學教務處</string>
     <string name="period_count_too_small_warning">警告：當前設置的總節數 (%1$d) 小於已選課程的最大節次 (%2$d)。超出部分的課程將被隱藏！</string>
     <string name="edit_config_hint">修改周數、節次時間及開學日期</string>
     <string name="one_week_at_least">請至少選擇一週</string>
     <string name="course_conflict_format">%1$s 以及其他 %2$d 門課程</string>
-    <string name="import_failed">導入失敗: %1$s</string>
     <string name="widget_week_desc">本週課程</string>
     <string name="no_courses_today">今天沒有課，休息一下</string>
     <string name="section_format">%1$d-%2$d節</string>

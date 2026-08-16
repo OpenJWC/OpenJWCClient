@@ -98,17 +98,27 @@ fun UploadNewsScreen(navigator: Navigator, newsViewModel: NewsViewModel) {
     val datePickerState = rememberDatePickerState(initialDisplayMode = DisplayMode.Picker)
     val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd")
 
-    val titleError = if (titleState.text.isBlank()) "Required" else ""
-    val labelError = if (labelState.text.isBlank()) "Required" else ""
+    val titleError = if (titleState.text.isBlank()) stringResource(R.string.required) else ""
+    val labelError = if (labelState.text.isBlank()) stringResource(R.string.required) else ""
     val detailUrlError = when {
-        detailUrlState.text.isBlank() -> "Required"
-        !detailUrlState.text.toString().startsWith("http://") && !detailUrlState.text.toString().startsWith("https://") -> "Must be a valid URL"
+        detailUrlState.text.isBlank() -> stringResource(R.string.required)
+        !detailUrlState.text.toString().startsWith("http://") && !detailUrlState.text.toString().startsWith("https://") -> stringResource(R.string.invalid_url)
         else -> ""
     }
-    val contentError = if (contentState.text.isBlank()) "Required" else ""
-    val dateError = if (dateState.text.isBlank()) "Required" else ""
+    val contentError = if (contentState.text.isBlank()) stringResource(R.string.required) else ""
+    val dateError = if (dateState.text.isBlank()) stringResource(R.string.required) else ""
+    // 附件必须有内容且为有效 URL，否则禁止提交
+    val attachmentErrors = attachmentStates.map { state ->
+        val text = state.text.toString()
+        when {
+            text.isBlank() -> stringResource(R.string.required)
+            !text.startsWith("http://") && !text.startsWith("https://") -> stringResource(R.string.invalid_url)
+            else -> ""
+        }
+    }
+    val attachmentsValid = attachmentErrors.all { it.isEmpty() }
     val canSubmit = titleError.isEmpty() && labelError.isEmpty() && dateError.isEmpty() &&
-            detailUrlError.isEmpty() && contentError.isEmpty()
+            detailUrlError.isEmpty() && contentError.isEmpty() && attachmentsValid
     val scrollState = rememberScrollState()
 
     if (showDatePicker) {
@@ -188,10 +198,20 @@ fun UploadNewsScreen(navigator: Navigator, newsViewModel: NewsViewModel) {
                     attachmentStates.forEachIndexed { index, state ->
                         item {
                             Row(Modifier.fillMaxWidth(), verticalAlignment = androidx.compose.ui.Alignment.CenterVertically) {
-                                Icon(Icons.TwoTone.Link, null, Modifier.size(18.dp).padding(start = 4.dp), tint = MaterialTheme.colorScheme.onSurfaceVariant)
-                                Spacer(Modifier.width(8.dp))
                                 Column(Modifier.weight(1f)) {
-                                    SettingsTextFieldWidget(state = state, title = "URL $index")
+                                    SettingsTextFieldWidget(
+                                        state = state,
+                                        title = stringResource(R.string.attachment_placeholder, index),
+                                        error = attachmentErrors[index],
+                                        leadingContent = {
+                                            Icon(
+                                                Icons.TwoTone.Link,
+                                                null,
+                                                Modifier.size(18.dp).padding(start = 4.dp),
+                                                tint = MaterialTheme.colorScheme.onSurfaceVariant
+                                            )
+                                        }
+                                    )
                                 }
                                 Spacer(Modifier.width(4.dp))
                                 IconButton(onClick = { attachmentStates.removeAt(index) }) {

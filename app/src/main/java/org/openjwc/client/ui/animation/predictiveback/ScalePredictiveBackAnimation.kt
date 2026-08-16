@@ -16,6 +16,8 @@ import androidx.compose.animation.slideInHorizontally
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawWithContent
@@ -38,6 +40,7 @@ class ScalePredictiveBackAnimation(
     private var exitingPageKey: String? = null
     private val exitAnimatable = Animatable(0f)
     private var inPredictiveBackAnimation = false
+    private var inPredictiveBackState by mutableStateOf(false)
 
     override suspend fun onBackPressed(
         transitionState: NavigationEventTransitionState?,
@@ -90,13 +93,8 @@ class ScalePredictiveBackAnimation(
                     }
                 }
 
-                // navigation 3 break transition.targetState
-                // its state management is fully shit
-                // racing racing racing
-                // fuck fuck fuck
-                // so, We can't use LaunchedEffect to process that
-                // Just check transition.animateFloat's result to know currentStatus
                 inPredictiveBackAnimation = animatedScale != 1f
+                inPredictiveBackState = inPredictiveBackAnimation
 
                 // calculate WHERE is the scaled page
                 val progressInProgress = (transitionState as? InProgress)
@@ -153,7 +151,7 @@ class ScalePredictiveBackAnimation(
                 // alpha = 0.5 * (1f - animationProgress) (decrease alpha when increase progress)
                 // so, alpha will always in 0 - 0.5f
                 val modifier = if (transitionState is InProgress) {
-                    val progress = if (!inPredictiveBackAnimation) 1f else exitAnimatable.value
+                    val progress = if (!inPredictiveBackState) 1f else exitAnimatable.value
                     val dynamicAlpha = 0.5f * (1f - progress)
 
                     this

@@ -47,7 +47,7 @@ fun ChatInputBar(
     Surface(
         modifier = modifier,
         shape = RoundedCornerShape(20.dp),
-        color = MaterialTheme.colorScheme.surfaceContainerHigh,
+        color = MaterialTheme.colorScheme.surfaceContainerHigh.copy(org.openjwc.client.ui.theme.CardConfig.cardAlpha),
         shadowElevation = 0.dp
     ) {
         Column(

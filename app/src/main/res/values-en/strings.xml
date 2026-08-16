@@ -34,37 +34,34 @@ If a dispute occurs between the user and the original developer, it should be re
 # Article 7 Contact and Feedback\n\n
 If you have any questions or suggestions about this agreement, you are welcome to submit feedback through the project\'s open-source platform. For specific problems such as server operation and data storage, please contact the privatized deployment administrator who provides the service for you.
     </string>
-    <string name="license" tools:ignore="TypographyOther">
-MIT License\n
-\n
-Copyright (c) 2026 OpenJWC\n
-\n
-Permission is hereby granted, free of charge, to any person obtaining a copy\n
-of this software and associated documentation files (the \"Software\"), to deal\n
-in the Software without restriction, including without limitation the rights\n
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell\n
-copies of the Software, and to permit persons to whom the Software is\n
-furnished to do so, subject to the following conditions:\n
-\n
-The above copyright notice and this permission notice shall be included in all\n
-copies or substantial portions of the Software.\n
-\n
-THE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\n
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\n
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\n
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\n
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\n
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE\n
-SOFTWARE.\n
-    </string>
+    <string name="license">MIT License</string>
     <string name="confirm">OK</string>
     <string name="cancel">Cancel</string>
+
+    <string name="device_list_hint">After logging in, you can view and manage your authorized devices.</string>
+    <string name="custom_background">Custom Background</string>
+    <string name="theme_color">Theme Color</string>
+    <string name="accessibility">Accessibility</string>
+    <string name="high_contrast_mode">High Contrast Mode</string>
+    <string name="use_background_seed_color">Use background image for theme color</string>
+    <string name="enable_blur_experimental">Experimental Background Blur</string>
+    <string name="enable_blur">Enable Blur</string>
+    <string name="advanced_theme">Advanced Theme</string>
+    <string name="background">Background</string>
+    <string name="seed_color">Seed Color</string>
+    <string name="dark_mode">Dark Mode</string>
+    <string name="light_mode">Light Mode</string>
+    <string name="theme_mode">Theme Mode</string>
+    <string name="share">Share</string>
+    <string name="reviewed_notices">Submission Review Results</string>
+    <string name="register">Register</string>    <string name="ok">OK</string>
     <string name="upload_news">Upload News</string>
     <string name="back">Back</string>
     <string name="uploading">Uploading…</string>
     <string name="loading">Loading…</string>
     <string name="submit_upload">Submit</string>
     <string name="basic_information">Basic Information</string>
+    <string name="course_color">Course Color</string>
     <string name="title">Title</string>
     <string name="label">Label</string>
     <string name="date">Date</string>
@@ -189,6 +186,23 @@ SOFTWARE.\n
     <string name="introduction">Introduction</string>
     <string name="check_for_updates">Check for Updates</string>
     <string name="github">GitHub</string>
+    <string name="open_source_project">Open source project</string>
+
+    <string name="import_failed">Import failed: %1$s</string>
+    <string name="extractor_script_error">Cannot load extractor script</string>    <string name="mit_license">MIT License</string>
+    <string name="select_a_setting">Select a setting</string>
+    <string name="protocol">Protocol</string>
+    <string name="proxy_type">Proxy Type</string>
+    <string name="delete_session_confirm">Delete this session? This cannot be undone.</string>
+    <string name="review_result_hint">Submission review results will be shown here</string>
+    <string name="clear_logs">Clear logs</string>
+    <string name="no_chat_history">No chat history</string>
+    <string name="required">Required</string>
+    <string name="license_title">License</string>
+    <string name="predictive_back_animation">Predictive Back Animation</string>
+    <string name="animation_type">Animation Type</string>
+    <string name="exit_direction">Exit Direction</string>
+        <string name="clear_all_favorites">Clear all favorites</string>
     <string name="open_source_licenses">Open Source Licenses</string>
 
     <string name="confirm_unbind">Confirm Unbind</string>
@@ -262,7 +276,8 @@ SOFTWARE.\n
     <string name="logout_failed_with_code">Logout failed (%1$d): %2$s</string>
     <string name="copy_success">Copied to clipboard</string>
     <string name="already_latest_version">Already the latest version</string>
-    <string name="check_update_failed">Failed to check for updates</string>
+    <string name="check_update">Check for Updates</string>
+    <string name="check_update_failed">Check update failed</string>
     <string name="upload_success">Upload successful</string>
     <string name="load_error">Load error: %1$s</string>
     <string name="language">Language</string>
@@ -276,6 +291,7 @@ SOFTWARE.\n
     <!-- Timetable -->
     <string name="timetable">Timetable</string>
     <string name="current_week">Week %d</string>
+    <string name="select_week">Select Week</string>
     <string name="period_index">Period %d</string>
     <string name="last_week">Last Week</string>
     <string name="next_week">Next Week</string>
@@ -304,6 +320,7 @@ SOFTWARE.\n
     <string name="plan_from_scratch">Plan your schedule from scratch</string>
     <string name="no_timetables_yet">No timetables yet</string>
     <string name="import_timetable">Import Timetable</string>
+    <string name="import_hint">Import automatically from the academic office, or create a blank timetable</string>
     <string name="starting_period">Starting Period</string>
     <string name="lasting_periods">Duration (Periods)</string>
     <string name="every_week">Every Week</string>
@@ -345,13 +362,13 @@ SOFTWARE.\n
     <string name="no_weeks_selected">No weeks selected</string>
     <string name="click_me_when_you_see_the_timetable">Tap here to import when you see the timetable</string>
     <string name="edit_semester_config">Edit Semester Config</string>
-    <string name="extracting_timetable">Extracting timetable...</string>
+    <string name="extracting_timetable">Extracting timetable</string>
+    <string name="page_load_failed">Page failed to load. Check your network connection.</string>
     <string name="login_title">Login to SEU Educational System</string>
     <string name="period_count_too_small_warning">Warning: The total periods (%1$d) is less than the max period of some courses (%2$d). Some courses will be hidden!</string>
     <string name="edit_config_hint">Change weeks, period times, and start date</string>
     <string name="one_week_at_least">Please select at least one week</string>
     <string name="course_conflict_format">%1$s and %2$d other courses</string>
-    <string name="import_failed">Import failed: %1$s</string>
     <string name="widget_week_desc">Weekly Courses</string>
     <string name="no_courses_today">No classes today, take a break</string>
     <string name="section_format">Period %1$d-%2$d</string>

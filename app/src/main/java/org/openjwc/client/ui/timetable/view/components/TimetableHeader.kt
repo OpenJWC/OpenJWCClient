@@ -7,8 +7,12 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.*
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import kotlinx.coroutines.delay
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
@@ -37,7 +41,18 @@ fun TimetableHeader(
             .mapValues { weekStart.plusDays((it.key.value - 1).toLong()) }
     }
 
-    val today = remember { LocalDate.now() }
+    val today = remember { mutableStateOf(LocalDate.now()) }
+    LaunchedEffect(Unit) {
+        while (true) {
+            val now = LocalDate.now()
+            if (now != today.value) today.value = now
+            val millisToMidnight = java.time.Duration.between(
+                java.time.LocalDateTime.now(),
+                java.time.LocalDate.now().plusDays(1).atStartOfDay()
+            ).toMillis()
+            delay(millisToMidnight)
+        }
+    }
 
     Row(
         modifier = modifier
@@ -45,17 +60,25 @@ fun TimetableHeader(
             .height(titleHeight)
     ) {
         // 左侧节次栏的上方空白占位
-        Box(modifier = Modifier.width(timeLabelWidth))
+        Box(
+            modifier = Modifier
+                .width(timeLabelWidth)
+                .fillMaxHeight()
+                .background(MaterialTheme.colorScheme.surfaceContainer.copy(alpha = 0.5f))
+        )
 
         sortedVisibleDays.forEach { day ->
-            val dateOfThisDay = weekDates[day] ?: today
-            val isToday = dateOfThisDay == today
+            val dateOfThisDay = weekDates[day] ?: today.value
+            val isToday = dateOfThisDay == today.value
 
-            // 💡 2. 使用 Box + 权重，确保每一列严格对齐网格
             Column(
                 modifier = Modifier
                     .weight(1f)
-                    .fillMaxHeight(),
+                    .fillMaxHeight()
+                    .background(
+                        if (isToday) MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.25f)
+                        else Color.Transparent
+                    ),
                 verticalArrangement = Arrangement.Center,
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
@@ -71,7 +94,7 @@ fun TimetableHeader(
                 Spacer(modifier = Modifier.height(2.dp))
 
                 if (showDate) {
-                    // 💡 3. 日期部分：增加“胶囊”背景或圆形高亮（MD3 典型风格）
+                    // MD3E 胶囊形今天高亮
                     Surface(
                         shape = CircleShape,
                         color = if (isToday) MaterialTheme.colorScheme.primary

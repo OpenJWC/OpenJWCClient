@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Demo stage: server has no SSL certificate, allow cleartext globally.
+     TODO: Switch to cleartextTrafficPermitted="false" and force HTTPS before production. -->
+<network-security-config>
+    <base-config cleartextTrafficPermitted="true">
+        <trust-anchors>
+            <certificates src="system" />
+        </trust-anchors>
+    </base-config>
+</network-security-config>

@@ -6,7 +6,6 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.launch
 import org.openjwc.client.data.dao.ChatDao
 import org.openjwc.client.data.datastore.AuthDataSource
 import org.openjwc.client.data.datastore.SettingsDataSource
@@ -72,8 +71,9 @@ class ChatRepository(
         suspend fun deleteAllSessions() = chatDao.deleteAllSessions()
     */
 
-    private suspend fun handleFailure(aiMsgId: Long? = null) {
+    private suspend fun handleFailure(aiMsgId: Long? = null, userMsgId: Long? = null) {
         aiMsgId?.let { deleteMessageById(it) }
+        userMsgId?.let { deleteMessageById(it) }
     }
 
     fun sendMessage(
@@ -84,7 +84,7 @@ class ChatRepository(
         val currentSettings = settingsDataSource.userSettings.first()
         val authSession = authDataSource.authSession.first()
 
-        insertMessage(
+        val userMsgId = insertMessage(
             ChatMessage(
                 ownerSessionId = sessionId,
                 text = messageText,
@@ -137,20 +137,21 @@ class ChatRepository(
                             val currentTime = System.currentTimeMillis()
                             if (currentTime - lastWriteTime > 500L) {
                                 lastWriteTime = currentTime
-                                // 启动一个并行的非阻塞任务去更新数据库
-                                launch {
-                                    updateMessageText(aiMsgId, currentFullText)
-                                }
+                                updateMessageText(aiMsgId, currentFullText)
                             }
                         }
                         is ChatNetworkResult.Failure -> {
-                            handleFailure(aiMsgId)
+                            if (result.code == 401) {
+                                handleFailure(aiMsgId)
+                            } else {
+                                handleFailure(aiMsgId, userMsgId)
+                            }
                             emit(Failure(result.code, result.msg))
                             Logger.e(tag, "Failure: (${result.code}) ${result.msg}")
                             cancel(CancellationException("Network request failed"))
                         }
                         is ChatNetworkResult.Error -> {
-                            handleFailure(aiMsgId)
+                            handleFailure(aiMsgId, userMsgId)
                             emit(Failure(-1, result.msg))
                             Logger.e(tag, result.msg)
                             cancel(CancellationException("Network request failed"))
@@ -164,7 +165,7 @@ class ChatRepository(
 
         } catch (e: Exception) {
             if (e !is CancellationException) {
-                handleFailure(aiMsgId)
+                handleFailure(aiMsgId, userMsgId)
                 Logger.e(tag, e.localizedMessage ?: "Unknown Error")
                 emit(Failure(-1, e.localizedMessage ?: "Unknown Error"))
             }

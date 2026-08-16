@@ -121,7 +121,7 @@ fun SettingsScreen(
                         Screen.TimetablePrefs -> TimetableContent(settingsViewModel, timetableViewModel!!, contentModifier)
                         Screen.Log -> LogContent(navigator, modifier = contentModifier)
                         null -> Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                            Text("Select a setting", style = MaterialTheme.typography.bodyLarge, color = MaterialTheme.colorScheme.outline)
+                            Text(stringResource(R.string.select_a_setting), style = MaterialTheme.typography.bodyLarge, color = MaterialTheme.colorScheme.outline)
                         }
                         else -> {}
                     }

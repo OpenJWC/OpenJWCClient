@@ -2,7 +2,7 @@ package org.openjwc.client.log
 
 import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.mutableStateListOf
-import kotlinx.coroutines.launch
+import androidx.compose.runtime.snapshots.Snapshot
 import java.util.concurrent.atomic.AtomicLong
 
 object Logger {
@@ -25,7 +25,9 @@ object Logger {
         val message: String
     )
 
+    @Volatile
     private var isDebug = true
+    @Volatile
     private var maxEntries = 500
 
     val logHistory = mutableStateListOf<LogEntry>()
@@ -81,7 +83,7 @@ object Logger {
             message = message
         )
 
-        kotlinx.coroutines.MainScope().launch {
+        Snapshot.withMutableSnapshot {
             logHistory.add(0, entry)
             if (logHistory.size > maxEntries) {
                 logHistory.removeAt(logHistory.size - 1)

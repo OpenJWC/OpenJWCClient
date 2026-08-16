@@ -68,7 +68,7 @@ fun NewsScreen(
     var selectedNoticeForMenu by remember { mutableStateOf<FetchedNotice?>(null) }
     var showMenu by remember { mutableStateOf(false) }
 
-    LaunchedEffect(tabs) { newsViewModel.loadLabels() }
+    LaunchedEffect(Unit) { newsViewModel.loadLabels() }
 
     Box(modifier = modifier) {
         if (tabs.isEmpty()) {

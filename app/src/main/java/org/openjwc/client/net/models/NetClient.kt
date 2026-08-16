@@ -39,12 +39,13 @@ object NetClient {
         }
         response
     }
-    private val serviceCache = mutableMapOf<Pair<String, Proxy>, NetService>()
-    private val clientCache = mutableMapOf<Proxy, OkHttpClient>()
+    private val serviceCache = java.util.concurrent.ConcurrentHashMap<Pair<String, Proxy>, NetService>()
+    private val clientCache = java.util.concurrent.ConcurrentHashMap<Proxy, OkHttpClient>()
 
     private val json = Json {
         ignoreUnknownKeys = true
         coerceInputValues = true
+        isLenient = true
     }
 
     fun getService(host: String, port: Int, useHttp: Boolean, proxy: Proxy): NetService {
@@ -55,7 +56,7 @@ object NetClient {
             is Proxy.HttpProxy -> java.net.Proxy(java.net.Proxy.Type.HTTP, java.net.InetSocketAddress(proxy.host, proxy.port))
             is Proxy.SocksProxy -> java.net.Proxy(java.net.Proxy.Type.SOCKS, java.net.InetSocketAddress(proxy.host, proxy.port))
         }
-        val okHttpClient = clientCache.getOrPut(proxy) {
+        val okHttpClient = clientCache.computeIfAbsent(proxy) {
             OkHttpClient.Builder()
                 .addInterceptor(authInterceptor)
                 .addInterceptor(loggingInterceptor)
@@ -65,7 +66,7 @@ object NetClient {
                 .build()
         }
 
-        return serviceCache.getOrPut(Pair(baseUrl, proxy)) {
+        return serviceCache.computeIfAbsent(Pair(baseUrl, proxy)) {
             Retrofit.Builder()
                 .baseUrl(baseUrl)
                 .client(okHttpClient)
@@ -158,6 +159,12 @@ interface NetService {
     ): Response<ResponseBody>
 }
 
+val networkJson = Json {
+    ignoreUnknownKeys = true
+    coerceInputValues = true
+    isLenient = true
+}
+
 suspend inline fun <reified T> fetch(
     label: String = "NetworkFetch",
     level: Logger.Level = Logger.Level.DEBUG,
@@ -165,11 +172,6 @@ suspend inline fun <reified T> fetch(
 ): NetworkResult<T> = withContext(Dispatchers.IO) {
     runCatching {
         val response = request()
-        val networkJson = Json {
-            ignoreUnknownKeys = true
-            coerceInputValues = true
-            isLenient = true
-        }
         if (response.isSuccessful) {
             val rawBody = response.body()?.string()
             Logger.log(label, "Success: $rawBody", level)
@@ -186,6 +188,7 @@ suspend inline fun <reified T> fetch(
             NetworkResult.Failure(response.code(), errorMsg)
         }
     }.getOrElse { e ->
+        if (e is kotlinx.coroutines.CancellationException) throw e
         Logger.e(label, "Exception: ${e.message}", e)
         NetworkResult.Error("Error: ${e.localizedMessage}")
     }

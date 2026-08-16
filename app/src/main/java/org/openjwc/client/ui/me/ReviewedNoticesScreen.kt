@@ -76,7 +76,7 @@ fun ReviewedNoticesScreen(navigator: Navigator, newsViewModel: NewsViewModel) {
                     Spacer(Modifier.height(16.dp))
                     Text(stringResource(R.string.no_upload_records), style = MaterialTheme.typography.titleLarge, color = MaterialTheme.colorScheme.onSurface)
                     Spacer(Modifier.height(8.dp))
-                    Text("投稿审核结果会显示在这里", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    Text(stringResource(R.string.review_result_hint), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
             }
         } else {
@@ -84,7 +84,7 @@ fun ReviewedNoticesScreen(navigator: Navigator, newsViewModel: NewsViewModel) {
                 modifier = Modifier.fillMaxSize().nestedScroll(scrollBehavior.nestedScrollConnection).padding(innerPadding),
                 contentPadding = PaddingValues(16.dp)
             ) {
-                items(reviews) { r ->
+                items(reviews, key = { it.id }) { r ->
                     Spacer(Modifier.height(10.dp))
                     ReviewCard(r)
                 }
@@ -99,9 +99,9 @@ private fun ReviewCard(r: org.openjwc.client.net.models.ReviewedNotice) {
     val bgColor: Color
     val statusText: String
     when (r.status) {
-        "approved" -> { icon = Icons.TwoTone.CheckCircle; bgColor = Color(0xFF2E7D32); statusText = "审核通过" }
-        "rejected" -> { icon = Icons.TwoTone.Error; bgColor = Color(0xFFC62828); statusText = "审核未通过" }
-        else -> { icon = Icons.TwoTone.HourglassEmpty; bgColor = Color(0xFFE65100); statusText = "审核中" }
+        "approved" -> { icon = Icons.TwoTone.CheckCircle; bgColor = Color(0xFF2E7D32); statusText = stringResource(R.string.approved) }
+        "rejected" -> { icon = Icons.TwoTone.Error; bgColor = Color(0xFFC62828); statusText = stringResource(R.string.rejected) }
+        else -> { icon = Icons.TwoTone.HourglassEmpty; bgColor = Color(0xFFE65100); statusText = stringResource(R.string.pending) }
     }
 
     Box(

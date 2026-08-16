@@ -25,6 +25,7 @@ import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import org.openjwc.client.R
 import org.openjwc.client.data.appPreferences
 import org.openjwc.client.navigation3.Navigator
 import org.openjwc.client.ui.component.settings.AppBackButton
@@ -42,7 +43,7 @@ fun ThemeSettingsScreen(navigator: Navigator) {
     Scaffold(
         topBar = {
             LargeFlexibleTopAppBar(
-                title = { Text("Advanced Theme") },
+                title = { Text(stringResource(R.string.advanced_theme)) },
                 navigationIcon = { AppBackButton(onClick = { navigator.pop() }) },
                 scrollBehavior = scrollBehavior,
                 colors = TopAppBarDefaults.topAppBarColors(
@@ -70,22 +71,22 @@ fun ThemeSettingsContent(modifier: Modifier = Modifier) {
             .verticalScroll(rememberScrollState())
             .padding(bottom = 32.dp)
     ) {
-        SegmentedColumn(title = "Accessibility") {
+        SegmentedColumn(title = stringResource(R.string.accessibility)) {
             item {
                 SettingsSwitchWidget(
                     icon = Icons.TwoTone.Contrast,
-                    title = "High Contrast Mode",
+                    title = stringResource(R.string.high_contrast_mode),
                     checked = ThemeConfig.isHighContrastMode,
                     onCheckedChange = { BackgroundManager.saveEnableHighContrastMode(context, it) }
                 )
             }
         }
 
-        SegmentedColumn(title = "Predictive Back Animation") {
+        SegmentedColumn(title = stringResource(R.string.predictive_back_animation)) {
             item {
                 SettingsChooseWidget(
                     icon = Icons.TwoTone.Swipe,
-                    title = "Animation Type",
+                    title = stringResource(R.string.animation_type),
                     items = listOf("AOSP", "Scale", "KernelSU Classic", "MIUIX", "None"),
                     selectedIndex = when (ThemeConfig.predictiveBackAnimation) {
                         "AOSP" -> 0
@@ -104,7 +105,7 @@ fun ThemeSettingsContent(modifier: Modifier = Modifier) {
             item {
                 SettingsChooseWidget(
                     icon = Icons.TwoTone.OpenInFull,
-                    title = "Exit Direction",
+                    title = stringResource(R.string.exit_direction),
                     items = listOf("FOLLOW_GESTURE", "ALWAYS_RIGHT", "ALWAYS_LEFT"),
                     selectedIndex = when (ThemeConfig.predictiveBackExitDirection) {
                         "FOLLOW_GESTURE" -> 0

@@ -74,18 +74,28 @@ class SettingsViewModel(
     fun devicesQuery() {
         viewModelScope.launch {
             _isLoadingDeviceResult.value = true
-            _deviceResult.value = authRepository.deviceQuery()
-            _isLoadingDeviceResult.value = false
+            try {
+                _deviceResult.value = authRepository.deviceQuery()
+            } catch (e: Exception) {
+                Logger.e(label, "devicesQuery error: ${e.localizedMessage}")
+            } finally {
+                _isLoadingDeviceResult.value = false
+            }
         }
     }
 
     fun unbindAndRefresh(deviceId: String) {
         viewModelScope.launch {
             _isLoadingDeviceResult.value = true
-            val unbindResult = authRepository.deviceUnbind(deviceId)
-            _deviceUnbindNetworkResult.value = unbindResult
-            if (unbindResult is NetworkResult.Success) {
-                devicesQuery()
+            try {
+                val unbindResult = authRepository.deviceUnbind(deviceId)
+                _deviceUnbindNetworkResult.value = unbindResult
+                if (unbindResult is NetworkResult.Success) {
+                    _deviceResult.value = authRepository.deviceQuery()
+                }
+            } catch (e: Exception) {
+                Logger.e(label, "unbindAndRefresh error: ${e.localizedMessage}")
+            } finally {
                 _isLoadingDeviceResult.value = false
             }
         }

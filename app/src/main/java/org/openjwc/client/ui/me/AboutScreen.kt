@@ -2,6 +2,7 @@ package org.openjwc.client.ui.me
 
 import android.content.Intent
 import android.net.Uri
+import android.widget.Toast
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -17,6 +18,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.twotone.Code
 import androidx.compose.material.icons.twotone.Gavel
+import androidx.compose.material.icons.twotone.SystemUpdate
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.LargeFlexibleTopAppBar
 import androidx.compose.material3.MaterialTheme
@@ -26,6 +28,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.rememberTopAppBarState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -47,13 +50,28 @@ import org.openjwc.client.navigation3.Navigator
 import org.openjwc.client.ui.component.settings.AppBackButton
 import org.openjwc.client.ui.component.settings.SegmentedColumn
 import org.openjwc.client.ui.component.settings.SettingsJumpPageWidget
+import org.openjwc.client.viewmodels.MainViewModel
+import org.openjwc.client.viewmodels.UiEvent
+import org.openjwc.client.viewmodels.UiText
 
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
-fun AboutScreen(navigator: Navigator) {
+fun AboutScreen(navigator: Navigator, mainViewModel: MainViewModel) {
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior(rememberTopAppBarState())
     val scrollState = rememberScrollState()
     val context = LocalContext.current
+
+    // 消费检查更新的结果 Toast
+    LaunchedEffect(Unit) {
+        for (event in mainViewModel.uiEvent) {
+            when (event) {
+                is UiEvent.ShowToast ->
+                    Toast.makeText(context, event.uiText.asString(context), Toast.LENGTH_SHORT).show()
+                is UiEvent.ShowSnackBar ->
+                    Toast.makeText(context, event.uiText.asString(context), Toast.LENGTH_SHORT).show()
+            }
+        }
+    }
 
     Scaffold(
         topBar = {
@@ -84,14 +102,14 @@ fun AboutScreen(navigator: Navigator) {
                             .data(R.mipmap.ic_launcher)
                             .crossfade(true)
                             .build(),
-                        contentDescription = "App Icon",
+                        contentDescription = stringResource(R.string.app_icon_description),
                         modifier = Modifier.size(80.dp).clip(RoundedCornerShape(20.dp)),
                         contentScale = ContentScale.Crop
                     )
                     Spacer(Modifier.height(12.dp))
                     Text(stringResource(R.string.app_name), style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
                     Spacer(Modifier.height(4.dp))
-                    Text("Version ${BuildConfig.VERSION_NAME} (${BuildConfig.VERSION_CODE})", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    Text(stringResource(R.string.version_label, BuildConfig.VERSION_NAME), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
             }
 
@@ -112,17 +130,28 @@ fun AboutScreen(navigator: Navigator) {
             SegmentedColumn {
                 item {
                     SettingsJumpPageWidget(
+                        icon = Icons.TwoTone.SystemUpdate,
+                        title = stringResource(R.string.check_update),
+                        onClick = { mainViewModel.checkUpdate(showToast = true) }
+                    )
+                }
+                item {
+                    SettingsJumpPageWidget(
                         icon = Icons.TwoTone.Code,
-                        title = "GitHub",
-                        description = "Open source project",
-                        onClick = { context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse("https://github.com/OpenJWC"))) }
+                        title = stringResource(R.string.github),
+                        description = stringResource(R.string.open_source_project),
+                        onClick = {
+                            try {
+                                context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse("https://github.com/OpenJWC")))
+                            } catch (_: Exception) {}
+                        }
                     )
                 }
                 item {
                     SettingsJumpPageWidget(
                         icon = Icons.TwoTone.Gavel,
-                        title = stringResource(R.string.license),
-                        description = "MIT License",
+                        title = stringResource(R.string.license_title),
+                        description = stringResource(R.string.mit_license),
                         onClick = { navigator.push(Screen.License) }
                     )
                 }

@@ -158,14 +158,14 @@ fun ThemeContent(navigator: Navigator, modifier: Modifier = Modifier) {
                 item {
                     SettingsBaseWidget(
                         icon = Icons.TwoTone.Wallpaper,
-                        title = "Clear Background",
+                        title = stringResource(R.string.clear_background),
                         onClick = { BackgroundManager.clearCustomBackground(context) }
                     ) {}
                 }
                 item {
                     SettingsChooseWidget(
                         icon = Icons.TwoTone.Opacity,
-                        title = "Background Dim",
+                        title = stringResource(R.string.background_alpha),
                         items = (0..10).map { "${it * 10}%" },
                         selectedIndex = (ThemeConfig.backgroundDim * 10f).toInt().coerceIn(0, 10),
                         onSelectedIndexChange = { BackgroundManager.saveBackgroundDim(context, it / 10f) }

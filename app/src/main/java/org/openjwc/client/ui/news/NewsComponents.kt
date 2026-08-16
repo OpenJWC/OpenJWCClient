@@ -33,6 +33,7 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.FilledTonalButton
+import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -159,8 +160,8 @@ fun NewsCard(notice: FetchedNotice, freshDays: Int?, isFavorited: Boolean,
 @Composable
 fun BackToTopButton(visible: Boolean, onClick: () -> Unit, modifier: Modifier) {
     AnimatedVisibility(visible = visible, enter = fadeIn() + scaleIn(), exit = scaleOut(), modifier = modifier.padding(12.dp)) {
-        FilledTonalButton(onClick = onClick, modifier = Modifier.size(40.dp), shape = RoundedCornerShape(12.dp), contentPadding = PaddingValues(0.dp)) {
-            Icon(Icons.Default.ArrowUpward, stringResource(R.string.back_to_top), Modifier.size(20.dp))
+        FloatingActionButton(onClick = onClick) {
+            Icon(Icons.Default.ArrowUpward, stringResource(R.string.back_to_top), Modifier.size(24.dp))
         }
     }
 }

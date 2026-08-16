@@ -29,27 +29,19 @@ fun CourseColumnScope(
         courses.filter { it.dayOfWeek == day }
     }
 
-    Box(modifier = modifier.height(periodHeight * totalPeriods)) {
-        // 1. 分离本周和非本周
-        val (thisWeek, otherWeeks) = remember(dayCourses, currentWeek) {
-            dayCourses.partition { it.weekRule.contains(currentWeek) }
-        }
+    // 预计算本列的派生布局数据（本周/非本周课程、占用节次、非本周块切分），
+    // 避免每次重组都重新 flatMap + findContinuousBlocks
+    val layout = remember(dayCourses, currentWeek, showNonCurrentWeek) {
+        val (thisWeek, otherWeeks) = dayCourses.partition { it.weekRule.contains(currentWeek) }
 
-        // 💡 修正 2：建立一个已占用节次的集合，用于“防重叠”
         // 初始占用者是【本周课程】
-        // 注意：这里不要使用 remember，因为我们在下面循环中会通过 addAll 修改它。
-        // 如果使用 remember，当 courses 变化但 thisWeek 内容不变时，会拿到上一次重组污染后的 Set 实例。
         val occupiedPeriods = thisWeek.flatMap { c -> c.startPeriod until (c.startPeriod + c.duration) }
             .toMutableSet()
 
-        // 2. 绘制非本周课程（背景层）
+        // 绘制非本周课程（背景层），排序：优先显示长课
+        val otherBlocks = mutableListOf<Pair<Course, List<Int>>>()
         if (showNonCurrentWeek) {
-            // 排序：优先显示长课（大课），或者你可以根据需求调整排序
-            val sortedOtherWeeks = remember(otherWeeks) {
-                otherWeeks.sortedByDescending { it.duration }
-            }
-
-            sortedOtherWeeks.forEach { course ->
+            otherWeeks.sortedByDescending { it.duration }.forEach { course ->
                 val courseRange = (course.startPeriod until (course.startPeriod + course.duration))
 
                 // 找出当前非本周课程中，哪些节次没被占（裁剪逻辑）
@@ -57,21 +49,31 @@ fun CourseColumnScope(
 
                 if (visiblePeriods.isNotEmpty()) {
                     TimetableGridUtils.findContinuousBlocks(visiblePeriods).forEach { block ->
-                        CourseBlock(
-                            course = course,
-                            isCurrentWeek = false,
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .offset(y = periodHeight * (block.first() - 1))
-                                .height(periodHeight * block.size)
-                                .zIndex(1f),
-                            onClick = onCourseClick
-                        )
+                        otherBlocks.add(course to block)
                     }
-                    // 💡 修正 3：绘制完一段非本周课，也要更新占位，防止其他非本周课盖上来
+                    // 绘制完一段非本周课，也要更新占位，防止其他非本周课盖上来
                     occupiedPeriods.addAll(visiblePeriods)
                 }
             }
+        }
+
+        Triple(thisWeek, otherBlocks, occupiedPeriods)
+    }
+    val (thisWeek, otherBlocks, _) = layout
+
+    Box(modifier = modifier.height(periodHeight * totalPeriods)) {
+        // 2. 绘制非本周课程（背景层）
+        otherBlocks.forEach { (course, block) ->
+            CourseBlock(
+                course = course,
+                isCurrentWeek = false,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .offset(y = periodHeight * (block.first() - 1))
+                    .height(periodHeight * block.size)
+                    .zIndex(1f),
+                onClick = onCourseClick
+            )
         }
 
         // 3. 绘制本周课程（顶层，遮盖一切）

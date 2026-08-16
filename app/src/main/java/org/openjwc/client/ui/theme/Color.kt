@@ -123,7 +123,7 @@ object ThemeSeedColors {
     val Gray = Color(0xFF5B5C5C)
     val Yellow = Color(0xFF6D5E0F)
     val Sakura = Color(0xFFB8708C)
-    val Blue = Color(0xFF415F91)
+    val Blue = Color(0xFF0061A4)
     val Teal = Color(0xFF1E6E6E)
 
     val all = listOf(Default, Green, Purple, Orange, Pink, Gray, Yellow, Sakura, Blue, Teal)

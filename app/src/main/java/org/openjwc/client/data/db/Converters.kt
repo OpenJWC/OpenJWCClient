@@ -32,17 +32,23 @@ class Converters {
     fun fromStringList(value: List<String>?): String? = value?.let { json.encodeToString(it) }
 
     @TypeConverter
-    fun toStringList(value: String?): List<String>? = value?.let {
-        try { json.decodeFromString<List<String>>(it) } catch (e: Exception) { null }
-    }
+    fun toStringList(value: String?): List<String> = value?.let {
+        try { json.decodeFromString<List<String>>(it) } catch (e: Exception) {
+            Logger.e(tag, "Failed to decode String list: ${e.localizedMessage}")
+            emptyList()
+        }
+    } ?: emptyList()
 
     @TypeConverter
     fun fromIntSet(value: Set<Int>?): String? = value?.let { json.encodeToString(it) }
 
     @TypeConverter
-    fun toIntSet(value: String?): Set<Int>? = value?.let {
-        try { json.decodeFromString<Set<Int>>(it) } catch (e: Exception) { null }
-    }
+    fun toIntSet(value: String?): Set<Int> = value?.let {
+        try { json.decodeFromString<Set<Int>>(it) } catch (e: Exception) {
+            Logger.e(tag, "Failed to decode Int set: ${e.localizedMessage}")
+            emptySet()
+        }
+    } ?: emptySet()
 
     // DayOfWeek (映射为 Int)
     @TypeConverter

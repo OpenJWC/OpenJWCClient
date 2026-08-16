@@ -65,7 +65,9 @@ class SettingsDataSource(private val context: Context) {
         val default = UserSettings()
         default.copy(
             policyAgreed = prefs[Keys.POLICY_AGREED] ?: default.policyAgreed,
-            themeColor = prefs[Keys.THEME_COLOR]?.toColorType() ?: default.themeColor,
+            themeColor = prefs[Keys.THEME_COLOR]?.let {
+                runCatching { it.toColorType() }.getOrDefault(default.themeColor)
+            } ?: default.themeColor,
             themeStyle = prefs[Keys.THEME_STYLE]?.let {
                 runCatching { DarkThemeStyle.valueOf(it) }.getOrDefault(default.themeStyle)
             } ?: default.themeStyle,

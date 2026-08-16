@@ -1,5 +1,7 @@
 package org.openjwc.client.navigation3
 
+import android.content.Intent
+import android.net.Uri
 import androidx.compose.animation.AnimatedContentTransitionScope
 import androidx.compose.animation.ContentTransform
 import androidx.compose.foundation.background
@@ -14,11 +16,14 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.window.DialogProperties
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.draw.paint
@@ -83,6 +88,8 @@ import org.openjwc.client.viewmodels.TimetableViewModel
 import org.openjwc.client.viewmodels.TimetableViewModelFactory
 import org.openjwc.client.viewmodels.AuthViewModel
 import org.openjwc.client.viewmodels.AuthViewModelFactory
+import org.openjwc.client.viewmodels.MeViewModel
+import org.openjwc.client.viewmodels.MeViewModelFactory
 import org.openjwc.client.data.appPreferences
 import org.openjwc.client.ui.animation.predictiveback.AOSPCrossActivityAnimation
 import org.openjwc.client.ui.animation.predictiveback.KernelSUClassicPredictiveBackAnimation
@@ -91,6 +98,7 @@ import org.openjwc.client.ui.animation.predictiveback.NoPredictiveBackAnimation
 import org.openjwc.client.ui.animation.predictiveback.PredictiveBackExitDirection
 import org.openjwc.client.ui.animation.predictiveback.ScalePredictiveBackAnimation
 import org.openjwc.client.ui.main.MainScreen
+import org.openjwc.client.ui.main.UpdateDialog
 import org.openjwc.client.ui.theme.ThemeConfig
 import org.openjwc.client.ui.theme.backgroundImagePainter
 import org.openjwc.client.ui.util.LocalBackgroundBlurAnchor
@@ -124,6 +132,32 @@ fun NavContainer() {
     val timetableViewModel: TimetableViewModel = viewModel(factory = TimetableViewModelFactory(courseRepository, settingsRepository))
     val settingsViewModel: SettingsViewModel = viewModel(factory = SettingsViewModelFactory(settingsRepository, authRepository))
     val authViewModel: AuthViewModel = viewModel(factory = AuthViewModelFactory(authRepository))
+    val meViewModel: MeViewModel = viewModel(factory = MeViewModelFactory(settingsRepository))
+
+    // 启动时检查更新
+    LaunchedEffect(Unit) {
+        mainViewModel.checkUpdate(showToast = false)
+    }
+
+    val showUpdate by mainViewModel.showUpdateDialog.collectAsState()
+    val updateRelease = mainViewModel.updateRelease.collectAsState().value
+    if (showUpdate && updateRelease != null) {
+        Dialog(
+            onDismissRequest = { mainViewModel.dismissUpdateDialog() },
+            properties = DialogProperties(usePlatformDefaultWidth = false)
+        ) {
+            UpdateDialog(
+                gitHubRelease = updateRelease,
+                onDismiss = { mainViewModel.dismissUpdateDialog() },
+                onUpdate = {
+                    mainViewModel.dismissUpdateDialog()
+                    try {
+                        context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(updateRelease.htmlUrl)))
+                    } catch (_: Exception) {}
+                }
+            )
+        }
+    }
 
     val animType = ThemeConfig.predictiveBackAnimation
     val exitDir = ThemeConfig.predictiveBackExitDirection
@@ -201,7 +235,7 @@ fun NavContainer() {
                                 Box(
                                     modifier = Modifier
                                         .fillMaxSize()
-                                        .zIndex(-1f)
+                                        .zIndex(0f)
                                         .onGloballyPositioned { newCoordinates ->
                                             backgroundBlurAnchorCoordinates =
                                                 newCoordinates.takeIf { coordinates ->
@@ -223,11 +257,11 @@ fun NavContainer() {
             }
         ),
         entryProvider = entryProvider {
-            entry<Screen.Main> { MainScreen(navigator, mainViewModel, chatViewModel, newsViewModel, timetableViewModel, settingsViewModel) }
+            entry<Screen.Main> { MainScreen(navigator, mainViewModel, chatViewModel, newsViewModel, timetableViewModel, settingsViewModel, meViewModel) }
             entry<Screen.Settings> { SettingsScreen(navigator, settingsViewModel, authViewModel, newsViewModel, timetableViewModel) }
             entry<Screen.Theme> { ThemeScreen(navigator) }
             entry<Screen.ThemeSettings> { ThemeSettingsScreen(navigator) }
-            entry<Screen.About> { AboutScreen(navigator) }
+            entry<Screen.About> { AboutScreen(navigator, mainViewModel) }
             entry<Screen.Host> { HostScreen(navigator, settingsViewModel) }
             entry<Screen.Login> { LoginScreen(navigator, authViewModel) }
             entry<Screen.Register> { RegisterScreen(navigator, authViewModel) }

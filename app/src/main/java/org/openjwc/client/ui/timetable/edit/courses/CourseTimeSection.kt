@@ -30,7 +30,6 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import org.openjwc.client.R
 import org.openjwc.client.data.models.Course
-import org.openjwc.client.ui.timetable.edit.components.ErrorBox
 import java.time.DayOfWeek
 import java.time.format.TextStyle
 import java.util.Locale
@@ -99,37 +98,10 @@ fun CourseTimeSection(
     onPeriodChange: (Int, Int) -> Unit,
     conflictingCourses: List<Course>
 ) {
-    Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-        Text(
-            text = stringResource(R.string.class_time),
-            style = MaterialTheme.typography.titleSmall,
-            color = MaterialTheme.colorScheme.primary
-        )
-
+    Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
         DayOfWeekSelector(dayOfWeek, onDayChange)
 
         PeriodSelector(startPeriod, duration, maxPeriods, onPeriodChange)
-
-        if (conflictingCourses.isNotEmpty()) {
-            val conflictValue = when (conflictingCourses.size) {
-                1 -> conflictingCourses.first().name
-                2 -> conflictingCourses.first().name + ", " + conflictingCourses.last().name
-                else -> {
-                    val firstName = conflictingCourses.first().name + ", " + conflictingCourses[1].name
-                    val remainingCount = conflictingCourses.size - 2
-
-                    // 💡 统一口径：传入第一个名字和剩余个数
-                    stringResource(R.string.course_conflict_format, firstName, remainingCount)
-                }
-            }
-
-            ErrorBox(
-                text = stringResource(
-                    R.string.course_already_existed_during_this_period,
-                    conflictValue
-                )
-            )
-        }
     }
 }
 

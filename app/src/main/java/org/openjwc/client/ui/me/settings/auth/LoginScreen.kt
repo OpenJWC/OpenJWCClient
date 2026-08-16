@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.text.input.OutputTransformation
+import androidx.compose.foundation.text.input.TextFieldLineLimits
 import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
@@ -117,9 +118,11 @@ fun LoginContent(
     val passwordState = remember { TextFieldState() }
     var passwordVisible by remember { mutableStateOf(false) }
 
-    val canLogin = usernameState.text.isNotBlank() && passwordState.text.isNotBlank()
-    val usernameError = if (usernameState.text.isBlank()) "Required" else ""
-    val passwordError = if (passwordState.text.isBlank()) "Required" else ""
+    val usernameTrimmed = usernameState.text.toString().trim()
+    val passwordTrimmed = passwordState.text.toString().trim()
+    val canLogin = usernameTrimmed.isNotEmpty() && passwordTrimmed.isNotEmpty()
+    val usernameError = if (usernameTrimmed.isEmpty()) stringResource(R.string.required) else ""
+    val passwordError = if (passwordTrimmed.isEmpty()) stringResource(R.string.required) else ""
 
     Column(
         modifier = modifier
@@ -131,7 +134,8 @@ fun LoginContent(
                 SettingsTextFieldWidget(
                     state = usernameState,
                     title = stringResource(R.string.account),
-                    error = usernameError
+                    error = usernameError,
+                    lineLimits = TextFieldLineLimits.SingleLine
                 )
             }
             item {
@@ -141,6 +145,7 @@ fun LoginContent(
                     state = passwordState,
                     title = stringResource(R.string.password),
                     error = passwordError,
+                    lineLimits = TextFieldLineLimits.SingleLine,
                     outputTransformation = pwdTransform,
                     trailingContent = {
                         IconButton(
@@ -170,8 +175,8 @@ fun LoginContent(
         Button(
             onClick = {
                 authViewModel.login(
-                    usernameState.text.toString().trim(),
-                    passwordState.text.toString().trim()
+                    usernameTrimmed,
+                    passwordTrimmed
                 )
             },
             enabled = canLogin && !isLoggingIn,

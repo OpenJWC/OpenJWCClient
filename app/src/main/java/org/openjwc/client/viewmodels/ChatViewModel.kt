@@ -42,14 +42,19 @@ class ChatViewModel(
 ) : ViewModel() {
     private val label = "ChatViewModel"
     private val _sessionStates = MutableStateFlow<Map<Long?, ChatSessionState>>(emptyMap())
+    private val sessionStateCache = java.util.concurrent.ConcurrentHashMap<Long, StateFlow<ChatSessionState>>()
+    private val NULL_SESSION_KEY = Long.MIN_VALUE
 
     fun getSessionState(sessionId: Long?): StateFlow<ChatSessionState> {
-        return _sessionStates.map { it[sessionId] ?: ChatSessionState.Idle }
-            .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), ChatSessionState.Idle)
+        val cacheKey = sessionId ?: NULL_SESSION_KEY
+        return sessionStateCache.computeIfAbsent(cacheKey) {
+            _sessionStates.map { it[sessionId] ?: ChatSessionState.Idle }
+                .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), ChatSessionState.Idle)
+        }
     }
 
     private fun updateSessionState(sessionId: Long?, state: ChatSessionState) {
-        _sessionStates.value = _sessionStates.value + (sessionId to state)
+        _sessionStates.update { it + (sessionId to state) }
     }
 
     var currentSessionMetadata = MutableStateFlow<ChatMetadata?>(null)
@@ -205,7 +210,7 @@ class ChatViewModel(
     fun deleteSession(sessionId: Long) {
         viewModelScope.launch {
             chatRepository.deleteSession(sessionId)
-            _sessionStates.value -= sessionId
+            _sessionStates.update { it - sessionId }
             if (currentSessionMetadata.value?.sessionId == sessionId) {
                 currentSessionMetadata.value = null
             }

@@ -141,7 +141,8 @@ class TimetableViewModel(
                     }
                     _activePeriodIndex.value = index
                 }
-                delay(60000)
+                val delayMillis = 60_000 - (System.currentTimeMillis() % 60_000)
+                delay(delayMillis)
             }
         }
     }

@@ -42,12 +42,7 @@ fun CourseWeekRuleSection(
     val oddWeeks = (1..totalWeeks).filter { it % 2 != 0 }.toSet()
     val evenWeeks = (1..totalWeeks).filter { it % 2 == 0 }.toSet()
 
-    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-        Text(
-            stringResource(R.string.week_range),
-            style = MaterialTheme.typography.titleSmall,
-            color = MaterialTheme.colorScheme.primary
-        )
+    Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
         Text(
             text = weekRule.toDisplayText(
                 totalWeeks = totalWeeks,

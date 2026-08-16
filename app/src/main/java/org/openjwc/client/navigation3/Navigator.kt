@@ -23,7 +23,7 @@ class Navigator(
 ) {
     val backStack: SnapshotStateList<NavKey> = mutableStateListOf(initialKey)
 
-    private val resultBus = mutableMapOf<String, MutableSharedFlow<Any>>()
+    private val resultBus = java.util.concurrent.ConcurrentHashMap<String, MutableSharedFlow<Any>>()
 
     /**
      * Push a key onto the back stack.
@@ -133,7 +133,7 @@ class Navigator(
     }
 
     private fun ensureChannel(key: String): MutableSharedFlow<Any> {
-        return resultBus.getOrPut(key) { MutableSharedFlow(replay = 1, extraBufferCapacity = 0) }
+        return resultBus.computeIfAbsent(key) { MutableSharedFlow(replay = 1, extraBufferCapacity = 1) }
     }
 
     companion object {

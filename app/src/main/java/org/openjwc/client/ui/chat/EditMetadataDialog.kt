@@ -50,7 +50,7 @@ fun EditMetadataDialog(
                     singleLine = true,
                     trailingIcon = {
                         if (title.isNotEmpty()) {
-                            IconButton(onClick = { title = "" }) { Icon(Icons.Default.Clear, contentDescription = "清除") }
+                            IconButton(onClick = { title = "" }) { Icon(Icons.Default.Clear, contentDescription = stringResource(R.string.clear)) }
                         }
                     }
                 )

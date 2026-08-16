@@ -12,6 +12,10 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.input.TextFieldState
+import androidx.compose.foundation.text.input.TextFieldLineLimits
+import androidx.compose.foundation.text.input.OutputTransformation
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.twotone.Email
@@ -31,7 +35,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.nestedscroll.nestedScroll
@@ -41,6 +47,10 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import kotlinx.coroutines.flow.collect
 import org.openjwc.client.R
+import androidx.compose.material.icons.twotone.Visibility
+import androidx.compose.material.icons.twotone.VisibilityOff
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import org.openjwc.client.data.datastore.AuthDataSource
 import org.openjwc.client.data.datastore.SettingsDataSource
 import org.openjwc.client.data.repository.AuthRepository
@@ -111,21 +121,29 @@ fun RegisterContent(
     val emailState = remember { TextFieldState() }
     val passwordState = remember { TextFieldState() }
     val confirmPasswordState = remember { TextFieldState() }
+    var passwordVisible by remember { mutableStateOf(false) }
 
-    val usernameError = if (usernameState.text.isBlank()) "Required" else ""
+    val usernameTrimmed = usernameState.text.toString().trim()
+    val emailTrimmed = emailState.text.toString().trim()
+    val passwordText = passwordState.text.toString()
+    val confirmPasswordText = confirmPasswordState.text.toString()
+
+    val usernameError = if (usernameTrimmed.isEmpty()) stringResource(R.string.required)
+    else if (usernameTrimmed.length < 3) stringResource(R.string.username_3_chars_required)
+    else ""
     val emailError = when {
-        emailState.text.isBlank() -> "Required"
-        !emailState.text.contains("@") -> "Invalid email"
+        emailTrimmed.isEmpty() -> stringResource(R.string.required)
+        !emailTrimmed.contains("@") -> stringResource(R.string.please_type_valid_email)
         else -> ""
     }
     val passwordError = when {
-        passwordState.text.isBlank() -> "Required"
-        passwordState.text.length < 6 -> "At least 6 characters"
+        passwordText.isEmpty() -> stringResource(R.string.required)
+        passwordText.length < 6 -> stringResource(R.string.password_requirement)
         else -> ""
     }
     val confirmPasswordError = when {
-        confirmPasswordState.text.isBlank() -> "Required"
-        confirmPasswordState.text != passwordState.text -> "Passwords do not match"
+        confirmPasswordText.isEmpty() -> stringResource(R.string.required)
+        confirmPasswordText != passwordText -> stringResource(R.string.password_not_same)
         else -> ""
     }
 
@@ -142,28 +160,48 @@ fun RegisterContent(
                 SettingsTextFieldWidget(
                     state = usernameState,
                     title = stringResource(R.string.username),
-                    error = usernameError
+                    error = usernameError,
+                    lineLimits = TextFieldLineLimits.SingleLine
                 )
             }
             item {
                 SettingsTextFieldWidget(
                     state = emailState,
                     title = stringResource(R.string.email),
-                    error = emailError
+                    error = emailError,
+                    lineLimits = TextFieldLineLimits.SingleLine
                 )
             }
             item {
+                val pwdTransform = if (passwordVisible) null
+                else OutputTransformation { replace(0, length, "•".repeat(length)) }
                 SettingsTextFieldWidget(
                     state = passwordState,
                     title = stringResource(R.string.password),
-                    error = passwordError
+                    error = passwordError,
+                    lineLimits = TextFieldLineLimits.SingleLine,
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
+                    outputTransformation = pwdTransform,
+                    trailingContent = {
+                        IconButton(onClick = { passwordVisible = !passwordVisible }) {
+                            Icon(
+                                imageVector = if (passwordVisible) Icons.TwoTone.VisibilityOff else Icons.TwoTone.Visibility,
+                                contentDescription = null
+                            )
+                        }
+                    }
                 )
             }
             item {
+                val confirmTransform = if (passwordVisible) null
+                else OutputTransformation { replace(0, length, "•".repeat(length)) }
                 SettingsTextFieldWidget(
                     state = confirmPasswordState,
                     title = stringResource(R.string.confirm_password),
-                    error = confirmPasswordError
+                    error = confirmPasswordError,
+                    lineLimits = TextFieldLineLimits.SingleLine,
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
+                    outputTransformation = confirmTransform
                 )
             }
         }
@@ -180,9 +218,9 @@ fun RegisterContent(
         Button(
             onClick = {
                 authViewModel.register(
-                    usernameState.text.toString().trim(),
-                    passwordState.text.toString().trim(),
-                    emailState.text.toString().trim()
+                    usernameTrimmed,
+                    passwordText,
+                    emailTrimmed
                 )
             },
             enabled = canRegister && !isRegistering,

@@ -26,7 +26,7 @@ import org.openjwc.client.data.models.TableMetadata
         TableMetadata::class
     ],
     version = 5,
-    exportSchema = false
+    exportSchema = true
 )
 @TypeConverters(Converters::class)
 abstract class AppDatabase : RoomDatabase() {
@@ -36,6 +36,7 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun tableDao(): TableDao
 
     companion object {
+        @Volatile
         private var INSTANCE: AppDatabase? = null
 
         val MIGRATION_2_3 = object : Migration(2, 3) {
@@ -105,7 +106,7 @@ abstract class AppDatabase : RoomDatabase() {
                     "app_database"
                 )
                     .addMigrations(MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5) // 3. 添加新迁移脚本
-                    .fallbackToDestructiveMigration(false)
+                    .fallbackToDestructiveMigration(dropAllTables = false)
                     .build()
                 INSTANCE = instance
                 instance

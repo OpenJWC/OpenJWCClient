@@ -72,6 +72,7 @@ fun SettingsTextFieldWidget(
     error: String = "",
     labelColor: Color = MaterialTheme.colorScheme.onSurfaceVariant,
     useLabelAsPlaceholder: Boolean = false,
+    placeholder: String? = null,
     enabled: Boolean = true,
     readOnly: Boolean = false,
     renderBackgroundBlur: Boolean = true,
@@ -138,7 +139,9 @@ fun SettingsTextFieldWidget(
     val currentOnTextLayout by rememberUpdatedState(onTextLayout)
 
     val showFloatingTitle = useLabelAsPlaceholder && (focused || state.text.isNotEmpty())
-    val showPlaceholder = useLabelAsPlaceholder && !showFloatingTitle
+    val showPlaceholder = !showFloatingTitle && state.text.isEmpty() &&
+        (placeholder != null || useLabelAsPlaceholder)
+    val placeholderText = placeholder ?: title
 
     fun onClickInternal() {
         if (onClick != null) {
@@ -247,7 +250,7 @@ fun SettingsTextFieldWidget(
                                 ),
                             ) {
                                 Text(
-                                    text = title,
+                                    text = placeholderText,
                                     style = textStyle,
                                     color = labelColor.copy(alpha = 0.6f),
                                 )

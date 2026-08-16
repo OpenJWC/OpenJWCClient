@@ -39,17 +39,21 @@ class MeViewModel(
 
     fun refreshHitokoto(successMessage: String) {
         viewModelScope.launch {
-            val result = repository.tryRefreshHitokoto()
-            when (result) {
-                is NetworkResult.Failure -> {
-                    uiEvent.send(UiEvent.ShowToast(UiText.DynamicString("(${result.code}) ${result.msg}")))
-                    if (result.code == 401) {
-                        navEvent.send(NavEvent.ToLogin())
+            try {
+                val result = repository.tryRefreshHitokoto()
+                when (result) {
+                    is NetworkResult.Failure -> {
+                        uiEvent.send(UiEvent.ShowToast(UiText.DynamicString("(${result.code}) ${result.msg}")))
+                        if (result.code == 401) {
+                            navEvent.send(NavEvent.ToLogin())
+                        }
                     }
-                }
 
-                is NetworkResult.Error -> uiEvent.send(UiEvent.ShowToast(UiText.DynamicString(result.msg)))
-                is NetworkResult.Success -> uiEvent.send(UiEvent.ShowToast(UiText.DynamicString(successMessage)))
+                    is NetworkResult.Error -> uiEvent.send(UiEvent.ShowToast(UiText.DynamicString(result.msg)))
+                    is NetworkResult.Success -> uiEvent.send(UiEvent.ShowToast(UiText.DynamicString(successMessage)))
+                }
+            } catch (e: Exception) {
+                uiEvent.send(UiEvent.ShowToast(UiText.DynamicString(e.localizedMessage ?: "Unknown Error")))
             }
         }
     }

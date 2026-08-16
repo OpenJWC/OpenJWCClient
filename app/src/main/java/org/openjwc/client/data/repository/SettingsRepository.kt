@@ -50,9 +50,10 @@ class SettingsRepository(
                     settings.proxy
                 )
 
+            val session = authDataSource.authSession.first()
             val result = apiService.fetchHitokoto(
-                authDataSource.authSession.first().token ?: "",
-                authDataSource.authSession.first().uuid,
+                session.token ?: "",
+                session.uuid,
             )
             if (result is NetworkResult.Success) {
                 Logger.i(label, "Refresh hitokoto: ${LocalDate.now()}")
@@ -96,7 +97,12 @@ class SettingsRepository(
 
             val newFileName = "bg_${System.currentTimeMillis()}.jpg"
             val targetFile = File(bgDir, newFileName)
-            context.contentResolver.openInputStream(uri)?.use { input ->
+            val inputStream = context.contentResolver.openInputStream(uri)
+            if (inputStream == null) {
+                Logger.e(label, "Failed to open input stream for URI: $uri")
+                return@withContext false
+            }
+            inputStream.use { input ->
                 FileOutputStream(targetFile).use { output ->
                     input.copyTo(output)
                 }
@@ -104,7 +110,7 @@ class SettingsRepository(
             updateBackgroundPath(targetFile.absolutePath)
             true
         } catch (e: Exception) {
-            e.printStackTrace()
+            Logger.e(label, "Failed to update background: ${e.localizedMessage}")
             false
         }
     }
@@ -115,14 +121,14 @@ class SettingsRepository(
 
             if (!currentPath.isNullOrBlank()) {
                 val file = File(currentPath)
-                if (file.exists()) {
-                    file.delete()
+                if (file.exists() && !file.delete()) {
+                    Logger.w(label, "Failed to delete background file: $currentPath")
                 }
             }
             updateBackgroundPath(null)
             true
         } catch (e: Exception) {
-            e.printStackTrace()
+            Logger.e(label, "Failed to delete background: ${e.localizedMessage}")
             false
         }
     }

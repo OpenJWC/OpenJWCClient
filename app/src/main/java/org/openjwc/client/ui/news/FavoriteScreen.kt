@@ -42,6 +42,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
@@ -68,25 +69,25 @@ fun FavoriteScreen(navigator: Navigator, newsViewModel: NewsViewModel) {
                 actions = {
                     if (favorites.isNotEmpty()) {
                         IconButton(onClick = { showClearAllDialog = true }) {
-                            Icon(Icons.TwoTone.DeleteSweep, "Clear all")
+                            Icon(Icons.TwoTone.DeleteSweep, stringResource(R.string.clear))
                         }
                     }
                 },
                 scrollBehavior = scrollBehavior,
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.surface,
+                    containerColor = Color.Transparent,
                     scrolledContainerColor = MaterialTheme.colorScheme.surface
                 )
             )
         },
-        containerColor = MaterialTheme.colorScheme.surface
+        containerColor = Color.Transparent
     ) { innerPadding ->
         if (favorites.isEmpty()) {
             Box(Modifier.fillMaxSize().nestedScroll(scrollBehavior.nestedScrollConnection).padding(innerPadding), contentAlignment = Alignment.Center) {
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
                     Icon(Icons.TwoTone.Star, null, Modifier.size(72.dp), tint = MaterialTheme.colorScheme.outlineVariant)
                     Spacer(Modifier.height(16.dp))
-                    Text("No favorites", style = MaterialTheme.typography.titleLarge, color = MaterialTheme.colorScheme.onSurface)
+                    Text(stringResource(R.string.no_favorites), style = MaterialTheme.typography.titleLarge, color = MaterialTheme.colorScheme.onSurface)
                     Spacer(Modifier.height(8.dp))
                     Text(stringResource(R.string.favorite_hint), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
@@ -111,11 +112,11 @@ fun FavoriteScreen(navigator: Navigator, newsViewModel: NewsViewModel) {
     if (showClearAllDialog) {
         androidx.compose.material3.AlertDialog(
             onDismissRequest = { showClearAllDialog = false },
-            title = { Text("Clear all favorites") },
-            text = { Text("Remove all ${favorites.size} favorite items?") },
+            title = { Text(stringResource(R.string.clear_all_favorites)) },
+            text = { Text(stringResource(R.string.clear_all_favorites_confirm)) },
             confirmButton = {
                 androidx.compose.material3.TextButton(onClick = { newsViewModel.deleteAllFavorites(); showClearAllDialog = false }) {
-                    Text("Clear")
+                    Text(stringResource(R.string.clear))
                 }
             },
             dismissButton = {
@@ -161,14 +162,14 @@ private fun FavoriteCard(
                     }
                 }
                 IconButton(onClick = { showMenu = true }) {
-                    Icon(Icons.TwoTone.Star, "Remove favorite", Modifier.size(24.dp), tint = MaterialTheme.colorScheme.primary)
+                    Icon(Icons.TwoTone.Star, stringResource(R.string.remove_from_favorites), Modifier.size(24.dp), tint = MaterialTheme.colorScheme.primary)
                 }
             }
         }
 
         DropdownMenu(expanded = showMenu, onDismissRequest = { showMenu = false }) {
             DropdownMenuItem(
-                text = { Text("Remove from favorites", color = MaterialTheme.colorScheme.error) },
+                text = { Text(stringResource(R.string.remove_from_favorites), color = MaterialTheme.colorScheme.error) },
                 leadingIcon = { Icon(Icons.TwoTone.Delete, null, tint = MaterialTheme.colorScheme.error) },
                 onClick = { showMenu = false; onDelete() }
             )

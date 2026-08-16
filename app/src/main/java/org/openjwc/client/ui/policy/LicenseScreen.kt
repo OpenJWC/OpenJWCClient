@@ -13,9 +13,11 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.rememberTopAppBarState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.nestedscroll.nestedScroll
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import org.openjwc.client.R
@@ -26,11 +28,16 @@ import org.openjwc.client.ui.component.settings.AppBackButton
 @Composable
 fun LicenseScreen(navigator: Navigator) {
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior(rememberTopAppBarState())
+    val context = LocalContext.current
+    val licenseText = remember {
+        context.resources.openRawResource(R.raw.license)
+            .bufferedReader().use { it.readText() }
+    }
 
     Scaffold(
         topBar = {
             LargeFlexibleTopAppBar(
-                title = { Text("License") },
+                title = { Text(stringResource(R.string.license_title)) },
                 navigationIcon = { AppBackButton(onClick = { navigator.pop() }) },
                 scrollBehavior = scrollBehavior,
                 colors = TopAppBarDefaults.topAppBarColors(
@@ -49,7 +56,7 @@ fun LicenseScreen(navigator: Navigator) {
                 .verticalScroll(rememberScrollState())
                 .padding(16.dp)
         ) {
-            Text(stringResource(R.string.license))
+            Text(licenseText)
         }
     }
 }

@@ -61,6 +61,12 @@ class TableConfigViewModel(private val initialMetadata: TableMetadata? = null) :
         }
     }
 
+    fun removePeriod(index: Int) {
+        if (periods.size > 1 && index in periods.indices) {
+            periods = periods.toMutableList().apply { removeAt(index) }
+        }
+    }
+
     fun updatePeriodTime(index: Int, isStartTime: Boolean, newTime: LocalTime) {
         periods = periods.toMutableList().apply {
             val oldPeriod = this[index]

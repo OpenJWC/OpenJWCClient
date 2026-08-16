@@ -103,6 +103,7 @@ data class SemesterConfig(
     val periods: List<Period>
 ) {
     fun calculateCurrentWeek(targetDate: LocalDate = LocalDate.now()): Int? {
+        if (weeks <= 0) return null
         val startMonday = startDate.with(DayOfWeek.MONDAY)
         val endSunday = startMonday.plusWeeks(weeks.toLong()).minusDays(1)
         if (targetDate.isBefore(startMonday) || targetDate.isAfter(endSunday)) return null

@@ -67,6 +67,8 @@ import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.zIndex
 import androidx.core.graphics.createBitmap
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.core.graphics.drawable.toBitmap
 import androidx.core.graphics.scale
 import androidx.core.net.toUri
@@ -450,6 +452,16 @@ private fun ThemeInitializer(context: Context, systemIsDark: Boolean) {
             ThemeManager.loadDynamicPaletteStyle(context)
             CardConfig.load(context)
 
+            // 加载其余已保存的主题设置（保证持久化）
+            val prefs = context.appPreferences
+            ThemeConfig.predictiveBackAnimation = prefs.getString("predictive_back_animation", "AOSP") ?: "AOSP"
+            ThemeConfig.predictiveBackExitDirection = prefs.getString("predictive_back_exit_direction", "FOLLOW_GESTURE") ?: "FOLLOW_GESTURE"
+            ThemeConfig.isHighContrastMode = prefs.getBoolean("high_contrast_mode", false)
+            ThemeConfig.isEnableBlur = prefs.getBoolean("enable_blur", false)
+            ThemeConfig.isEnableBlurExp = prefs.getBoolean("enable_blur_exp", false)
+            ThemeConfig.isUseBackgroundSeedColor = prefs.getBoolean("use_background_seed_color", false)
+            ThemeConfig.backgroundDim = prefs.getFloat("background_dim", 0f)
+
             if (!ThemeConfig.backgroundImageLoaded && !ThemeConfig.preventBackgroundRefresh) {
                 BackgroundManager.loadCustomBackground(context)
             }
@@ -521,8 +533,12 @@ private fun BackgroundLayer() {
 
     val hasBlurBitmap = blurBackgroundImageBitmap != null
 
-    LaunchedEffect(ThemeConfig.isEnableBlurExp, hasBlurBitmap) {
-        if (!ThemeConfig.isEnableBlurExp || !hasBlurBitmap) return@LaunchedEffect
+    val lifecycleOwner = androidx.lifecycle.compose.LocalLifecycleOwner.current
+    val lifecycle = lifecycleOwner.lifecycle
+    val isResumed = lifecycle.currentState.isAtLeast(Lifecycle.State.RESUMED)
+
+    LaunchedEffect(ThemeConfig.isEnableBlurExp, hasBlurBitmap, isResumed) {
+        if (!ThemeConfig.isEnableBlurExp || !hasBlurBitmap || !isResumed) return@LaunchedEffect
 
         while (true) {
             withFrameNanos { }
@@ -1287,9 +1303,10 @@ private fun generateTypography(): androidx.compose.material3.Typography {
     }
 
     fun TextStyle.applyShadow() = this.copy(shadow = generateShadow(shadow))
-    val typography = Typography
 
-    return typography.copy(
+    return remember(ThemeConfig.isHighContrastMode, darkMode) {
+        val typography = Typography
+        typography.copy(
         displayLarge = typography.displayLarge.applyShadow(),
         displayMedium = typography.displayMedium.applyShadow(),
         displaySmall = typography.displaySmall.applyShadow(),
@@ -1321,6 +1338,7 @@ private fun generateTypography(): androidx.compose.material3.Typography {
         labelMediumEmphasized = typography.labelMediumEmphasized.applyShadow(),
         labelSmallEmphasized = typography.labelSmallEmphasized.applyShadow(),
     )
+    }
 }
 
 @Composable

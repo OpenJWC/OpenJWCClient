@@ -6,12 +6,31 @@
     <string name="me">マイページ</string>
     <string name="confirm">確定</string>
     <string name="cancel">キャンセル</string>
+
+    <string name="device_list_hint">ログイン後、承認済みデバイスの一覧を確認・管理できます。</string>
+    <string name="custom_background">カスタム背景</string>
+    <string name="theme_color">テーマカラー</string>
+    <string name="accessibility">アクセシビリティ</string>
+    <string name="high_contrast_mode">高コントラストモード</string>
+    <string name="use_background_seed_color">背景画像からテーマ色を抽出</string>
+    <string name="enable_blur_experimental">実験的な背景ぼかし</string>
+    <string name="enable_blur">ぼかしを有効化</string>
+    <string name="advanced_theme">高度なテーマ設定</string>
+    <string name="background">背景</string>
+    <string name="seed_color">シードカラー</string>
+    <string name="dark_mode">ダークモード</string>
+    <string name="light_mode">ライトモード</string>
+    <string name="theme_mode">テーマモード</string>
+    <string name="share">共有</string>
+    <string name="reviewed_notices">投稿審査結果</string>
+    <string name="register">登録</string>    <string name="ok">OK</string>
     <string name="upload_news">ニュース投稿</string>
     <string name="back">戻る</string>
     <string name="uploading">アップロード中…</string>
     <string name="loading">ロード中…</string>
     <string name="submit_upload">送信</string>
     <string name="basic_information">基本情報</string>
+    <string name="course_color">コース色</string>
     <string name="title">タイトル</string>
     <string name="label">ラベル</string>
     <string name="date">日付</string>
@@ -113,6 +132,23 @@
     <string name="introduction">紹介</string>
     <string name="check_for_updates">アップデートを確認</string>
     <string name="github">GitHub</string>
+    <string name="open_source_project">オープンソースプロジェクト</string>
+
+    <string name="import_failed">インポート失敗：%1$s</string>
+    <string name="extractor_script_error">抽出スクリプトを読み込めません</string>    <string name="mit_license">MITライセンス</string>
+    <string name="select_a_setting">設定を選択</string>
+    <string name="protocol">プロトコル</string>
+    <string name="proxy_type">プロキシタイプ</string>
+    <string name="delete_session_confirm">このセッションを削除しますか？元に戻せません。</string>
+    <string name="review_result_hint">投稿の審査結果がここに表示されます</string>
+    <string name="clear_logs">ログをクリア</string>
+    <string name="no_chat_history">チャット履歴なし</string>
+    <string name="required">必須</string>
+    <string name="license_title">ライセンス</string>
+    <string name="predictive_back_animation">予測戻るアニメーション</string>
+    <string name="animation_type">アニメーションタイプ</string>
+    <string name="exit_direction">終了方向</string>
+        <string name="clear_all_favorites">お気に入りをすべてクリア</string>
     <string name="open_source_licenses">オープンソースライセンス</string>
 
     <string name="confirm_unbind">解除の確認</string>
@@ -168,6 +204,7 @@
     <!-- Timetable -->
     <string name="timetable">時間割</string>
     <string name="current_week">第 %d 週</string>
+    <string name="select_week">週を選択</string>
     <string name="period_index">第 %d 時限</string>
     <string name="last_week">先週</string>
     <string name="next_week">来週</string>
@@ -182,7 +219,8 @@
     <string name="weekly_repetition_rules">繰り返しルール</string>
     <string name="customize">カスタマイズ</string>
     <string name="display_color">表示色</string>
-    <string name="notes">備考</string>
+    <string name="notes">メモ</string>
+    <string name="notes_hint">任意、例：教科書を忘れずに</string>
     <string name="select_class_weeks">週を選択</string>
     <string name="import_from">教務システムからインポート</string>
     <string name="add_single_course">講義を個別に追加</string>
@@ -191,6 +229,7 @@
     <string name="create_a_blank_timetable">空の時間割を作成</string>
     <string name="no_timetables_yet">時間割がありません</string>
     <string name="import_timetable">時間割をインポート</string>
+    <string name="import_hint">教务システムから自動で取り込むか、空の時間割を作成</string>
     <string name="starting_period">開始時限</string>
     <string name="lasting_periods">継続時限数</string>
     <string name="every_week">毎週</string>
@@ -220,10 +259,10 @@
     <string name="teacher_not_specified">教員未指定</string>
     <string name="no_weeks_selected">週が選択されていません</string>
     <string name="edit_semester_config">学期設定を編集</string>
-    <string name="extracting_timetable">時間割を抽出中……</string>
+    <string name="extracting_timetable">時間割を抽出中</string>
+    <string name="page_load_failed">ページの読み込みに失敗しました。ネットワーク接続を確認してください。</string>
     <string name="login_title">教務システムにログイン</string>
     <string name="one_week_at_least">少なくとも1週間選択してください</string>
-    <string name="import_failed">インポート失敗: %1$s</string>
     <string name="widget_week_desc">今週の講義</string>
     <string name="no_courses_today">今日の講義はありません</string>
     <string name="section_format">%1$d-%2$d時限</string>
@@ -262,4 +301,96 @@
     <string name="custom_weeks">カスタム</string>
     <string name="location">場所</string>
     <string name="timetable_settings">時間割設定</string>
+
+    <string name="add_attachment_hint">ニュースカードを長押しして添付</string>
+    <string name="add_to_launcher_hint">クリック後、デスクトップにウィジェットが表示されない場合は、設定で「デスクトップショートカット」権限を手動で許可してください</string>
+    <string name="api_key_retry_hint">APIキーを変更した場合は、設定を保存してから再試行してください</string>
+    <string name="app_icon_description">アプリアイコン</string>
+    <string name="attachment_placeholder">添付 %1$d</string>
+    <string name="auto_extracted_from_wallpaper">壁紙から自動抽出（Android 12 以降のみ）</string>
+    <string name="auto_import">東南大学教务システムから自動取得</string>
+    <string name="check_update">アップデートを確認</string>
+    <string name="check_update_failed">アップデート確認に失敗</string>
+    <string name="clear_all_favorites_confirm">お気に入りをすべて消去しますか？この操作は元に戻せません。</string>
+    <string name="click_me_when_you_see_the_timetable">時間割が表示されたらここをタップして取り込み</string>
+    <string name="color_scheme_based_on_material_you">Material You ベースのカラースキーム</string>
+    <string name="course_already_existed_during_this_period">この時間帯にはすでに授業があります: %1$s</string>
+    <string name="course_conflict_format">%1$s および他 %2$d 件の授業</string>
+    <string name="create_a_table_name">新しい時間割に名前を付けてください。例：「2025春学期」</string>
+    <string name="custom_periods_format">%1$s / %2$d-%3$d 限目</string>
+    <string name="custom_weeks_format">第 %1$s 週</string>
+    <string name="date_format_hint">yyyy-MM-dd</string>
+    <string name="delete_course_warning">時間割から「%1$s」を削除しますか？</string>
+    <string name="delete_permanently">時間割を完全に削除</string>
+    <string name="delete_permanently_warning">この操作は元に戻せません！</string>
+    <string name="delete_table_warning">時間割「%1$s」を削除しますか？この時間割のすべての授業が完全に削除され、元に戻せません。</string>
+    <string name="device_list_login_hint">ログイン後、承認済みデバイスの一覧を確認・管理できます。</string>
+    <string name="disable_highlight_hint">0 に設定するとハイライトを無効化</string>
+    <string name="edit_config_hint">週数、時限時間、開始日を変更</string>
+    <string name="extend_weeks_warning">週数を増やすと「毎週/単双週」の授業の範囲が変わります</string>
+    <string name="favorite_hint">ニュースリストで長押しするとお気に入りに追加できます</string>
+    <string name="force_https_desc">オフにすると HTTPS を強制</string>
+    <string name="fresh_threshold_example">例: 3</string>
+    <string name="get_labels_failed_hint">ニュースラベルを取得できません。ネットワーク接続を確認するか、後で再試行してください</string>
+    <string name="highlight_fresh_news_desc">ニュース公開後の「新着」表示日数を設定します。新着ニュースはハイライト表示されます。</string>
+    <string name="hitokoto_author_format">—— %1$s</string>
+    <string name="hitokoto_text_format">「 %1$s 」</string>
+    <string name="host_config_hint">ヒント：デバイスがこのアドレスにアクセスでき、ファイアウォールが正しく設定されていることを確認してください。</string>
+    <string name="invalid_positive_integer">有効な正の整数を入力してください</string>
+    <string name="license">MIT License</string>
+    <string name="link_is_a_page_desc">オフにすると添付または外部リンクとして扱われます</string>
+    <string name="load_error">読み込みエラー: %1$s</string>
+    <string name="logout_failed">ログアウト失敗: %1$s</string>
+    <string name="logout_failed_with_code">ログアウト失敗 (%1$d): %2$s</string>
+    <string name="news_empty_egg">ニュースが空です！イースターエッグを発見しました。</string>
+    <string name="no_account_register_now">アカウントがありませんか？今すぐ登録</string>
+    <string name="no_detail_view_original">詳細はありません。ブラウザで原文をご覧ください。</string>
+    <string name="no_news_categories">ニュースカテゴリが見つかりません</string>
+    <string name="no_shortcut_for_creating_widgets">このデスクトップはウィジェットの追加に対応していません</string>
+    <string name="openjwc_description">OpenJWC チームは、ソフトウェア開発技術を通じて教务情報が学生に届く最後の障壁を取り除くことを目指しています。
+
+完全なオープンソースプロジェクトとして、ツールを提供するだけでなく、すべての東南大学の開発者を招待し、コードでキャンパスライフを温めています。</string>
+    <string name="password_not_same">入力したパスワードが一致しません</string>
+    <string name="password_requirement">パスワードは大文字・小文字・数字・特殊文字を含み、8文字以上必要です</string>
+    <string name="period_count_too_small_warning">警告：設定された総時限数 (%1$d) が選択済み授業の最大時限 (%2$d) より少ないです。超過分の授業は非表示になります！</string>
+    <string name="plan_from_scratch">ゼロからスケジュールを作成</string>
+    <string name="please_input_new_title">新しいタイトルを入力してください</string>
+    <string name="please_type_valid_email">有効なメールアドレスを入力してください</string>
+    <string name="policy_text">OpenJWC（以下「本製品」）をご利用いただきありがとうございます。
+
+# 第一条 サービスの性質
+本製品は教务情報の集約、RAG教务QA、ニュース投稿機能を提供する支援ツールです。
+
+# 第三条 免責事項
+OpenJWC は東南大学教务処とは公式な関係はありません。AI回答は参考用であり、重要な情報は公式チャンネルで確認してください。
+
+本製品は MIT ライセンスで公開されるオープンソースツールです。</string>
+    <string name="port_range_error">ポートは 0–65535 の範囲内である必要があります</string>
+    <string name="preview_fresh_title">これは最新のニュースタイトルです</string>
+    <string name="preview_old_title">これは最古のニュースタイトルです</string>
+    <string name="proxy_host_ipv4_error">プロキシアドレスは現在 IPv4 形式のみ対応しています</string>
+    <string name="proxy_port_range_error">ポートは 0–65535 の範囲内である必要があります</string>
+    <string name="query_devices_failed">デバイス照会に失敗: %1$s</string>
+    <string name="query_devices_failed_with_code">デバイス照会に失敗 (%1$d): %2$s</string>
+    <string name="reduce_weeks_warning">週数を減らすと一部の授業が切れて表示されなくなる可能性があります</string>
+    <string name="refetch_categories">カテゴリを再取得</string>
+    <string name="register_success_hint">登録に成功しました。管理者の承認をお待ちください</string>
+    <string name="school_start_date">開始日（第1週の月曜日）</string>
+    <string name="show_date_header">日付ヘッダーを表示</string>
+    <string name="show_date_header_desc">曜日の下に具体的な日付を表示（例：05-01）</string>
+    <string name="show_non_current_week_desc">現在の週でも非今週の授業を半透明グレーで表示</string>
+    <string name="show_period_time_desc">側の番号の下に授業の開始・終了時間を表示</string>
+    <string name="show_timeline_desc">時間割に横のタイムラインを表示</string>
+    <string name="study_statistics">今学期は %1$d コマの授業を受け、累計 %2$.2f 時間</string>
+    <string name="switch_between">学期や複数の時間割を切り替える</string>
+    <string name="table_name_cannot_be_empty">時間割名は空にできません</string>
+    <string name="time_conflict_warning">時間設定が競合しています：赤いマークの時限を確認してください。</string>
+    <string name="unbind_device_confirm_msg">デバイス [%1$s] のバインドを解除しますか？</string>
+    <string name="unbind_failed">バインド解除に失敗: %1$s</string>
+    <string name="unbind_failed_with_code">バインド解除に失敗 (%1$d): %2$s</string>
+    <string name="url_placeholder">https://…</string>
+    <string name="username_3_chars_required">ユーザー名は3文字以上必要です</string>
+    <string name="using_unsafe_http">安全でない HTTP を使用中</string>
+    <string name="week_number_in_a_semester">学期の週数</string>
+    <string name="week_starting_date">%1$d 週・%2$s</string>
 </resources>

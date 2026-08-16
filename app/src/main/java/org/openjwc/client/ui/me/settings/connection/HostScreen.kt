@@ -21,6 +21,7 @@ import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.rememberTopAppBarState
 import androidx.compose.runtime.Composable
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -80,54 +81,66 @@ fun HostContent(
 ) {
     val settings by settingsViewModel.settings.collectAsStateWithLifecycle()
 
-    val hostState = remember { TextFieldState(settings.host) }
-    val portState = remember { TextFieldState(settings.port.toString()) }
-    var useHttp by remember { mutableStateOf(settings.useHttp) }
+    val hostState = remember { TextFieldState("") }
+    val portState = remember { TextFieldState("") }
+    var useHttp by remember { mutableStateOf(false) }
 
-    val currentProxy = settings.proxy
-    var proxyType by remember {
-        mutableIntStateOf(
-            when (currentProxy) {
+    var proxyType by remember { mutableIntStateOf(0) }
+
+    val proxyHostState = remember { TextFieldState("") }
+    val proxyPortState = remember { TextFieldState("8080") }
+
+    var settingsLoaded by remember { mutableStateOf(false) }
+
+    LaunchedEffect(settings.host, settings.port, settings.useHttp, settings.proxy) {
+        if (!settingsLoaded) {
+            hostState.edit { replace(0, length, settings.host) }
+            portState.edit { replace(0, length, settings.port.toString()) }
+            useHttp = settings.useHttp
+            val currentProxy = settings.proxy
+            proxyType = when (currentProxy) {
                 is Proxy.HttpProxy -> 1
                 is Proxy.SocksProxy -> 2
                 else -> 0
             }
-        )
+            val proxyHost = when (currentProxy) {
+                is Proxy.HttpProxy -> currentProxy.host
+                is Proxy.SocksProxy -> currentProxy.host
+                else -> ""
+            }
+            val proxyPort = when (currentProxy) {
+                is Proxy.HttpProxy -> currentProxy.port.toString()
+                is Proxy.SocksProxy -> currentProxy.port.toString()
+                else -> "8080"
+            }
+            proxyHostState.edit { replace(0, length, proxyHost) }
+            proxyPortState.edit { replace(0, length, proxyPort) }
+            settingsLoaded = true
+        }
     }
-    val proxyHost = when (currentProxy) {
-        is Proxy.HttpProxy -> currentProxy.host
-        is Proxy.SocksProxy -> currentProxy.host
-        else -> ""
-    }
-    val proxyPort = when (currentProxy) {
-        is Proxy.HttpProxy -> currentProxy.port.toString()
-        is Proxy.SocksProxy -> currentProxy.port.toString()
-        else -> "8080"
-    }
-    val proxyHostState = remember { TextFieldState(proxyHost) }
-    val proxyPortState = remember { TextFieldState(proxyPort) }
 
     val showProxyFields = proxyType != 0
 
-    val hostError = if (hostState.text.isBlank()) "Required" else ""
+    val hostError = if (hostState.text.isBlank()) stringResource(R.string.required) else ""
     val portError = run {
         val p = portState.text.toString().toIntOrNull()
         when {
-            portState.text.isBlank() -> "Required"
+            portState.text.isBlank() -> stringResource(R.string.required)
             p == null || p !in 0..65535 -> "0–65535"
             else -> ""
         }
     }
+    val proxyHostError = if (showProxyFields && proxyHostState.text.isBlank()) stringResource(R.string.required) else ""
     val proxyPortError = if (showProxyFields) {
         val p = proxyPortState.text.toString().toIntOrNull()
         when {
-            proxyPortState.text.isBlank() -> "Required"
+            proxyPortState.text.isBlank() -> stringResource(R.string.required)
             p == null || p !in 0..65535 -> "0–65535"
             else -> ""
         }
     } else ""
 
-    val isValid = hostError.isEmpty() && portError.isEmpty() && proxyPortError.isEmpty()
+    val isValid = hostError.isEmpty() && portError.isEmpty() && proxyHostError.isEmpty() && proxyPortError.isEmpty()
 
     fun save() {
         settingsViewModel.updateHost(hostState.text.toString())
@@ -135,7 +148,7 @@ fun HostContent(
         settingsViewModel.updateUseHttp(useHttp)
         val proxy = when (proxyType) {
             1 -> Proxy.HttpProxy(proxyHostState.text.toString(), proxyPortState.text.toString().toIntOrNull() ?: 8080)
-            2 -> Proxy.SocksProxy(proxyHostState.text.toString(), proxyPortState.text.toString().toIntOrNull() ?: 8080)
+            2 -> Proxy.SocksProxy(proxyHostState.text.toString(), proxyPortState.text.toString().toIntOrNull() ?: 1080)
             else -> Proxy.NoProxy()
         }
         settingsViewModel.updateProxy(proxy)
@@ -151,7 +164,7 @@ fun HostContent(
             item {
                 SettingsTextFieldWidget(
                     state = hostState,
-                    title = "Host URL",
+                    title = stringResource(R.string.host_address),
                     error = hostError,
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Uri)
                 )
@@ -159,7 +172,7 @@ fun HostContent(
             item {
                 SettingsTextFieldWidget(
                     state = portState,
-                    title = "Port",
+                    title = stringResource(R.string.port_number),
                     error = portError,
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
                 )
@@ -167,7 +180,7 @@ fun HostContent(
             item {
                 SettingsChooseWidget(
                     icon = Icons.TwoTone.Http,
-                    title = "Protocol",
+                    title = stringResource(R.string.protocol),
                     items = listOf("HTTP", "HTTPS"),
                     selectedIndex = if (useHttp) 0 else 1,
                     onSelectedIndexChange = { useHttp = it == 0 }
@@ -175,11 +188,11 @@ fun HostContent(
             }
         }
 
-        SegmentedColumn(title = "Proxy") {
+        SegmentedColumn(title = stringResource(R.string.proxy_settings)) {
             item {
                 SettingsChooseWidget(
                     icon = Icons.TwoTone.LinkOff,
-                    title = "Proxy Type",
+                    title = stringResource(R.string.proxy_type),
                     items = listOf("None", "HTTP Proxy", "SOCKS Proxy"),
                     selectedIndex = proxyType,
                     onSelectedIndexChange = { proxyType = it }
@@ -189,15 +202,15 @@ fun HostContent(
                 item {
                     SettingsTextFieldWidget(
                         state = proxyHostState,
-                        title = "Proxy Host",
-                        error = if (proxyHostState.text.isBlank()) "Required" else "",
+                        title = stringResource(R.string.proxy_host),
+                        error = if (proxyHostState.text.isBlank()) stringResource(R.string.required) else "",
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Uri)
                     )
                 }
                 item {
                     SettingsTextFieldWidget(
                         state = proxyPortState,
-                        title = "Proxy Port",
+                        title = stringResource(R.string.proxy_port),
                         error = proxyPortError,
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
                     )

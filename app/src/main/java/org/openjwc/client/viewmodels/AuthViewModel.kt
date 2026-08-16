@@ -50,26 +50,38 @@ class AuthViewModel(
 
     fun login(account: String, password: String) {
         Logger.d(tag, "login: $account")
+        if (isLoggingIn.value) return
         viewModelScope.launch {
             isLoggingIn.value = true
-            loginResult.value = authRepository.login(account, password)
-            isLoggingIn.value = false
-            if (loginResult.value is NetworkResult.Success) {
-                navEvent.send(NavEvent.ToBack())
-                uiEvent.send(UiEvent.ShowToast(UiText.StringResource(R.string.login_successfully)))
+            try {
+                loginResult.value = authRepository.login(account, password)
+                if (loginResult.value is NetworkResult.Success) {
+                    navEvent.send(NavEvent.ToBack())
+                    uiEvent.send(UiEvent.ShowToast(UiText.StringResource(R.string.login_successfully)))
+                }
+            } catch (e: Exception) {
+                Logger.e(tag, "login error", e)
+            } finally {
+                isLoggingIn.value = false
             }
         }
     }
 
     fun register(username: String, password: String, email: String) {
         Logger.d(tag, "register: $username")
+        if (isRegistering.value) return
         viewModelScope.launch {
             isRegistering.value = true
-            registerResult.value = authRepository.register(username, password, email)
-            isRegistering.value = false
-            if (registerResult.value is NetworkResult.Success) {
-                navEvent.send(NavEvent.ToBack())
-                uiEvent.send(UiEvent.ShowToast(UiText.StringResource(R.string.register_success_hint)))
+            try {
+                registerResult.value = authRepository.register(username, password, email)
+                if (registerResult.value is NetworkResult.Success) {
+                    navEvent.send(NavEvent.ToBack())
+                    uiEvent.send(UiEvent.ShowToast(UiText.StringResource(R.string.register_success_hint)))
+                }
+            } catch (e: Exception) {
+                Logger.e(tag, "register error", e)
+            } finally {
+                isRegistering.value = false
             }
         }
     }
@@ -77,28 +89,32 @@ class AuthViewModel(
     fun logout() {
         Logger.d(tag, "logout")
         viewModelScope.launch {
-            val result = authRepository.logout()
-            when (result) {
-                is NetworkResult.Failure -> uiEvent.send(
-                    UiEvent.ShowToast(
-                        UiText.StringResource(
-                            R.string.logout_failed_with_code,
-                            result.code,
-                            result.msg
+            try {
+                val result = authRepository.logout()
+                when (result) {
+                    is NetworkResult.Failure -> uiEvent.send(
+                        UiEvent.ShowToast(
+                            UiText.StringResource(
+                                R.string.logout_failed_with_code,
+                                result.code,
+                                result.msg
+                            )
                         )
                     )
-                )
 
-                is NetworkResult.Error -> uiEvent.send(
-                    UiEvent.ShowToast(
-                        UiText.StringResource(
-                            R.string.logout_failed,
-                            result.msg
+                    is NetworkResult.Error -> uiEvent.send(
+                        UiEvent.ShowToast(
+                            UiText.StringResource(
+                                R.string.logout_failed,
+                                result.msg
+                            )
                         )
                     )
-                )
 
-                else -> {}
+                    else -> {}
+                }
+            } catch (e: Exception) {
+                Logger.e(tag, "logout error", e)
             }
         }
     }

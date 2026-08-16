@@ -8,6 +8,7 @@ import org.openjwc.client.net.models.NetworkResult
 import org.openjwc.client.net.models.RegisterRequestBody
 import org.openjwc.client.net.models.SuccessResponse
 import org.openjwc.client.net.models.fetch
+import java.util.UUID
 
 suspend fun NetService.login(
     auth: String?,
@@ -20,8 +21,8 @@ suspend fun NetService.login(
         postLogin(
             auth,
             deviceId,
-            "",
-            "",
+            UUID.randomUUID().toString(),
+            "1.2.0",
             LoginRequestBody(account, passwordHash, deviceName)
         )
     }
@@ -33,12 +34,12 @@ suspend fun NetService.register(
     passwordHash: String,
     email: String,
 ): NetworkResult<SuccessResponse<Map<String, String>>> =
-    fetch {
+    fetch(level = Logger.Level.NONE) {
         postRegister(
             auth,
             deviceId,
-            "",
-            "",
+            UUID.randomUUID().toString(),
+            "1.2.0",
             RegisterRequestBody(username, passwordHash, email)
         )
     }

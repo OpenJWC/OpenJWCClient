@@ -1,6 +1,6 @@
 package org.openjwc.client.data.repository
 
-import android.util.Log
+import org.openjwc.client.log.Logger
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
@@ -67,7 +67,7 @@ class CourseRepository(
     suspend fun setCurrentTable(tableId: Long) = tableDao.setCurrentTable(tableId)
 
     suspend fun parseExternalJson(jsonString: String): Pair<TableMetadata, List<Course>> = withContext(Dispatchers.IO) {
-        Log.d(TAG, "Starting JSON parse process...")
+        Logger.d(TAG, "Starting JSON parse process...")
         val root = JSONObject(jsonString)
         val termName = root.optString("termName", "导入课表")
         val rowsArray = root.optJSONArray("rows") ?: throw Exception("解析错误：未找到课程数据(rows)")
@@ -75,7 +75,7 @@ class CourseRepository(
         if (rowsArray.length() == 0) throw Exception("解析错误：课表内容为空")
 
         val parseResult = TableParserUtils.parseCoursesFromJsonArray(rowsArray.toString(), 0L)
-        Log.d(TAG, "Parse successful: Found ${parseResult.courses.size} courses")
+        Logger.d(TAG, "Parse successful: Found ${parseResult.courses.size} courses")
 
         val defaultConfig = SemesterConfig.default()
 
@@ -157,6 +157,8 @@ class CourseRepository(
 
     /**
      * 清理无用的空课表
+     * 注意：如果 courses 表为空，此操作会删除所有 table_metadata 记录，
+     * 包括当前正在使用的课表。请仅在用户明确期望清理时调用。
      */
     suspend fun cleanEmptyTables() = tableDao.deleteEmptyTables()
 }

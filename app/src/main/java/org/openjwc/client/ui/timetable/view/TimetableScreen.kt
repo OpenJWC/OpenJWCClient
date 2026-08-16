@@ -6,13 +6,20 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
+import androidx.compose.material3.CircularWavyProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.windowsizeclass.WindowSizeClass
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.withFrameNanos
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import org.openjwc.client.data.models.Course
 import org.openjwc.client.ui.timetable.edit.EmptyGuidePlaceholder
 import org.openjwc.client.ui.timetable.edit.tables.TableConfigDialog
 import org.openjwc.client.ui.timetable.view.components.TimetableOverlayHost
@@ -42,6 +49,37 @@ fun TimetableScreen(
 
     val uiState = viewModel.uiState.collectAsState().value
 
+    val isReady by viewModel.isReady.collectAsState()
+    // 数据就绪后再推迟一帧渲染重网格，让加载动画先显示，避免阻塞切换 Tab 的那一帧
+    var showContent by remember { mutableStateOf(false) }
+    LaunchedEffect(isReady) {
+        if (isReady) {
+            withFrameNanos { }
+            showContent = true
+        }
+    }
+
+    // 稳定的回调，避免父级重组时网格整棵子树级联重组
+    val onCourseClick = remember {
+        { course: Course ->
+            viewModel.updateUiState {
+                it.copy(clickedCourse = course, showDetailSheet = true)
+            }
+        }
+    }
+    val onEmptySlotClick = remember {
+        { day: java.time.DayOfWeek, period: Int ->
+            viewModel.updateUiState {
+                it.copy(
+                    showEditDialog = true,
+                    editingCourseId = 0L,
+                    initialDay = day,
+                    initialStartPeriod = period
+                )
+            }
+        }
+    }
+
     val totalWeeks = tableMetadata?.semesterConfig?.weeks ?: 1
     val pagerState = rememberPagerState(
         initialPage = (currentWeek - 1).coerceIn(0, (totalWeeks - 1).coerceAtLeast(0)),
@@ -70,6 +108,15 @@ fun TimetableScreen(
     Box(
         modifier = Modifier.padding(contentPadding)
     ) {
+        if (!isReady || !showContent) {
+            // 加载动画占位
+            Box(
+                modifier = Modifier.fillMaxSize(),
+                contentAlignment = Alignment.Center
+            ) {
+                CircularWavyProgressIndicator()
+            }
+        } else {
         val currentTable = tableMetadata
 
         if (currentTable == null) {
@@ -81,7 +128,7 @@ fun TimetableScreen(
             HorizontalPager(
                 state = pagerState,
                 modifier = Modifier.fillMaxSize(),
-                beyondViewportPageCount = 1
+                beyondViewportPageCount = 0
             ) { pageIndex ->
                 TimetableGrid(
                     tableMetadata = currentTable,
@@ -92,24 +139,8 @@ fun TimetableScreen(
                     showPeriodTime = showPeriodTime,
                     currentWeek = pageIndex + 1,
                     activePeriodIndex = if (pageIndex + 1 == currentWeek) activePeriodIndex else -1,
-                    onCourseClick = { course ->
-                        viewModel.updateUiState {
-                            it.copy(
-                                clickedCourse = course,
-                                showDetailSheet = true
-                            )
-                        }
-                    },
-                    onEmptySlotClick = { day, period ->
-                        viewModel.updateUiState {
-                            it.copy(
-                                showEditDialog = true,
-                                editingCourseId = 0L,
-                                initialDay = day,
-                                initialStartPeriod = period
-                            )
-                        }
-                    }
+                    onCourseClick = onCourseClick,
+                    onEmptySlotClick = onEmptySlotClick
                 )
             }
         }
@@ -141,6 +172,7 @@ fun TimetableScreen(
             onDeleteTable = viewModel::deleteTable,
             onSwitchTable = viewModel::switchTable
         )
+        }
     }
 
 }

@@ -70,7 +70,7 @@ fun SettingsChooseWidget(
     val displayItems = remember(items, range) {
         range?.map { value -> "$value/${range.last}" } ?: items
     }
-    var currentIndex by remember { mutableIntStateOf(selectedIndex) }
+    var currentIndex by remember(selectedIndex) { mutableIntStateOf(selectedIndex) }
     var showDialog by remember { mutableStateOf(false) }
 
     fun dismiss(resetSelection: Boolean = true) {
