@@ -309,6 +309,14 @@
     <string name="attachment_placeholder">添付 %1$d</string>
     <string name="auto_extracted_from_wallpaper">壁紙から自動抽出（Android 12 以降のみ）</string>
     <string name="auto_import">東南大学教务システムから自動取得</string>
+    <string name="import_from_file">ファイルからインポート</string>
+    <string name="import_from_file_desc">JSON 課表ファイルから新しい課表を作成</string>
+    <string name="import_file_read_failed">選択したファイルを読み取れません</string>
+    <string name="export_timetable">現在の課表をエクスポート</string>
+    <string name="export_timetable_desc">JSON ファイルとして保存し、再インポートや共有が可能</string>
+    <string name="export_success">エクスポート成功</string>
+    <string name="export_failed">エクスポート失敗</string>
+    <string name="export_empty">現在の課表に授業がないため、エクスポートできません</string>
     <string name="check_update">アップデートを確認</string>
     <string name="check_update_failed">アップデート確認に失敗</string>
     <string name="clear_all_favorites_confirm">お気に入りをすべて消去しますか？この操作は元に戻せません。</string>

@@ -309,6 +309,14 @@
     <string name="attachment_placeholder">첨부 %1$d</string>
     <string name="auto_extracted_from_wallpaper">배경화면에서 자동 추출 (Android 12 이상만)</string>
     <string name="auto_import">동남대학교 학사 시스템에서 자동 가져오기</string>
+    <string name="import_from_file">파일에서 가져오기</string>
+    <string name="import_from_file_desc">JSON 시간표 파일에서 새 시간표 만들기</string>
+    <string name="import_file_read_failed">선택한 파일을 읽을 수 없습니다</string>
+    <string name="export_timetable">현재 시간표 내보내기</string>
+    <string name="export_timetable_desc">JSON 파일로 저장하여 다시 가져오기 또는 공유 가능</string>
+    <string name="export_success">내보내기 성공</string>
+    <string name="export_failed">내보내기 실패</string>
+    <string name="export_empty">현재 시간표에 수업이 없어 내보낼 수 없습니다</string>
     <string name="check_update">업데이트 확인</string>
     <string name="check_update_failed">업데이트 확인 실패</string>
     <string name="clear_all_favorites_confirm">모든 즐겨찾기를 지우시겠습니까? 되돌릴 수 없습니다.</string>

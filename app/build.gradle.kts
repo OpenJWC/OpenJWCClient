@@ -14,6 +14,7 @@ val localPropertiesFile = rootProject.file("local.properties")
 if (localPropertiesFile.exists()) {
     localProperties.load(localPropertiesFile.inputStream())
 }
+
 android {
     namespace = "org.openjwc.client"
     compileSdk = 37
@@ -22,8 +23,8 @@ android {
         applicationId = "org.openjwc.client"
         minSdk = 26
         targetSdk = 37
-        versionCode = 28
-        versionName = "1.3.0 (Beta)"
+        versionCode = 29
+        versionName = "1.4.0 (Beta)"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
@@ -35,6 +36,7 @@ android {
         }
         release {
             isMinifyEnabled = true
+            isShrinkResources = true
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"

@@ -21,6 +21,10 @@ data class TimetableParseResult(
 
 /**
  * 课表解析工具类
+ *
+ * 输入为规范化的课表 JSON：
+ * { "name", "teacher", "location", "dayOfWeek", "startPeriod", "endPeriod", "weeks", "note" }
+ * 教务系统原始字段（KCM/SKXQ/ZCMC 等）由抓取端（timetable_extractor.js）负责转换
  */
 object TableParserUtils {
 
@@ -80,6 +84,43 @@ object TableParserUtils {
         return allWeeks.sorted()
     }
 
+    private fun JSONObject.firstString(vararg keys: String): String? =
+        keys.firstNotNullOfOrNull { k ->
+            optString(k, "").takeIf { it.isNotBlank() && it.lowercase() != "null" }
+        }
+
+    private fun JSONObject.firstInt(vararg keys: String): Int? =
+        keys.firstNotNullOfOrNull { k ->
+            if (!has(k) || isNull(k)) null
+            else when (val v = opt(k)) {
+                is Number -> v.toInt()
+                is String -> v.trim().toDoubleOrNull()?.toInt()
+                else -> null
+            }
+        }
+
+    /**
+     * 提取周次集合：[weeks] 支持周次字符串（"1-16周(单)"）、
+     * 数字数组（[1,3,5]）或字符串数组（["1-8周","10,12"]）
+     */
+    private fun extractWeeks(obj: JSONObject): List<Int> {
+        when (val weeks = obj.opt("weeks")) {
+            is JSONArray -> {
+                val result = mutableSetOf<Int>()
+                for (i in 0 until weeks.length()) {
+                    when (val w = weeks.opt(i)) {
+                        is Number -> result.add(w.toInt())
+                        is String -> result.addAll(parseWeekRange(w))
+                    }
+                }
+                if (result.isNotEmpty()) return result.sorted()
+            }
+            is String -> if (weeks.isNotBlank()) return parseWeekRange(weeks)
+            is Number -> return listOf(weeks.toInt())
+        }
+        return emptyList()
+    }
+
     /**
      * 从 JSON 数组字符串中解析完整的课表信息
      * @param jsonArrayStr 原始 JSON 数据
@@ -98,66 +139,74 @@ object TableParserUtils {
             return TimetableParseResult(emptyList(), 16, false, 13)
         }
 
-        val rawObjects = mutableListOf<JSONObject>()
+        data class RawRow(
+            val name: String?,
+            val teacher: String,
+            val location: String,
+            val dayValue: Int,
+            val start: Int,
+            val end: Int,
+            val weeks: List<Int>,
+            val note: String
+        )
+
+        val rows = (0 until jsonArray.length())
+            .mapNotNull { jsonArray.optJSONObject(it) }
+            .map { obj ->
+                RawRow(
+                    name = obj.firstString("name"),
+                    teacher = obj.firstString("teacher").cleanRaw(),
+                    location = obj.firstString("location").cleanRaw(),
+                    dayValue = obj.firstInt("dayOfWeek") ?: 1,
+                    start = obj.firstInt("startPeriod") ?: 1,
+                    end = obj.firstInt("endPeriod") ?: 0,
+                    weeks = extractWeeks(obj),
+                    note = obj.firstString("note").orEmpty()
+                )
+            }
+
+        // 从数据推断课表全局配置
         var inferredMaxWeek = 16
         var inferredHasWeekend = false
         var inferredMaxPeriod = 13
 
-        for (i in 0 until jsonArray.length()) {
-            val obj = jsonArray.optJSONObject(i) ?: continue
-            rawObjects.add(obj)
-
-            // 推断最大周数
-            val weeks = parseWeekRange(obj.optString("ZCMC"))
-            if (weeks.isNotEmpty()) {
-                inferredMaxWeek = maxOf(inferredMaxWeek, weeks.maxOrNull() ?: 0)
+        for (row in rows) {
+            if (row.weeks.isNotEmpty()) {
+                inferredMaxWeek = maxOf(inferredMaxWeek, row.weeks.max())
             }
-
-            // 推断是否包含周末课程 (SKXQ: 6=周六, 7=周日)
-            if (obj.optInt("SKXQ") >= 6) {
+            if (row.dayValue >= 6) {
                 inferredHasWeekend = true
             }
-
-            // 推断最大节次 (JSJC: 结束节次)
-            val endPeriod = obj.optInt("JSJC")
-            if (endPeriod > inferredMaxPeriod) {
-                inferredMaxPeriod = endPeriod
+            if (row.end > inferredMaxPeriod) {
+                inferredMaxPeriod = row.end
             }
         }
 
         Logger.d(TAG, "Scan complete: MaxWeek=$inferredMaxWeek, Weekend=$inferredHasWeekend, MaxPeriod=$inferredMaxPeriod")
 
-        val courses = rawObjects.mapNotNull { obj ->
-            val weeks = parseWeekRange(obj.optString("ZCMC"))
-            if (weeks.isEmpty()) {
-                Logger.w(TAG, "Course [${obj.optString("KCM")}] ignored: No valid weeks found in '${obj.optString("ZCMC")}'")
+        val courses = rows.mapNotNull { row ->
+            if (row.weeks.isEmpty()) {
+                Logger.w(TAG, "Course [${row.name}] ignored: no valid weeks")
                 return@mapNotNull null
             }
-
-            val start = obj.optInt("KSJC")
-            val end = obj.optInt("JSJC")
-            val courseName = obj.optString("KCM")
-
-            val smartWeekRule = weeks.toSet()
-            val dayValue = obj.optInt("SKXQ")
-            val dayOfWeek = if (dayValue in 1..7) DayOfWeek.of(dayValue) else DayOfWeek.MONDAY
+            val courseName = row.name ?: run {
+                Logger.w(TAG, "Course ignored: missing 'name'")
+                return@mapNotNull null
+            }
+            val start = if (row.start < 1) 1 else row.start
+            val end = if (row.end >= start) row.end else start
 
             Course(
                 id = 0,
                 name = courseName,
-                teacher = obj.optString("SKJS").cleanRaw(),
-                location = obj.optString("JASMC").cleanRaw(),
-                dayOfWeek = dayOfWeek,
+                teacher = row.teacher,
+                location = row.location,
+                dayOfWeek = if (row.dayValue in 1..7) DayOfWeek.of(row.dayValue) else DayOfWeek.MONDAY,
                 startPeriod = start,
-                duration = if (end >= start) end - start + 1 else 1,
-                weekRule = smartWeekRule,
+                duration = end - start + 1,
+                weekRule = row.weeks.toSet(),
                 color = getDeterministicColor(courseName),
-                note = buildString {
-                    append("课程号: ${obj.optString("KCH")}")
-                    append("\n原始周次: ${obj.optString("ZCMC")}")
-                    val groupNo = obj.optString("JXBQH").cleanRaw()
-                    if (groupNo.isNotBlank()) append("\n教学班群号: $groupNo")
-                },
+                note = row.note,
                 tableId = tableId
             )
         }

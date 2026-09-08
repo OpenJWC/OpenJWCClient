@@ -312,6 +312,14 @@ If you have any questions or suggestions about this agreement, you are welcome t
     <string name="select_class_weeks">Select Weeks</string>
     <string name="import_from">Import from Educational System</string>
     <string name="auto_import">Automatically fetch SEU educational system timetable</string>
+    <string name="import_from_file">Import from file</string>
+    <string name="import_from_file_desc">Create a timetable from a JSON file</string>
+    <string name="import_file_read_failed">Unable to read the selected file</string>
+    <string name="export_timetable">Export Current Timetable</string>
+    <string name="export_timetable_desc">Save as a JSON file for re-import or sharing</string>
+    <string name="export_success">Exported successfully</string>
+    <string name="export_failed">Export failed</string>
+    <string name="export_empty">Current timetable has no courses to export</string>
     <string name="add_single_course">Add Single Course</string>
     <string name="add_manually">Manually add a non-system course</string>
     <string name="switch_timetable">Switch Timetable</string>

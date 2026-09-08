@@ -1,5 +1,8 @@
 package org.openjwc.client.ui.timetable.view
 
+import android.widget.Toast
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
@@ -15,10 +18,17 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.runtime.withFrameNanos
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
+import org.openjwc.client.R
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import org.openjwc.client.data.models.Course
 import org.openjwc.client.ui.timetable.edit.EmptyGuidePlaceholder
 import org.openjwc.client.ui.timetable.edit.tables.TableConfigDialog
@@ -50,6 +60,70 @@ fun TimetableScreen(
     val uiState = viewModel.uiState.collectAsState().value
 
     val isReady by viewModel.isReady.collectAsState()
+
+    // 从文件导入课表：SAF 选择 JSON 文件 → 读文本 → 走统一的 pendingImport 预览流程
+    val context = LocalContext.current
+    val scope = rememberCoroutineScope()
+    val filePickerLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.OpenDocument()
+    ) { uri ->
+        if (uri == null) return@rememberLauncherForActivityResult
+        scope.launch {
+            val json = withContext(Dispatchers.IO) {
+                runCatching {
+                    context.contentResolver.openInputStream(uri)
+                        ?.bufferedReader()?.use { it.readText() }
+                }.getOrNull()
+            }
+            if (json != null) {
+                viewModel.handleImportedJson(json)
+            } else {
+                viewModel.notifyImportError(
+                    context.getString(R.string.import_failed, context.getString(R.string.import_file_read_failed))
+                )
+            }
+        }
+    }
+    // 解析失败提示（WebView 导入页有自己的展示，此处覆盖文件导入路径）
+    LaunchedEffect(Unit) {
+        snapshotFlow { viewModel.importErrorMessage }.collect { message ->
+            if (message != null) {
+                Toast.makeText(context, message, Toast.LENGTH_LONG).show()
+                viewModel.consumeImportError()
+            }
+        }
+    }
+
+    // 导出当前课表：SAF 创建 JSON 文件 → 生成并写入
+    val exportLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.CreateDocument("application/json")
+    ) { uri ->
+        if (uri == null) return@rememberLauncherForActivityResult
+        scope.launch {
+            val json = viewModel.buildExportJson()
+            if (json == null) {
+                Toast.makeText(
+                    context,
+                    context.getString(R.string.export_empty),
+                    Toast.LENGTH_SHORT
+                ).show()
+                return@launch
+            }
+            val written = withContext(Dispatchers.IO) {
+                runCatching {
+                    context.contentResolver.openOutputStream(uri)?.use { stream ->
+                        stream.write(json.toByteArray())
+                    } ?: throw IllegalStateException("output stream is null")
+                }.isSuccess
+            }
+            Toast.makeText(
+                context,
+                context.getString(if (written) R.string.export_success else R.string.export_failed),
+                Toast.LENGTH_SHORT
+            ).show()
+        }
+    }
+
     // 数据就绪后再推迟一帧渲染重网格，让加载动画先显示，避免阻塞切换 Tab 的那一帧
     var showContent by remember { mutableStateOf(false) }
     LaunchedEffect(isReady) {
@@ -160,6 +234,21 @@ fun TimetableScreen(
             state = uiState,
             onStateChange = { viewModel.updateUiState(it) },
             onImportRequest = onImportRequest,
+            onImportFileRequest = remember {
+                {
+                    filePickerLauncher.launch(
+                        arrayOf("application/json", "text/*", "application/octet-stream")
+                    )
+                }
+            },
+            onExportRequest = remember(tableMetadata?.tableName) {
+                {
+                    val raw = tableMetadata?.tableName ?: ""
+                    val safeName = raw.replace(Regex("""[\\/:*?"<>|\s]"""), "_")
+                        .ifEmpty { "timetable" }
+                    exportLauncher.launch("$safeName.json")
+                }
+            },
             currentWeek = currentWeek,
             currentTableCourses = currentTableCourses,
             allTables = allTables,

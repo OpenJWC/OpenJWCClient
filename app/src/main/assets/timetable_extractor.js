@@ -31,21 +31,29 @@
 
 		// 💡 检查数据有效性
 
-		if (
-			!kbData ||
-			!kbData.datas ||
-			!kbData.datas.xskcb ||
-			kbData.datas.xskcb.totalCount === 0
-		) {
+		if (!kbData?.datas?.xskcb || kbData.datas.xskcb.totalCount === 0) {
 			throw new Error("当前学期未查询到课程数据，请确认是否已登录或选课。");
 		}
+
+		// 教务原始字段 → 规范化键
+		const rows = kbData.datas.xskcb.rows.map((r) => ({
+			name: r.KCM || "",
+			teacher: r.SKJS || "",
+			location: r.JASMC || "",
+			dayOfWeek: r.SKXQ,
+			startPeriod: r.KSJC,
+			endPeriod: r.JSJC,
+			weeks: r.ZCMC,
+			note: [r.KCH ? `课程号: ${r.KCH}` : "", r.JXBQH ? `教学班群号: ${r.JXBQH}` : ""]
+				.filter(Boolean)
+				.join("\n"),
+		}));
 
 		if (window.AndroidBridge) {
 			window.AndroidBridge.sendData(
 				JSON.stringify({
 					termName: targetTerm.MC,
-
-					rows: kbData.datas.xskcb.rows,
+					rows,
 				}),
 			);
 		}

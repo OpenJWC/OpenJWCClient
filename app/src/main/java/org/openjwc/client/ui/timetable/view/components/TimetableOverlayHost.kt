@@ -29,6 +29,8 @@ fun TimetableOverlayHost(
     currentTableCourses: List<Course>,
     allTables: List<TableMetadata>,
     onImportRequest: () -> Unit,
+    onImportFileRequest: () -> Unit,
+    onExportRequest: () -> Unit,
     onSaveCourse: (Course) -> Unit,
     onDeleteCourse: (Long) -> Unit,
     onCreateTable: (TableMetadata) -> Unit,
@@ -44,6 +46,12 @@ fun TimetableOverlayHost(
                 when (action) {
                     TimetableAction.Import -> {
                         onImportRequest()
+                    }
+                    TimetableAction.ImportFile -> {
+                        onImportFileRequest()
+                    }
+                    TimetableAction.Export -> {
+                        onExportRequest()
                     }
                     TimetableAction.AddCourse -> {
                         if (currentTable == null) {

@@ -49,6 +49,8 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
+import kotlinx.coroutines.flow.filter
+import kotlinx.coroutines.flow.take
 import org.openjwc.client.R
 import org.openjwc.client.log.Logger
 import org.openjwc.client.navigation3.Navigator
@@ -117,12 +119,11 @@ fun ImportWebViewScreen(navigator: Navigator, timetableViewModel: TimetableViewM
     }
 
     LaunchedEffect(Unit) {
-        snapshotFlow { timetableViewModel.pendingImport }.collect { import ->
-            if (import != null) {
-                timetableViewModel.confirmImport(import.metadata)
-                navigator.pop()
-            }
-        }
+        // 抓取成功后回到课表页，由课表页的 TableConfigDialog 完成预览与确认
+        snapshotFlow { timetableViewModel.pendingImport }
+            .filter { it != null }
+            .take(1)
+            .collect { navigator.pop() }
     }
 
     LaunchedEffect(Unit) {

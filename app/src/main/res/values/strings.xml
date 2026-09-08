@@ -306,6 +306,14 @@
     <string name="select_class_weeks">选择上课周数</string>
     <string name="import_from">从教务处导入</string>
     <string name="auto_import">自动抓取东南大学教务系统课表</string>
+    <string name="import_from_file">从文件导入</string>
+    <string name="import_from_file_desc">从 JSON 课表文件创建新课表</string>
+    <string name="import_file_read_failed">无法读取所选文件</string>
+    <string name="export_timetable">导出当前课表</string>
+    <string name="export_timetable_desc">保存为 JSON 文件，可再次导入或分享</string>
+    <string name="export_success">导出成功</string>
+    <string name="export_failed">导出失败</string>
+    <string name="export_empty">当前课表没有课程，无法导出</string>
     <string name="add_single_course">新建单个课程</string>
     <string name="add_manually">手动添加一门非教务处课程</string>
     <string name="switch_timetable">切换当前课表</string>

@@ -8,8 +8,10 @@ import androidx.compose.material.icons.automirrored.filled.LibraryBooks
 import androidx.compose.material.icons.filled.CloudDownload
 import androidx.compose.material.icons.filled.DeleteForever
 import androidx.compose.material.icons.filled.EditCalendar
+import androidx.compose.material.icons.filled.FileDownload
 import androidx.compose.material.icons.filled.LibraryAdd
 import androidx.compose.material.icons.filled.MoreTime
+import androidx.compose.material.icons.filled.UploadFile
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
@@ -95,6 +97,17 @@ fun TimetableActionSheet(
                             }
                         )
                     }
+                    item {
+                        SettingsJumpPageWidget(
+                            icon = Icons.Default.FileDownload,
+                            title = stringResource(R.string.export_timetable),
+                            description = stringResource(R.string.export_timetable_desc),
+                            onClick = {
+                                onDismissRequest()
+                                onActionClick(TimetableAction.Export)
+                            }
+                        )
+                    }
                 }
             }
 
@@ -108,6 +121,17 @@ fun TimetableActionSheet(
                         onClick = {
                             onDismissRequest()
                             onActionClick(TimetableAction.Import)
+                        }
+                    )
+                }
+                item {
+                    SettingsJumpPageWidget(
+                        icon = Icons.Default.UploadFile,
+                        title = stringResource(R.string.import_from_file),
+                        description = stringResource(R.string.import_from_file_desc),
+                        onClick = {
+                            onDismissRequest()
+                            onActionClick(TimetableAction.ImportFile)
                         }
                     )
                 }
@@ -150,5 +174,5 @@ fun TimetableActionSheet(
 }
 
 enum class TimetableAction {
-    Import, AddCourse, Switch, CreateEmpty, Delete, EditConfig, AddShortCut
+    Import, ImportFile, AddCourse, Export, Switch, CreateEmpty, Delete, EditConfig, AddShortCut
 }

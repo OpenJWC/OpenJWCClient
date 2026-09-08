@@ -19,6 +19,8 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
+import org.json.JSONArray
+import org.json.JSONObject
 import org.openjwc.client.data.models.Course
 import org.openjwc.client.data.models.SemesterConfig
 import org.openjwc.client.data.models.TableMetadata
@@ -290,6 +292,42 @@ class TimetableViewModel(
 
     fun cancelImport() {
         pendingImport = null
+    }
+
+    fun consumeImportError() {
+        importErrorMessage = null
+    }
+
+    fun notifyImportError(message: String) {
+        importErrorMessage = message
+    }
+
+    /**
+     * 生成当前课表的导出 JSON（与导入相同的规范化键）。
+     * 无当前课表时返回 null。
+     */
+    suspend fun buildExportJson(): String? {
+        val table = courseRepository.currentTable.first() ?: return null
+        val courses = courseRepository.getCoursesByTableId(table.id).first()
+        if (courses.isEmpty()) return null
+
+        val rows = JSONArray()
+        for (c in courses) {
+            val row = JSONObject()
+                .put("name", c.name)
+                .put("dayOfWeek", c.dayOfWeek.value)
+                .put("startPeriod", c.startPeriod)
+                .put("endPeriod", c.startPeriod + c.duration - 1)
+                .put("weeks", JSONArray(c.weekRule.sorted()))
+            if (c.teacher.isNotBlank()) row.put("teacher", c.teacher)
+            if (c.location.isNotBlank()) row.put("location", c.location)
+            if (c.note.isNotBlank()) row.put("note", c.note)
+            rows.put(row)
+        }
+        return JSONObject()
+            .put("termName", table.tableName)
+            .put("rows", rows)
+            .toString(2)
     }
 
 }
