@@ -393,4 +393,28 @@ OpenJWC は東南大学教务処とは公式な関係はありません。AI回�
     <string name="using_unsafe_http">安全でない HTTP を使用中</string>
     <string name="week_number_in_a_semester">学期の週数</string>
     <string name="week_starting_date">%1$d 週・%2$s</string>
-</resources>
+
+    <!-- 新着通知 -->
+    <string name="notification">通知</string>
+    <string name="notification_settings">通知設定</string>
+    <string name="news_notification">新着通知</string>
+    <string name="news_notification_desc">設定した間隔でバックグラウンドでサーバーを確認し、新しいお知らせがあれば通知します。実際の間隔はシステムの省電力設定の影響を受ける場合があります。</string>
+    <string name="news_check_interval">確認間隔</string>
+    <string name="interval_15m">15 分</string>
+    <string name="interval_30m">30 分</string>
+    <string name="interval_1h">1 時間</string>
+    <string name="interval_3h">3 時間</string>
+    <string name="interval_6h">6 時間</string>
+    <string name="notification_channel_news">新着情報</string>
+    <string name="notification_channel_news_desc">新しいお知らせが公開されたときに通知</string>
+    <string name="news_notification_summary_title">新しいお知らせがあります</string>
+    <string name="news_notification_count">新着 %1$d 件</string>
+    <string name="news_notification_more">他 %1$d 件</string>
+
+    <!-- ストレージとキャッシュ -->
+    <string name="storage_and_cache">ストレージとキャッシュ</string>
+    <string name="news_cache">ニュースキャッシュ</string>
+    <string name="news_cache_count">ニュースキャッシュ：%1$d件</string>
+    <string name="clear_news_cache">ニュースキャッシュを削除</string>
+    <string name="clear_news_cache_confirm">すべてのニュースキャッシュを削除しますか？次回オンライン更新時に自動的に再構築されます。</string>
+    <string name="cache_cleared">キャッシュを削除しました</string></resources>

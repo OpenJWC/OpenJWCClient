@@ -426,4 +426,23 @@
     <string name="show_date_header_desc">在週幾下方顯示具體的日期（如 05–01）</string>
     <string name="show_period_time_desc">在側邊序號下方顯示上課和下課的具體時間</string>
     <string name="show_non_current_week_desc">在當前周次也顯示灰色半透明的非本週課程</string>
-</resources>
+
+    <!-- 通知（补齐） -->
+    <string name="news_notification">新資訊通知</string>
+    <string name="news_notification_desc">開啟後按設定間隔在背景檢查伺服器，有新資訊時提醒你。實際檢查間隔可能受系統省電策略影響。</string>
+    <string name="news_check_interval">檢查間隔</string>
+    <string name="interval_15m">15 分鐘</string>
+    <string name="interval_30m">30 分鐘</string>
+    <string name="interval_1h">1 小時</string>
+    <string name="interval_3h">3 小時</string>
+    <string name="interval_6h">6 小時</string>
+    <string name="news_notification_summary_title">有新資訊</string>
+    <string name="news_notification_count">%1$d 條新資訊</string>
+    <string name="news_notification_more">還有 %1$d 條</string>
+    <!-- 儲存與快取 -->
+    <string name="storage_and_cache">儲存與快取</string>
+    <string name="news_cache">資訊快取</string>
+    <string name="news_cache_count">資訊快取：%1$d 條</string>
+    <string name="clear_news_cache">清除資訊快取</string>
+    <string name="clear_news_cache_confirm">確定要清除所有資訊快取嗎？快取將於下次連線重新整理時自動重建。</string>
+    <string name="cache_cleared">快取已清除</string></resources>

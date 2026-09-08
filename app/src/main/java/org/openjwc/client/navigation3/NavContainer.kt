@@ -68,9 +68,11 @@ import org.openjwc.client.ui.me.settings.auth.AccountScreen
 import org.openjwc.client.ui.me.settings.general.LanguageScreen
 import org.openjwc.client.ui.me.ReviewedNoticesScreen
 import org.openjwc.client.ui.me.settings.news.NewsDisplaySettingsScreen
+import org.openjwc.client.ui.me.settings.notification.NotificationSettingsScreen
 import org.openjwc.client.ui.policy.PolicyScreen
 import org.openjwc.client.ui.policy.LicenseScreen
 import org.openjwc.client.ui.me.settings.log.LogScreen
+import org.openjwc.client.ui.me.settings.storage.StorageCacheScreen
 import org.openjwc.client.ui.news.FavoriteScreen
 import org.openjwc.client.ui.news.NewsDetailScreen
 import org.openjwc.client.ui.news.upload.UploadNewsScreen
@@ -269,6 +271,7 @@ fun NavContainer() {
             entry<Screen.Language> { LanguageScreen(navigator, settingsViewModel) }
             entry<Screen.Review> { ReviewedNoticesScreen(navigator, newsViewModel) }
             entry<Screen.NewsSettings> { NewsDisplaySettingsScreen(navigator, settingsViewModel) }
+            entry<Screen.NotificationSettings> { NotificationSettingsScreen(navigator, settingsViewModel) }
             entry<Screen.Policy> { PolicyScreen(navigator) }
             entry<Screen.License> { LicenseScreen(navigator) }
             entry<Screen.Log> { LogScreen(navigator) }
@@ -277,6 +280,7 @@ fun NavContainer() {
             entry<Screen.UploadNews> { UploadNewsScreen(navigator, newsViewModel) }
             entry<Screen.Load> { ImportWebViewScreen(navigator, timetableViewModel) }
             entry<Screen.TimetablePrefs> { TimetablePrefsScreen(navigator, settingsViewModel, timetableViewModel) }
+            entry<Screen.StorageCache> { StorageCacheScreen(navigator, newsViewModel) }
         },
     )
 

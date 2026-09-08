@@ -34,7 +34,9 @@ data class UserSettings(
     val showTimeline: Boolean = true,
     val showDate: Boolean = true,
     val showPeriodTime: Boolean = true,
-    val showNonCurrentWeek: Boolean = true
+    val showNonCurrentWeek: Boolean = true,
+    val newsNotificationEnabled: Boolean = false,
+    val newsCheckIntervalMinutes: Int = 60
 )
 
 private val Context.settingsStore by preferencesDataStore(name = "user_settings")
@@ -59,6 +61,8 @@ class SettingsDataSource(private val context: Context) {
         val SHOW_DATE = booleanPreferencesKey("show_date")
         val SHOW_PERIOD_TIME = booleanPreferencesKey("show_period_time")
         val SHOW_NON_CURRENT_WEEK = booleanPreferencesKey("show_non_current_week")
+        val NEWS_NOTIFICATION_ENABLED = booleanPreferencesKey("news_notification_enabled")
+        val NEWS_CHECK_INTERVAL_MINUTES = intPreferencesKey("news_check_interval_minutes")
     }
 
     val userSettings: Flow<UserSettings> = context.settingsStore.data.map { prefs ->
@@ -99,7 +103,9 @@ class SettingsDataSource(private val context: Context) {
             showTimeline = prefs[Keys.SHOW_TIMELINE] ?: default.showTimeline,
             showDate = prefs[Keys.SHOW_DATE] ?: default.showDate,
             showPeriodTime = prefs[Keys.SHOW_PERIOD_TIME] ?: default.showPeriodTime,
-            showNonCurrentWeek = prefs[Keys.SHOW_NON_CURRENT_WEEK] ?: default.showNonCurrentWeek
+            showNonCurrentWeek = prefs[Keys.SHOW_NON_CURRENT_WEEK] ?: default.showNonCurrentWeek,
+            newsNotificationEnabled = prefs[Keys.NEWS_NOTIFICATION_ENABLED] ?: default.newsNotificationEnabled,
+            newsCheckIntervalMinutes = prefs[Keys.NEWS_CHECK_INTERVAL_MINUTES] ?: default.newsCheckIntervalMinutes
         )
     }
     suspend fun <T> save(key: Preferences.Key<T>, value: T) {

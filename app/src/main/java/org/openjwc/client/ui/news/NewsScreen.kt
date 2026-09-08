@@ -44,7 +44,6 @@ import org.openjwc.client.R
 import org.openjwc.client.data.appPreferences
 import org.openjwc.client.navigation.Screen
 import org.openjwc.client.net.models.FetchedNotice
-import org.openjwc.client.net.models.toNoticeEntity
 import org.openjwc.client.navigation.MainTab
 import org.openjwc.client.viewmodels.ChatViewModel
 import org.openjwc.client.viewmodels.MainViewModel
@@ -111,7 +110,7 @@ fun NewsScreen(
                             onInitialLoad = { newsViewModel.loadCategory(currentLabel) },
                             favoriteItems = newsViewModel.favoriteNews.collectAsStateWithLifecycle().value,
                             onDeleteFavorite = { newsViewModel.deleteFavorite(it.id) },
-                            onAddToFavorite = { newsViewModel.insertFavorite(it.toNoticeEntity()) })
+                            onAddToFavorite = { newsViewModel.insertFavorite(it) })
                         val showBackToTop by remember { derivedStateOf { listState.firstVisibleItemIndex > 5 } }
                         BackToTopButton(visible = showBackToTop, onClick = { scope.launch { listState.animateScrollToItem(0) } }, modifier = Modifier.align(Alignment.BottomEnd))
                     }

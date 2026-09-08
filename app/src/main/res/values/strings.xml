@@ -426,4 +426,29 @@
     <string name="accessibility">辅助功能</string>
     <string name="theme_color">主题颜色</string>
     <string name="custom_background">自定义背景</string>
-</resources>
+
+    <!-- 资讯通知 -->
+    <string name="notification">通知</string>
+    <string name="notification_settings">通知设置</string>
+    <string name="news_notification">新资讯通知</string>
+    <string name="news_notification_desc">开启后按设定间隔在后台检查服务器，有新资讯时提醒你。实际检查间隔可能受系统省电策略影响。</string>
+    <string name="news_check_interval">检查间隔</string>
+    <string name="interval_15m">15 分钟</string>
+    <string name="interval_30m">30 分钟</string>
+    <string name="interval_1h">1 小时</string>
+    <string name="interval_3h">3 小时</string>
+    <string name="interval_6h">6 小时</string>
+    <string name="notification_channel_news">新资讯</string>
+    <string name="notification_channel_news_desc">当有新资讯发布时进行提醒</string>
+    <string name="news_notification_summary_title">有新资讯</string>
+    <string name="news_notification_count">%1$d 条新资讯</string>
+    <string name="news_notification_more">还有 %1$d 条</string>
+
+    <!-- 通知（补齐） -->
+    <!-- 存储与缓存 -->
+    <string name="storage_and_cache">存储与缓存</string>
+    <string name="news_cache">资讯缓存</string>
+    <string name="news_cache_count">资讯缓存：%1$d 条</string>
+    <string name="clear_news_cache">清除资讯缓存</string>
+    <string name="clear_news_cache_confirm">确定要清除所有资讯缓存吗？缓存将在下次联网刷新时自动重建。</string>
+    <string name="cache_cleared">缓存已清除</string></resources>

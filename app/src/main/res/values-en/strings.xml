@@ -419,4 +419,28 @@ If you have any questions or suggestions about this agreement, you are welcome t
     <string name="show_date_header_desc">Display specific dates (e.g., 05–01) under the day of the week</string>
     <string name="show_period_time_desc">Display start and end times below the period number</string>
     <string name="show_non_current_week_desc">Display non-current week courses as semi-transparent grey</string>
-</resources>
+
+    <!-- News notifications -->
+    <string name="notification">Notifications</string>
+    <string name="notification_settings">Notification settings</string>
+    <string name="news_notification">New notice notifications</string>
+    <string name="news_notification_desc">Check the server in the background at the selected interval and notify you when new notices arrive. The actual interval may be affected by system battery optimizations.</string>
+    <string name="news_check_interval">Check interval</string>
+    <string name="interval_15m">15 minutes</string>
+    <string name="interval_30m">30 minutes</string>
+    <string name="interval_1h">1 hour</string>
+    <string name="interval_3h">3 hours</string>
+    <string name="interval_6h">6 hours</string>
+    <string name="notification_channel_news">New notices</string>
+    <string name="notification_channel_news_desc">Notify when new notices are published</string>
+    <string name="news_notification_summary_title">New notices available</string>
+    <string name="news_notification_count">%1$d new notices</string>
+    <string name="news_notification_more">%1$d more</string>
+
+    <!-- Storage & cache -->
+    <string name="storage_and_cache">Storage &amp; cache</string>
+    <string name="news_cache">News cache</string>
+    <string name="news_cache_count">News cache: %1$d items</string>
+    <string name="clear_news_cache">Clear news cache</string>
+    <string name="clear_news_cache_confirm">Clear all cached news? The cache will be rebuilt automatically on the next online refresh.</string>
+    <string name="cache_cleared">Cache cleared</string></resources>

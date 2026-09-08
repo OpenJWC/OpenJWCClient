@@ -24,7 +24,9 @@ data class FetchedNotice(
     @SerialName("attachments") val attachmentUrls: List<String>?
 )
 
-fun FetchedNotice.toNoticeEntity() = NoticeEntity(
+fun FetchedNotice.toNoticeEntity(host: String = "", port: Int = 0) = NoticeEntity(
+    host = host,
+    port = port,
     id = id,
     label = label,
     title = title,

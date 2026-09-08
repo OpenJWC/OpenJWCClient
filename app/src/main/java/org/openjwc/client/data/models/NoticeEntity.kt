@@ -1,18 +1,20 @@
 package org.openjwc.client.data.models
 
 import androidx.room.Entity
-import androidx.room.PrimaryKey
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import org.openjwc.client.net.models.FetchedNotice
 
 @Entity(
     tableName = "favorite_notices",
+    primaryKeys = ["host", "port", "id"]
 )
 @Serializable
 data class NoticeEntity(
+    val host: String = "",
+    val port: Int = 0,
     @SerialName("id")
-    @PrimaryKey val id: String,
+    val id: String,
     val label: String,
     val title: String,
     val date: String,

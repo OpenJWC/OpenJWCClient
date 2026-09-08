@@ -14,7 +14,6 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import org.openjwc.client.R
 import org.openjwc.client.data.datastore.UserSettings
-import org.openjwc.client.data.models.NoticeEntity
 import org.openjwc.client.data.models.toFetchedNotice
 import org.openjwc.client.data.repository.AuthRepository
 import org.openjwc.client.data.repository.NewsRepository
@@ -32,6 +31,8 @@ data class PagingState(
     val error: String? = null
 )
 
+private const val PAGE_SIZE = 20
+
 class NewsViewModel(
     repository: SettingsRepository,
     private val newsRepository: NewsRepository,
@@ -40,6 +41,13 @@ class NewsViewModel(
     private val tag = "NewsViewModel"
 
     private val _pagingStates = mutableStateMapOf<String, PagingState>()
+
+    init {
+        // 迁移遗留收藏（host='' 分区）归属到当前数据源（幂等）
+        viewModelScope.launch {
+            runCatching { newsRepository.adoptLegacyFavorites() }
+        }
+    }
 
     val freshDays: StateFlow<Int?> = repository.userSettings
         .map { it.freshDays }
@@ -50,7 +58,7 @@ class NewsViewModel(
             initialValue = UserSettings().freshDays
         )
 
-    val favoriteNews = newsRepository.allFavorites
+    val favoriteNews = newsRepository.allFavorites()
         .map { favorites ->
             favorites.map {
                 it.toFetchedNotice()
@@ -60,6 +68,13 @@ class NewsViewModel(
             scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(5000),
             initialValue = emptyList()
+        )
+
+    val newsCacheCount: StateFlow<Int> = newsRepository.observeNewsCacheCount()
+        .stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5000),
+            initialValue = 0
         )
 
     var currentNewsToDisplay = MutableStateFlow<FetchedNotice?>(null)
@@ -111,14 +126,26 @@ class NewsViewModel(
                     is NetworkResult.Success -> {
                         labels.value = result.response.data.labels
                         labelError.value = null
+                        runCatching { newsRepository.saveLabelsCache(result.response.data.labels) }
                     }
 
                     is NetworkResult.Failure -> {
-                        labelError.value = "加载错误(${result.code}): ${result.msg}"
+                        // 离线回退：有标签缓存则静默使用，不报错
+                        val cached = runCatching { newsRepository.getCachedLabels() }.getOrNull()
+                        if (cached != null) {
+                            labels.value = cached
+                        } else {
+                            labelError.value = "加载错误(${result.code}): ${result.msg}"
+                        }
                     }
 
                     is NetworkResult.Error -> {
-                        labelError.value = result.msg
+                        val cached = runCatching { newsRepository.getCachedLabels() }.getOrNull()
+                        if (cached != null) {
+                            labels.value = cached
+                        } else {
+                            labelError.value = result.msg
+                        }
                     }
                 }
             } catch (e: Exception) {
@@ -157,6 +184,9 @@ class NewsViewModel(
                                 isEnd = isEnd
                             )
                         }
+
+                        // 写入离线缓存（失败不影响 UI）
+                        runCatching { newsRepository.refreshNewsCacheFromUi(label, newData) }
                     }
 
                     is NetworkResult.Failure -> {
@@ -236,13 +266,33 @@ class NewsViewModel(
 
     fun loadCategory(label: String, isRefresh: Boolean = false) {
         if (!isRefresh && _pagingStates.containsKey(label)) return
-        executeLoadNews(label, page = 1, size = 20, isRefresh = isRefresh)
+        if (!_pagingStates.containsKey(label)) hydrateFromCache(label)
+        executeLoadNews(label, page = 1, size = PAGE_SIZE, isRefresh = isRefresh)
+    }
+
+    /** 缓存打底：进标签先展示本地缓存（仅当内存里还没有数据时），随后网络刷新覆盖。 */
+    private fun hydrateFromCache(label: String) {
+        viewModelScope.launch {
+            val cached = runCatching { newsRepository.getCachedNews(label) }.getOrDefault(emptyList())
+            if (cached.isEmpty()) return@launch
+            val current = _pagingStates[label]
+            if (current == null || current.items.isEmpty()) {
+                _pagingStates[label] = PagingState(items = cached, currentPage = 1, isEnd = false)
+            }
+        }
     }
 
     fun loadNextPage(label: String) {
         if (isLoading.value || isRefreshing.value || isEnd(label)) return
         val nextPage = (_pagingStates[label]?.currentPage ?: 1) + 1
-        executeLoadNews(label, page = nextPage, size = 20, isRefresh = false)
+        executeLoadNews(label, page = nextPage, size = PAGE_SIZE, isRefresh = false)
+    }
+
+    fun clearNewsCache() {
+        viewModelScope.launch {
+            runCatching { newsRepository.clearNewsCache() }
+            uiEvent.send(UiEvent.ShowToast(UiText.StringResource(R.string.cache_cleared)))
+        }
     }
 
     fun clearUploadError() {
@@ -261,15 +311,9 @@ class NewsViewModel(
         }
     }
 
-    fun insertFavorite(notice: NoticeEntity) {
+    fun insertFavorite(notice: FetchedNotice) {
         viewModelScope.launch {
             newsRepository.insertFavoriteNews(notice)
-        }
-    }
-
-    fun insertFavorite(notices: List<NoticeEntity>) {
-        viewModelScope.launch {
-            newsRepository.insertFavoriteNews(notices)
         }
     }
 

@@ -142,6 +142,12 @@ class SettingsRepository(
     suspend fun updateShowPeriodTime(show: Boolean) = settingsDataSource.save(keys.SHOW_PERIOD_TIME, show)
     suspend fun updateShowNonCurrentWeek(show: Boolean) = settingsDataSource.save(keys.SHOW_NON_CURRENT_WEEK, show)
 
+    suspend fun updateNewsNotificationEnabled(enabled: Boolean) =
+        settingsDataSource.save(keys.NEWS_NOTIFICATION_ENABLED, enabled)
+
+    suspend fun updateNewsCheckIntervalMinutes(minutes: Int) =
+        settingsDataSource.save(keys.NEWS_CHECK_INTERVAL_MINUTES, minutes)
+
     suspend fun getToggleState(id: String): Boolean = settingsDataSource.getToggleState(id)
 
     suspend fun saveToggleState(id: String, value: Boolean) = settingsDataSource.saveToggleState(id, value)

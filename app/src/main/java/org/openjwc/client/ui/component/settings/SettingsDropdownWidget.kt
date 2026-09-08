@@ -34,6 +34,7 @@ fun SettingsDropdownWidget(
     choice: Int,
     data: List<String>,
     leadingContent: (@Composable () -> Unit)? = null,
+    trailingContent: (@Composable () -> Unit)? = null,
     onChoiceChange: (Int) -> Unit
 ) {
     var expanded by remember {
@@ -61,8 +62,9 @@ fun SettingsDropdownWidget(
                 expanded = !expanded
             },
             leadingContent = leadingContent,
+            trailingContent = trailingContent?.let { content -> { content() } },
             iconPlaceholder = iconPlaceholder,
-        ) {}
+        )
 
         Box(
             modifier = Modifier

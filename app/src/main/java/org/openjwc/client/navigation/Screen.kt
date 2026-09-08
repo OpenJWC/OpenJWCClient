@@ -50,6 +50,9 @@ sealed interface Screen : NavKey, Parcelable {
     object NewsSettings : Screen
     @Serializable
     @Parcelize
+    object NotificationSettings : Screen
+    @Serializable
+    @Parcelize
     object Policy : Screen
     @Serializable
     @Parcelize
@@ -66,6 +69,9 @@ sealed interface Screen : NavKey, Parcelable {
     @Serializable
     @Parcelize
     object Language : Screen
+    @Serializable
+    @Parcelize
+    object StorageCache : Screen
     @Serializable
     @Parcelize
     object Load : Screen

@@ -393,4 +393,28 @@ OpenJWC는 동남대학교 학사처와 공식적인 관계가 없습니다. AI 
     <string name="using_unsafe_http">안전하지 않은 HTTP를 사용 중</string>
     <string name="week_number_in_a_semester">학기 주차 수</string>
     <string name="week_starting_date">%1$d주 · %2$s</string>
-</resources>
+
+    <!-- 새 소식 알림 -->
+    <string name="notification">알림</string>
+    <string name="notification_settings">알림 설정</string>
+    <string name="news_notification">새 소식 알림</string>
+    <string name="news_notification_desc">설정한 간격으로 백그라운드에서 서버를 확인하고 새 소식이 있으면 알려드립니다. 실제 간격은 시스템 절전 설정의 영향을 받을 수 있습니다.</string>
+    <string name="news_check_interval">확인 간격</string>
+    <string name="interval_15m">15분</string>
+    <string name="interval_30m">30분</string>
+    <string name="interval_1h">1시간</string>
+    <string name="interval_3h">3시간</string>
+    <string name="interval_6h">6시간</string>
+    <string name="notification_channel_news">새 소식</string>
+    <string name="notification_channel_news_desc">새 소식이 게시되면 알림</string>
+    <string name="news_notification_summary_title">새 소식이 있습니다</string>
+    <string name="news_notification_count">새 소식 %1$d개</string>
+    <string name="news_notification_more">%1$d개 더 보기</string>
+
+    <!-- 저장소 및 캐시 -->
+    <string name="storage_and_cache">저장소 및 캐시</string>
+    <string name="news_cache">뉴스 캐시</string>
+    <string name="news_cache_count">뉴스 캐시: %1$d개</string>
+    <string name="clear_news_cache">뉴스 캐시 지우기</string>
+    <string name="clear_news_cache_confirm">모든 뉴스 캐시를 지울까요? 다음 온라인 새로고침 시 자동으로 다시 생성됩니다.</string>
+    <string name="cache_cleared">캐시가 삭제되었습니다</string></resources>

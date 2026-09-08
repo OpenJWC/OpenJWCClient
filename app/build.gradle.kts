@@ -22,8 +22,8 @@ android {
         applicationId = "org.openjwc.client"
         minSdk = 26
         targetSdk = 37
-        versionCode = 27
-        versionName = "1.2.0 (Beta)"
+        versionCode = 28
+        versionName = "1.3.0 (Beta)"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
@@ -111,6 +111,7 @@ dependencies {
     implementation(libs.androidx.room.common.jvm)
     implementation(libs.androidx.room.ktx)
     implementation(libs.androidx.datastore)
+    implementation(libs.androidx.work.runtime.ktx)
 
     testImplementation(libs.junit)
     testImplementation(kotlin("test"))

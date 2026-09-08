@@ -59,6 +59,12 @@ class SettingsViewModel(
     fun updateShowPeriodTime(show: Boolean) = viewModelScope.launch { settingsRepository.updateShowPeriodTime(show) }
     fun updateShowNonCurrentWeek(show: Boolean) = viewModelScope.launch { settingsRepository.updateShowNonCurrentWeek(show) }
 
+    fun updateNewsNotificationEnabled(enabled: Boolean) =
+        viewModelScope.launch { settingsRepository.updateNewsNotificationEnabled(enabled) }
+
+    fun updateNewsCheckIntervalMinutes(minutes: Int) =
+        viewModelScope.launch { settingsRepository.updateNewsCheckIntervalMinutes(minutes) }
+
     private var _deviceResult = MutableStateFlow<NetworkResult<SuccessResponse<DevicesQueryResponseData>>>(
         NetworkResult.Success(SuccessResponse("success", DevicesQueryResponseData(deviceQueries = emptyList())))
     )
