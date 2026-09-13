@@ -148,6 +148,12 @@ class SettingsRepository(
     suspend fun updateNewsCheckIntervalMinutes(minutes: Int) =
         settingsDataSource.save(keys.NEWS_CHECK_INTERVAL_MINUTES, minutes)
 
+    suspend fun updateCourseReminderEnabled(enabled: Boolean) =
+        settingsDataSource.save(keys.COURSE_REMINDER_ENABLED, enabled)
+
+    suspend fun updatePermissionReminderDismissed(dismissed: Boolean) =
+        settingsDataSource.save(keys.PERMISSION_REMINDER_DISMISSED, dismissed)
+
     suspend fun getToggleState(id: String): Boolean = settingsDataSource.getToggleState(id)
 
     suspend fun saveToggleState(id: String, value: Boolean) = settingsDataSource.saveToggleState(id, value)

@@ -2,6 +2,7 @@ package org.openjwc.client.ui.main
 
 import android.app.Activity
 import android.widget.Toast
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -44,6 +45,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
@@ -59,6 +61,7 @@ import org.openjwc.client.navigation3.Navigator
 import org.openjwc.client.ui.chat.ChatHistoryList
 import org.openjwc.client.ui.chat.ChatMainContent
 import org.openjwc.client.ui.chat.EditMetadataDialog
+import org.openjwc.client.ui.component.PermissionReminderFab
 import org.openjwc.client.ui.component.settings.SettingsChooseDialog
 import org.openjwc.client.ui.me.MeScreenContent
 import org.openjwc.client.ui.news.NewsScreen
@@ -303,10 +306,16 @@ fun MainScreen(
                     },
                     floatingActionButton = {
                         if (isTimetableTab && !timetableViewModel.isImporting) {
-                            FloatingActionButton(onClick = {
-                                timetableViewModel.updateUiState { it.copy(showActionSheet = true) }
-                            }) {
-                                Icon(Icons.Default.Add, contentDescription = stringResource(R.string.operating_menu))
+                            Column(
+                                horizontalAlignment = Alignment.End,
+                                verticalArrangement = Arrangement.spacedBy(12.dp)
+                            ) {
+                                PermissionReminderFab(settingsViewModel = settingsViewModel)
+                                FloatingActionButton(onClick = {
+                                    timetableViewModel.updateUiState { it.copy(showActionSheet = true) }
+                                }) {
+                                    Icon(Icons.Default.Add, contentDescription = stringResource(R.string.operating_menu))
+                                }
                             }
                         }
                     },

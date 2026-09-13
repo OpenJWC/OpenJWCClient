@@ -459,4 +459,47 @@
     <string name="news_cache_count">资讯缓存：%1$d 条</string>
     <string name="clear_news_cache">清除资讯缓存</string>
     <string name="clear_news_cache_confirm">确定要清除所有资讯缓存吗？缓存将在下次联网刷新时自动重建。</string>
-    <string name="cache_cleared">缓存已清除</string></resources>
+    <string name="cache_cleared">缓存已清除</string>
+
+    <!-- 课程提醒 -->
+    <string name="course_reminder">课程提醒</string>
+    <string name="course_reminder_desc">在上课前 10 分钟提醒你，按当前课表自动安排。需要通知权限，且精确度可能受系统省电策略影响。</string>
+    <string name="course_reminder_channel_name">课程提醒</string>
+    <string name="course_reminder_channel_desc">在上课前 10 分钟进行提醒</string>
+    <string name="course_reminder_title">课程还有 10 分钟开始</string>
+    <string name="course_reminder_content">%1$s · %2$s · %3$s · %4$s</string>
+
+    <!-- 桌面小组件 -->
+    <string name="widget_description">查看今日课程安排</string>
+    <string name="widget_today_format">今天 · %1$s</string>
+    <string name="widget_tomorrow_format">明天 · %1$s</string>
+    <string name="widget_courses_completed">今日课程已结束</string>
+    <string name="widget_no_courses_today">今天没有课</string>
+    <string name="widget_section_range">第 %1$d-%2$d 节</string>
+    <string name="widget_countdown">距离下课</string>
+    <string name="widget_countdown_minutes">约 %1$d 分钟</string>
+    <string name="widget_settings_summary">自定义小组件背景与不透明度</string>
+    <string name="widget_preview">预览</string>
+    <string name="widget_background">背景图片</string>
+    <string name="widget_background_desc">未设置背景图，将使用纯色背景</string>
+    <string name="widget_pick_image">选择图片</string>
+    <string name="widget_remove_background">移除背景</string>
+    <string name="widget_opacity">背景不透明度</string>
+    <string name="widget_opacity_desc">调整背景图片的不透明度，0% 时隐藏背景图</string>
+
+    <!-- 系统权限 -->
+    <string name="system_permissions">系统权限</string>
+    <string name="notification_permission">通知权限</string>
+    <string name="notification_permission_summary">允许发送课程提醒与资讯通知</string>
+    <string name="battery_optimization">忽略电池优化</string>
+    <string name="battery_optimization_summary">保持后台刷新小组件与课程提醒的可靠性</string>
+    <string name="cannot_open_settings">无法打开系统设置</string>
+
+    <!-- 权限提醒 FAB -->
+    <string name="permission_reminder_title">开启通知与省电权限</string>
+    <string name="permission_reminder_desc">为了确保课程提醒准时送达、桌面小组件及时刷新，请开启通知权限并忽略电池优化。</string>
+    <string name="permission_reminder_notification">通知权限</string>
+    <string name="permission_reminder_battery">忽略电池优化</string>
+    <string name="permission_reminder_granted">已开启</string>
+    <string name="permission_reminder_not_granted">未开启</string>
+    <string name="dont_remind_again">不再提醒</string></resources>

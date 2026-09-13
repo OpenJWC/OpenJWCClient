@@ -53,6 +53,9 @@ sealed interface Screen : NavKey, Parcelable {
     object NotificationSettings : Screen
     @Serializable
     @Parcelize
+    object WidgetSettings : Screen
+    @Serializable
+    @Parcelize
     object Policy : Screen
     @Serializable
     @Parcelize

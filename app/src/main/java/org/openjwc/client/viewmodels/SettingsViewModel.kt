@@ -65,6 +65,12 @@ class SettingsViewModel(
     fun updateNewsCheckIntervalMinutes(minutes: Int) =
         viewModelScope.launch { settingsRepository.updateNewsCheckIntervalMinutes(minutes) }
 
+    fun updateCourseReminderEnabled(enabled: Boolean) =
+        viewModelScope.launch { settingsRepository.updateCourseReminderEnabled(enabled) }
+
+    fun updatePermissionReminderDismissed(dismissed: Boolean) =
+        viewModelScope.launch { settingsRepository.updatePermissionReminderDismissed(dismissed) }
+
     private var _deviceResult = MutableStateFlow<NetworkResult<SuccessResponse<DevicesQueryResponseData>>>(
         NetworkResult.Success(SuccessResponse("success", DevicesQueryResponseData(deviceQueries = emptyList())))
     )

@@ -453,4 +453,47 @@
     <string name="news_cache_count">資訊快取：%1$d 條</string>
     <string name="clear_news_cache">清除資訊快取</string>
     <string name="clear_news_cache_confirm">確定要清除所有資訊快取嗎？快取將於下次連線重新整理時自動重建。</string>
-    <string name="cache_cleared">快取已清除</string></resources>
+    <string name="cache_cleared">快取已清除</string>
+
+    <!-- 課程提醒 -->
+    <string name="course_reminder">課程提醒</string>
+    <string name="course_reminder_desc">在上課前 10 分鐘提醒你，依目前課表自動安排。需要通知權限，且精確度可能受系統省電策略影響。</string>
+    <string name="course_reminder_channel_name">課程提醒</string>
+    <string name="course_reminder_channel_desc">在上課前 10 分鐘提醒</string>
+    <string name="course_reminder_title">課程還有 10 分鐘開始</string>
+    <string name="course_reminder_content">%1$s · %2$s · %3$s · %4$s</string>
+
+    <!-- 桌面小工具 -->
+    <string name="widget_description">查看今日課程安排</string>
+    <string name="widget_today_format">今天 · %1$s</string>
+    <string name="widget_tomorrow_format">明天 · %1$s</string>
+    <string name="widget_courses_completed">今日課程已結束</string>
+    <string name="widget_no_courses_today">今天沒有課</string>
+    <string name="widget_section_range">第 %1$d-%2$d 節</string>
+    <string name="widget_countdown">距離下課</string>
+    <string name="widget_countdown_minutes">約 %1$d 分鐘</string>
+    <string name="widget_settings_summary">自訂小工具背景與不透明度</string>
+    <string name="widget_preview">預覽</string>
+    <string name="widget_background">背景圖片</string>
+    <string name="widget_background_desc">未設定背景圖，將使用純色背景</string>
+    <string name="widget_pick_image">選擇圖片</string>
+    <string name="widget_remove_background">移除背景</string>
+    <string name="widget_opacity">背景不透明度</string>
+    <string name="widget_opacity_desc">調整背景圖片的不透明度，0% 時會隱藏背景圖</string>
+
+    <!-- 系統權限 -->
+    <string name="system_permissions">系統權限</string>
+    <string name="notification_permission">通知權限</string>
+    <string name="notification_permission_summary">允許傳送課程提醒與資訊通知</string>
+    <string name="battery_optimization">忽略電池最佳化</string>
+    <string name="battery_optimization_summary">保持背景重新整理小工具與課程提醒的可靠性</string>
+    <string name="cannot_open_settings">無法開啟系統設定</string>
+
+    <!-- 權限提醒 FAB -->
+    <string name="permission_reminder_title">開啟通知與省電權限</string>
+    <string name="permission_reminder_desc">為了確保課程提醒準時送達、桌面小工具及時重新整理，請開啟通知權限並忽略電池最佳化。</string>
+    <string name="permission_reminder_notification">通知權限</string>
+    <string name="permission_reminder_battery">忽略電池最佳化</string>
+    <string name="permission_reminder_granted">已開啟</string>
+    <string name="permission_reminder_not_granted">未開啟</string>
+    <string name="dont_remind_again">不再提醒</string></resources>

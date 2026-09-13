@@ -10,6 +10,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import org.openjwc.client.ui.theme.ColorItem
+import org.openjwc.client.ui.theme.rememberCourseColor
 import org.openjwc.client.ui.theme.seedColors
 
 @Preview
@@ -34,9 +35,12 @@ fun ColorPickerRow(
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
         presetColors.forEachIndexed { index, color ->
+            val courseColor = rememberCourseColor(color)
             ColorItem(
-                color = color,
+                color = courseColor.container,
                 isSelected = selectedIndex == index,
+                ringColor = courseColor.accent,
+                checkColor = courseColor.content,
                 onClick = {
                     onColorSelect(index)
                 }

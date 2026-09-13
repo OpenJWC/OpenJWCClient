@@ -20,6 +20,7 @@ import androidx.compose.material.icons.twotone.Notifications
 import androidx.compose.material.icons.twotone.Palette
 import androidx.compose.material.icons.twotone.Storage
 import androidx.compose.material.icons.twotone.VpnKey
+import androidx.compose.material.icons.twotone.Widgets
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.LargeFlexibleTopAppBar
 import androidx.compose.material3.MaterialTheme
@@ -67,6 +68,7 @@ import org.openjwc.client.ui.me.settings.storage.StorageCacheContent
 import org.openjwc.client.ui.me.settings.storage.StorageCacheScreen
 import org.openjwc.client.ui.me.settings.timetable.TimetableContent
 import org.openjwc.client.ui.me.settings.timetable.TimetablePrefsScreen
+import org.openjwc.client.ui.me.settings.widget.WidgetSettingsContent
 import org.openjwc.client.viewmodels.AuthViewModel
 import org.openjwc.client.viewmodels.NewsViewModel
 import org.openjwc.client.viewmodels.SettingsViewModel
@@ -114,6 +116,7 @@ fun SettingsScreen(
                     }
                     SegmentedColumn(title = stringResource(R.string.timetable)) {
                         item { SettingsBaseWidget(icon = Icons.TwoTone.CalendarMonth, title = stringResource(R.string.timetable_settings), selected = selectedPage == Screen.TimetablePrefs, onClick = { selectedPage = Screen.TimetablePrefs }) {} }
+                        item { SettingsBaseWidget(icon = Icons.TwoTone.Widgets, title = stringResource(R.string.widget_settings), selected = selectedPage == Screen.WidgetSettings, onClick = { selectedPage = Screen.WidgetSettings }) {} }
                     }
                     SegmentedColumn(title = stringResource(R.string.debug)) {
                         item { SettingsBaseWidget(icon = Icons.TwoTone.BugReport, title = stringResource(R.string.log), selected = selectedPage == Screen.Log, onClick = { selectedPage = Screen.Log }) {} }
@@ -126,6 +129,7 @@ fun SettingsScreen(
                         Screen.Theme -> ThemeContent(navigator, contentModifier)
                         Screen.Language -> LanguageContent(navigator, settingsViewModel, contentModifier)
                         Screen.StorageCache -> StorageCacheContent(newsViewModel!!, contentModifier)
+                        Screen.WidgetSettings -> WidgetSettingsContent(contentModifier)
                         Screen.Host -> HostContent(navigator, settingsViewModel, contentModifier)
                         Screen.Account -> AccountContent(navigator, authViewModel!!, settingsViewModel)
                         Screen.NewsSettings -> NewsContent(navigator, settingsViewModel, contentModifier)
@@ -170,6 +174,7 @@ fun SettingsScreen(
                 }
                 SegmentedColumn(title = stringResource(R.string.timetable)) {
                     item { SettingsJumpPageWidget(icon = Icons.TwoTone.CalendarMonth, title = stringResource(R.string.timetable_settings), onClick = { navigator.push(Screen.TimetablePrefs) }) }
+                    item { SettingsJumpPageWidget(icon = Icons.TwoTone.Widgets, title = stringResource(R.string.widget_settings), onClick = { navigator.push(Screen.WidgetSettings) }) }
                 }
                 SegmentedColumn(title = stringResource(R.string.debug)) {
                     item { SettingsJumpPageWidget(icon = Icons.TwoTone.BugReport, title = stringResource(R.string.log), onClick = { navigator.push(Screen.Log) }) }

@@ -46,6 +46,7 @@ import org.openjwc.client.data.models.Course
 import org.openjwc.client.ui.component.settings.SegmentedColumn
 import org.openjwc.client.ui.component.settings.SettingsBaseWidget
 import org.openjwc.client.ui.timetable.edit.components.CardItem
+import org.openjwc.client.ui.theme.rememberCourseColor
 import java.time.DayOfWeek
 import java.time.format.TextStyle
 
@@ -242,12 +243,14 @@ fun InfoSection(
         course.startPeriod + course.duration - 1
     )
 
+    val courseColor = rememberCourseColor(course.color)
+
     Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
         SegmentedColumn {
             item {
                 SettingsBaseWidget(
                     icon = Icons.Default.Place,
-                    iconColor = course.color,
+                    iconColor = courseColor.accent,
                     title = course.location.ifBlank { stringResource(R.string.location_not_specified) },
                     description = course.teacher.ifBlank { stringResource(R.string.teacher_not_specified) }
                 )

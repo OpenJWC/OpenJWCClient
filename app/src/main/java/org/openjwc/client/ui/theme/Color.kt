@@ -75,7 +75,13 @@ val courseBackgroundColors = listOf(
 )
 
 @Composable
-fun ColorItem(color: Color, isSelected: Boolean, onClick: () -> Unit) {
+fun ColorItem(
+    color: Color,
+    isSelected: Boolean,
+    onClick: () -> Unit,
+    ringColor: Color = MaterialTheme.colorScheme.primary,
+    checkColor: Color = if (isDarkColor(color)) Color.White else Color.Black
+) {
     Box(
         contentAlignment = Alignment.Center,
         modifier = Modifier
@@ -84,7 +90,7 @@ fun ColorItem(color: Color, isSelected: Boolean, onClick: () -> Unit) {
             .aspectRatio(1f)
             .then(
                 if (isSelected) Modifier.border(
-                    3.dp, MaterialTheme.colorScheme.primary, CircleShape
+                    3.dp, ringColor, CircleShape
                 ) else Modifier
             )
             .padding(4.dp)
@@ -101,7 +107,7 @@ fun ColorItem(color: Color, isSelected: Boolean, onClick: () -> Unit) {
             if (isSelected) {
                 Icon(
                     Icons.Default.Check, contentDescription = null,
-                    tint = if (isDarkColor(color)) Color.White else Color.Black,
+                    tint = checkColor,
                     modifier = Modifier.size(24.dp)
                 )
             }

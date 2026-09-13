@@ -27,6 +27,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import org.openjwc.client.data.models.Course
+import org.openjwc.client.ui.theme.rememberCourseColor
 import java.time.DayOfWeek
 
 private val mockCourse = Course(
@@ -78,14 +79,16 @@ fun CourseBlock(
         label = "courseBlockScale"
     )
 
+    val courseColor = rememberCourseColor(course.color)
+
     val containerColor = if (isCurrentWeek) {
-        course.color
+        courseColor.container
     } else {
         MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.8f)
     }
 
     val contentColor = if (isCurrentWeek) {
-        Color.White
+        courseColor.content
     } else {
         MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
     }

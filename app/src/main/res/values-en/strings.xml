@@ -451,4 +451,47 @@ If you have any questions or suggestions about this agreement, you are welcome t
     <string name="news_cache_count">News cache: %1$d items</string>
     <string name="clear_news_cache">Clear news cache</string>
     <string name="clear_news_cache_confirm">Clear all cached news? The cache will be rebuilt automatically on the next online refresh.</string>
-    <string name="cache_cleared">Cache cleared</string></resources>
+    <string name="cache_cleared">Cache cleared</string>
+
+    <!-- Class reminders -->
+    <string name="course_reminder">Class reminders</string>
+    <string name="course_reminder_desc">Notify you 10 minutes before class starts, scheduled from the active timetable. Requires notification permission; exactness may be affected by battery optimizations.</string>
+    <string name="course_reminder_channel_name">Class reminders</string>
+    <string name="course_reminder_channel_desc">Notify 10 minutes before a class starts</string>
+    <string name="course_reminder_title">Class starts in 10 minutes</string>
+    <string name="course_reminder_content">%1$s · %2$s · %3$s · %4$s</string>
+
+    <!-- Home screen widget -->
+    <string name="widget_description">Show today class schedule</string>
+    <string name="widget_today_format">Today · %1$s</string>
+    <string name="widget_tomorrow_format">Tomorrow · %1$s</string>
+    <string name="widget_courses_completed">All classes finished</string>
+    <string name="widget_no_courses_today">No classes today</string>
+    <string name="widget_section_range">Period %1$d-%2$d</string>
+    <string name="widget_countdown">Time left</string>
+    <string name="widget_countdown_minutes">~%1$d min</string>
+    <string name="widget_settings_summary">Customize widget background and opacity</string>
+    <string name="widget_preview">Preview</string>
+    <string name="widget_background">Background image</string>
+    <string name="widget_background_desc">No background image selected; a solid color will be used</string>
+    <string name="widget_pick_image">Pick image</string>
+    <string name="widget_remove_background">Remove background</string>
+    <string name="widget_opacity">Background opacity</string>
+    <string name="widget_opacity_desc">Adjust the opacity of the background image; 0% hides it</string>
+
+    <!-- System permissions -->
+    <string name="system_permissions">System permissions</string>
+    <string name="notification_permission">Notification permission</string>
+    <string name="notification_permission_summary">Allow class reminders and news notifications</string>
+    <string name="battery_optimization">Ignore battery optimization</string>
+    <string name="battery_optimization_summary">Keep the widget and class reminders reliable in the background</string>
+    <string name="cannot_open_settings">Unable to open system settings</string>
+
+    <!-- Permission reminder FAB -->
+    <string name="permission_reminder_title">Enable notifications and battery exemption</string>
+    <string name="permission_reminder_desc">To make sure class reminders arrive on time and the home-screen widget refreshes promptly, allow notifications and ignore battery optimization.</string>
+    <string name="permission_reminder_notification">Notification permission</string>
+    <string name="permission_reminder_battery">Ignore battery optimization</string>
+    <string name="permission_reminder_granted">Enabled</string>
+    <string name="permission_reminder_not_granted">Not enabled</string>
+    <string name="dont_remind_again">Don\'t remind again</string></resources>

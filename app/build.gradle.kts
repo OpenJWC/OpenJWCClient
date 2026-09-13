@@ -23,10 +23,25 @@ android {
         applicationId = "org.openjwc.client"
         minSdk = 26
         targetSdk = 37
-        versionCode = 29
-        versionName = "1.4.0 (Beta)"
+        versionCode = 30
+        versionName = "1.4.1 (Beta)"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+    }
+
+    signingConfigs {
+        create("release") {
+            val keystorePath = localProperties.getProperty("openjwc.keyStore")
+            if (!keystorePath.isNullOrBlank()) {
+                val keystoreFile = file(keystorePath)
+                if (keystoreFile.exists()) {
+                    storeFile = keystoreFile
+                    storePassword = localProperties.getProperty("openjwc.storePassword")
+                    keyAlias = localProperties.getProperty("openjwc.keyAlias")
+                    keyPassword = localProperties.getProperty("openjwc.keyPassword")
+                }
+            }
+        }
     }
 
     buildTypes {
@@ -36,11 +51,11 @@ android {
         }
         release {
             isMinifyEnabled = true
-            isShrinkResources = true
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
+            signingConfig = signingConfigs.getByName("release")
         }
     }
 
@@ -114,6 +129,10 @@ dependencies {
     implementation(libs.androidx.room.ktx)
     implementation(libs.androidx.datastore)
     implementation(libs.androidx.work.runtime.ktx)
+
+    implementation(libs.glance.appwidget)
+    implementation(libs.glance.material3)
+    debugImplementation(libs.glance.appwidget.preview)
 
     testImplementation(libs.junit)
     testImplementation(kotlin("test"))

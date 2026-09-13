@@ -425,4 +425,47 @@ OpenJWC は東南大学教务処とは公式な関係はありません。AI回�
     <string name="news_cache_count">ニュースキャッシュ：%1$d件</string>
     <string name="clear_news_cache">ニュースキャッシュを削除</string>
     <string name="clear_news_cache_confirm">すべてのニュースキャッシュを削除しますか？次回オンライン更新時に自動的に再構築されます。</string>
-    <string name="cache_cleared">キャッシュを削除しました</string></resources>
+    <string name="cache_cleared">キャッシュを削除しました</string>
+
+    <!-- 授業リマインダー -->
+    <string name="course_reminder">授業リマインダー</string>
+    <string name="course_reminder_desc">授業開始 10 分前に通知します。現在の時間割から自動的に設定されます。通知権限が必要で、正確さは省電力設定の影響を受ける場合があります。</string>
+    <string name="course_reminder_channel_name">授業リマインダー</string>
+    <string name="course_reminder_channel_desc">授業開始 10 分前に通知</string>
+    <string name="course_reminder_title">授業開始まであと 10 分</string>
+    <string name="course_reminder_content">%1$s · %2$s · %3$s · %4$s</string>
+
+    <!-- ホーム画面ウィジェット -->
+    <string name="widget_description">今日の授業予定を表示</string>
+    <string name="widget_today_format">今日 · %1$s</string>
+    <string name="widget_tomorrow_format">明日 · %1$s</string>
+    <string name="widget_courses_completed">本日の授業は終了しました</string>
+    <string name="widget_no_courses_today">今日は授業がありません</string>
+    <string name="widget_section_range">第 %1$d-%2$d 限</string>
+    <string name="widget_countdown">終了まで</string>
+    <string name="widget_countdown_minutes">約 %1$d 分</string>
+    <string name="widget_settings_summary">ウィジェットの背景と不透明度をカスタマイズ</string>
+    <string name="widget_preview">プレビュー</string>
+    <string name="widget_background">背景画像</string>
+    <string name="widget_background_desc">背景画像が未設定です。単色背景を使用します</string>
+    <string name="widget_pick_image">画像を選択</string>
+    <string name="widget_remove_background">背景を削除</string>
+    <string name="widget_opacity">背景の不透明度</string>
+    <string name="widget_opacity_desc">背景画像の不透明度を調整します。0% で背景画像が非表示になります</string>
+
+    <!-- システム権限 -->
+    <string name="system_permissions">システム権限</string>
+    <string name="notification_permission">通知権限</string>
+    <string name="notification_permission_summary">授業リマインダーとお知らせ通知を許可します</string>
+    <string name="battery_optimization">バッテリー最適化を無効化</string>
+    <string name="battery_optimization_summary">バックグラウンドでのウィジェット更新と授業リマインダーの信頼性を保ちます</string>
+    <string name="cannot_open_settings">システム設定を開けません</string>
+
+    <!-- 権限リマインダー FAB -->
+    <string name="permission_reminder_title">通知とバッテリー最適化を有効に</string>
+    <string name="permission_reminder_desc">授業リマインダーを時間どおりに届け、ウィジェットを適時に更新するため、通知権限を許可しバッテリー最適化を無効にしてください。</string>
+    <string name="permission_reminder_notification">通知権限</string>
+    <string name="permission_reminder_battery">バッテリー最適化を無効化</string>
+    <string name="permission_reminder_granted">有効</string>
+    <string name="permission_reminder_not_granted">未有効</string>
+    <string name="dont_remind_again">今後表示しない</string></resources>

@@ -47,6 +47,8 @@ import androidx.navigationevent.compose.NavigationEventState
 import androidx.navigationevent.compose.rememberNavigationEventState
 import androidx.lifecycle.viewmodel.compose.viewModel
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.distinctUntilChanged
 import org.openjwc.client.data.datastore.AuthDataSource
 import org.openjwc.client.data.datastore.CachedDataSource
 import org.openjwc.client.data.datastore.SettingsDataSource
@@ -69,6 +71,7 @@ import org.openjwc.client.ui.me.settings.general.LanguageScreen
 import org.openjwc.client.ui.me.ReviewedNoticesScreen
 import org.openjwc.client.ui.me.settings.news.NewsDisplaySettingsScreen
 import org.openjwc.client.ui.me.settings.notification.NotificationSettingsScreen
+import org.openjwc.client.ui.me.settings.widget.WidgetSettingsScreen
 import org.openjwc.client.ui.policy.PolicyScreen
 import org.openjwc.client.ui.policy.LicenseScreen
 import org.openjwc.client.ui.me.settings.log.LogScreen
@@ -107,6 +110,8 @@ import org.openjwc.client.ui.util.LocalBackgroundBlurAnchor
 import org.openjwc.client.ui.util.LocalBlurState
 import org.openjwc.client.ui.util.LocalSnackbarHost
 import org.openjwc.client.navigation3.LocalNavigator
+import org.openjwc.client.notification.ReminderBootstrapper
+import org.openjwc.client.widget.WidgetDataManager
 import top.yukonga.miuix.kmp.blur.LayerBackdrop
 import top.yukonga.miuix.kmp.blur.rememberLayerBackdrop
 import top.yukonga.miuix.kmp.shader.isRenderEffectSupported
@@ -139,6 +144,19 @@ fun NavContainer() {
     // 启动时检查更新
     LaunchedEffect(Unit) {
         mainViewModel.checkUpdate(showToast = false)
+    }
+
+    // 当前课表或课程变化时重排课程提醒并刷新桌面小组件
+    LaunchedEffect(timetableViewModel) {
+        combine(
+            timetableViewModel.currentTable,
+            timetableViewModel.currentTableCourses
+        ) { table, courses -> table?.id to courses.size }
+            .distinctUntilChanged()
+            .collect {
+                ReminderBootstrapper.rescheduleCurrentTimetable(context)
+                WidgetDataManager.refreshWidget(context)
+            }
     }
 
     val showUpdate by mainViewModel.showUpdateDialog.collectAsState()
@@ -272,6 +290,7 @@ fun NavContainer() {
             entry<Screen.Review> { ReviewedNoticesScreen(navigator, newsViewModel) }
             entry<Screen.NewsSettings> { NewsDisplaySettingsScreen(navigator, settingsViewModel) }
             entry<Screen.NotificationSettings> { NotificationSettingsScreen(navigator, settingsViewModel) }
+            entry<Screen.WidgetSettings> { WidgetSettingsScreen(navigator) }
             entry<Screen.Policy> { PolicyScreen(navigator) }
             entry<Screen.License> { LicenseScreen(navigator) }
             entry<Screen.Log> { LogScreen(navigator) }
