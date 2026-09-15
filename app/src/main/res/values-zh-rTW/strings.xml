@@ -487,6 +487,8 @@
     <string name="notification_permission_summary">允許傳送課程提醒與資訊通知</string>
     <string name="battery_optimization">忽略電池最佳化</string>
     <string name="battery_optimization_summary">保持背景重新整理小工具與課程提醒的可靠性</string>
+    <string name="auto_start">自啟動</string>
+    <string name="auto_start_summary">允許應用程式在背景自啟動，部分系統需手動開啟以確保提醒與小工具可靠</string>
     <string name="cannot_open_settings">無法開啟系統設定</string>
 
     <!-- 權限提醒 FAB -->
@@ -496,4 +498,5 @@
     <string name="permission_reminder_battery">忽略電池最佳化</string>
     <string name="permission_reminder_granted">已開啟</string>
     <string name="permission_reminder_not_granted">未開啟</string>
-    <string name="dont_remind_again">不再提醒</string></resources>
+    <string name="dont_remind_again">不再提醒</string>
+    <string name="timetable_preview">預覽</string></resources>

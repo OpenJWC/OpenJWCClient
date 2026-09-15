@@ -153,6 +153,12 @@ fun TimetableScreen(
             }
         }
     }
+    // 长按拖动课程到新的星期/节次（冲突时由网格负责回弹，不会走到这里）
+    val onCourseMove = remember {
+        { course: Course, day: java.time.DayOfWeek, startPeriod: Int ->
+            viewModel.saveCourse(course.copy(dayOfWeek = day, startPeriod = startPeriod))
+        }
+    }
 
     val totalWeeks = tableMetadata?.semesterConfig?.weeks ?: 1
     val pagerState = rememberPagerState(
@@ -214,7 +220,8 @@ fun TimetableScreen(
                     currentWeek = pageIndex + 1,
                     activePeriodIndex = if (pageIndex + 1 == currentWeek) activePeriodIndex else -1,
                     onCourseClick = onCourseClick,
-                    onEmptySlotClick = onEmptySlotClick
+                    onEmptySlotClick = onEmptySlotClick,
+                    onCourseMove = onCourseMove
                 )
             }
         }

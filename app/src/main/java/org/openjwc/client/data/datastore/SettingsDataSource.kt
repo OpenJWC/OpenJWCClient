@@ -38,7 +38,8 @@ data class UserSettings(
     val newsNotificationEnabled: Boolean = false,
     val newsCheckIntervalMinutes: Int = 60,
     val courseReminderEnabled: Boolean = false,
-    val permissionReminderDismissed: Boolean = false
+    val permissionReminderDismissed: Boolean = false,
+    val autoStartEnabled: Boolean = false
 )
 
 private val Context.settingsStore by preferencesDataStore(name = "user_settings")
@@ -67,6 +68,7 @@ class SettingsDataSource(private val context: Context) {
         val NEWS_CHECK_INTERVAL_MINUTES = intPreferencesKey("news_check_interval_minutes")
         val COURSE_REMINDER_ENABLED = booleanPreferencesKey("course_reminder_enabled")
         val PERMISSION_REMINDER_DISMISSED = booleanPreferencesKey("permission_reminder_dismissed")
+        val AUTO_START_ENABLED = booleanPreferencesKey("auto_start_enabled")
     }
 
     val userSettings: Flow<UserSettings> = context.settingsStore.data.map { prefs ->
@@ -111,7 +113,8 @@ class SettingsDataSource(private val context: Context) {
             newsNotificationEnabled = prefs[Keys.NEWS_NOTIFICATION_ENABLED] ?: default.newsNotificationEnabled,
             newsCheckIntervalMinutes = prefs[Keys.NEWS_CHECK_INTERVAL_MINUTES] ?: default.newsCheckIntervalMinutes,
             courseReminderEnabled = prefs[Keys.COURSE_REMINDER_ENABLED] ?: default.courseReminderEnabled,
-            permissionReminderDismissed = prefs[Keys.PERMISSION_REMINDER_DISMISSED] ?: default.permissionReminderDismissed
+            permissionReminderDismissed = prefs[Keys.PERMISSION_REMINDER_DISMISSED] ?: default.permissionReminderDismissed,
+            autoStartEnabled = prefs[Keys.AUTO_START_ENABLED] ?: default.autoStartEnabled
         )
     }
     suspend fun <T> save(key: Preferences.Key<T>, value: T) {

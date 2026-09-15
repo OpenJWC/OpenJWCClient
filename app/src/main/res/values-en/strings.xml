@@ -485,6 +485,8 @@ If you have any questions or suggestions about this agreement, you are welcome t
     <string name="notification_permission_summary">Allow class reminders and news notifications</string>
     <string name="battery_optimization">Ignore battery optimization</string>
     <string name="battery_optimization_summary">Keep the widget and class reminders reliable in the background</string>
+    <string name="auto_start">Auto-start</string>
+    <string name="auto_start_summary">Allow the app to start in the background; some systems require this for reminders and the widget to be reliable</string>
     <string name="cannot_open_settings">Unable to open system settings</string>
 
     <!-- Permission reminder FAB -->
@@ -494,4 +496,5 @@ If you have any questions or suggestions about this agreement, you are welcome t
     <string name="permission_reminder_battery">Ignore battery optimization</string>
     <string name="permission_reminder_granted">Enabled</string>
     <string name="permission_reminder_not_granted">Not enabled</string>
-    <string name="dont_remind_again">Don\'t remind again</string></resources>
+    <string name="dont_remind_again">Don\'t remind again</string>
+    <string name="timetable_preview">Preview</string></resources>

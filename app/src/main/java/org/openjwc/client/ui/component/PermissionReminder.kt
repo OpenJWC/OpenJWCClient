@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.twotone.Autorenew
 import androidx.compose.material.icons.twotone.BatterySaver
 import androidx.compose.material.icons.twotone.ChevronRight
 import androidx.compose.material.icons.twotone.Notifications
@@ -42,6 +43,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import org.openjwc.client.R
 import org.openjwc.client.utils.areNotificationsEnabled
 import org.openjwc.client.utils.isIgnoringBatteryOptimizations
+import org.openjwc.client.utils.openAutoStartSettings
 import org.openjwc.client.utils.openBatteryOptimizationSettings
 import org.openjwc.client.utils.openNotificationSettings
 import org.openjwc.client.viewmodels.SettingsViewModel
@@ -78,7 +80,7 @@ fun PermissionReminderFab(
     }
 
     val needsAttention = !settings.permissionReminderDismissed &&
-        (!notificationsEnabled || !batteryIgnored)
+        (!notificationsEnabled || !batteryIgnored || !settings.autoStartEnabled)
     if (!needsAttention) return
 
     FloatingActionButton(
@@ -97,8 +99,13 @@ fun PermissionReminderFab(
         PermissionReminderDialog(
             notificationsEnabled = notificationsEnabled,
             batteryIgnored = batteryIgnored,
+            autoStartEnabled = settings.autoStartEnabled,
             onOpenNotification = { openNotificationSettings(context) },
             onOpenBattery = { openBatteryOptimizationSettings(context) },
+            onOpenAutoStart = {
+                settingsViewModel.updateAutoStartEnabled(true)
+                openAutoStartSettings(context)
+            },
             onDontRemind = { settingsViewModel.updatePermissionReminderDismissed(true) },
             onDismiss = { showDialog = false }
         )
@@ -109,8 +116,10 @@ fun PermissionReminderFab(
 private fun PermissionReminderDialog(
     notificationsEnabled: Boolean,
     batteryIgnored: Boolean,
+    autoStartEnabled: Boolean,
     onOpenNotification: () -> Unit,
     onOpenBattery: () -> Unit,
+    onOpenAutoStart: () -> Unit,
     onDontRemind: () -> Unit,
     onDismiss: () -> Unit
 ) {
@@ -144,6 +153,12 @@ private fun PermissionReminderDialog(
                     title = stringResource(R.string.permission_reminder_battery),
                     granted = batteryIgnored,
                     onClick = onOpenBattery
+                )
+                PermissionActionRow(
+                    icon = Icons.TwoTone.Autorenew,
+                    title = stringResource(R.string.auto_start),
+                    granted = autoStartEnabled,
+                    onClick = onOpenAutoStart
                 )
                 Row(
                     modifier = Modifier

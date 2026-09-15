@@ -2,6 +2,7 @@ package org.openjwc.client.ui.me.settings.timetable
 
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.layout.padding
@@ -78,6 +79,17 @@ fun TimetableContent(
             .verticalScroll(rememberScrollState())
             .padding(bottom = 32.dp)
     ) {
+        SegmentedColumn(title = stringResource(R.string.timetable_preview)) {
+            item {
+                TimetablePreview(
+                    prefs = prefs,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp, vertical = 8.dp)
+                )
+            }
+        }
+
         SegmentedColumn {
             item {
                 SettingsSwitchWidget(

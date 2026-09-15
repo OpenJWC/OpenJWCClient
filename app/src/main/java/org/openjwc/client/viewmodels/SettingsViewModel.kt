@@ -71,6 +71,9 @@ class SettingsViewModel(
     fun updatePermissionReminderDismissed(dismissed: Boolean) =
         viewModelScope.launch { settingsRepository.updatePermissionReminderDismissed(dismissed) }
 
+    fun updateAutoStartEnabled(enabled: Boolean) =
+        viewModelScope.launch { settingsRepository.updateAutoStartEnabled(enabled) }
+
     private var _deviceResult = MutableStateFlow<NetworkResult<SuccessResponse<DevicesQueryResponseData>>>(
         NetworkResult.Success(SuccessResponse("success", DevicesQueryResponseData(deviceQueries = emptyList())))
     )

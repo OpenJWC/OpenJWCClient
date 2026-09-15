@@ -28,11 +28,13 @@ import java.time.LocalTime
 fun TimeIndicatorLine(
     periods: List<Period>,
     periodHeight: Dp,
-    timeLabelWidth: Dp
+    timeLabelWidth: Dp,
+    fixedTime: LocalTime? = null
 ) {
-    // 1. 每分钟更新一次当前时间
-    var currentTime by remember { mutableStateOf(LocalTime.now()) }
-    LaunchedEffect(Unit) {
+    // 1. 每分钟更新一次当前时间（预览可传入固定时间）
+    var currentTime by remember(fixedTime) { mutableStateOf(fixedTime ?: LocalTime.now()) }
+    LaunchedEffect(fixedTime) {
+        if (fixedTime != null) return@LaunchedEffect
         while (true) {
             currentTime = LocalTime.now()
             delay(60000) // 60秒刷新一次

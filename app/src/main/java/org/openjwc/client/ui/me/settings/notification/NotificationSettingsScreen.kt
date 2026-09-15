@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.twotone.Autorenew
 import androidx.compose.material.icons.twotone.BatterySaver
 import androidx.compose.material.icons.twotone.CalendarMonth
 import androidx.compose.material.icons.twotone.Notifications
@@ -48,6 +49,7 @@ import org.openjwc.client.ui.component.settings.SettingsDropdownWidget
 import org.openjwc.client.ui.component.settings.SettingsSwitchWidget
 import org.openjwc.client.utils.isIgnoringBatteryOptimizations
 import org.openjwc.client.utils.isNotificationPermissionGranted
+import org.openjwc.client.utils.openAutoStartSettings
 import org.openjwc.client.utils.openBatteryOptimizationList
 import org.openjwc.client.utils.openBatteryOptimizationSettings
 import org.openjwc.client.utils.openNotificationSettings
@@ -171,6 +173,20 @@ fun NotificationContent(settingsViewModel: SettingsViewModel, modifier: Modifier
                             openBatteryOptimizationSettings(context)
                         }
                         if (!opened) {
+                            Toast.makeText(context, R.string.cannot_open_settings, Toast.LENGTH_SHORT).show()
+                        }
+                    }
+                )
+            }
+            item {
+                SettingsSwitchWidget(
+                    icon = Icons.TwoTone.Autorenew,
+                    title = stringResource(R.string.auto_start),
+                    description = stringResource(R.string.auto_start_summary),
+                    checked = settings.autoStartEnabled,
+                    onCheckedChange = { checked ->
+                        settingsViewModel.updateAutoStartEnabled(checked)
+                        if (!openAutoStartSettings(context)) {
                             Toast.makeText(context, R.string.cannot_open_settings, Toast.LENGTH_SHORT).show()
                         }
                     }

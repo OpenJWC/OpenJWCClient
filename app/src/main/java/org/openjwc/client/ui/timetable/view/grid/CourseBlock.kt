@@ -1,9 +1,10 @@
 package org.openjwc.client.ui.timetable.view.grid
 
-import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.spring
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.detectDragGesturesAfterLongPress
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.BoxWithConstraints
@@ -15,13 +16,17 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
@@ -69,15 +74,32 @@ fun CourseBlock(
     modifier: Modifier = Modifier,
     course: Course,
     isCurrentWeek: Boolean = true,
+    isDragging: Boolean = false,
+    initialScale: Float = 1f,
+    scaleOverride: Float? = null,
+    dragState: TimetableDragState? = null,
+    onDragStart: ((Course) -> Unit)? = null,
+    onDrag: ((Offset) -> Unit)? = null,
+    onDragEnd: (() -> Unit)? = null,
+    onDragCancel: (() -> Unit)? = null,
     onClick: (Course) -> Unit = {}
 ) {
     val interactionSource = remember { MutableInteractionSource() }
     val isPressed by interactionSource.collectIsPressedAsState()
-    val scale by animateFloatAsState(
-        targetValue = if (isPressed) 0.97f else 1f,
-        animationSpec = spring(stiffness = 800f, dampingRatio = 0.5f),
-        label = "courseBlockScale"
-    )
+    val targetScale = when {
+        isDragging -> 1.06f
+        isPressed -> 0.97f
+        else -> 1f
+    }
+    // 用 Animatable 从 initialScale 起步，避免拖动浮层首次组合时直接跳到目标缩放值
+    val scaleAnim = remember { Animatable(initialScale) }
+    LaunchedEffect(targetScale) {
+        scaleAnim.animateTo(
+            targetValue = targetScale,
+            animationSpec = spring(stiffness = 800f, dampingRatio = 0.5f)
+        )
+    }
+    val scale = scaleOverride ?: scaleAnim.value
 
     val courseColor = rememberCourseColor(course.color)
 
@@ -93,6 +115,30 @@ fun CourseBlock(
         MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
     }
 
+    // pointerInput 的 key 只有 course.id，课程被拖动后 id 不变、手势协程不会重启，
+    // 因此必须用 rememberUpdatedState 读取最新的 course / 回调，否则会拿到移动前的旧对象
+    val currentCourse by rememberUpdatedState(course)
+    val currentOnDragStart by rememberUpdatedState(onDragStart)
+    val currentOnDrag by rememberUpdatedState(onDrag)
+    val currentOnDragEnd by rememberUpdatedState(onDragEnd)
+    val currentOnDragCancel by rememberUpdatedState(onDragCancel)
+
+    val dragModifier = if (dragState != null) {
+        Modifier.pointerInput(course.id, dragState) {
+            detectDragGesturesAfterLongPress(
+                onDragStart = { currentOnDragStart?.invoke(currentCourse) },
+                onDrag = { change, dragAmount ->
+                    change.consume()
+                    currentOnDrag?.invoke(dragAmount)
+                },
+                onDragEnd = { currentOnDragEnd?.invoke() },
+                onDragCancel = { currentOnDragCancel?.invoke() }
+            )
+        }
+    } else {
+        Modifier
+    }
+
     BoxWithConstraints(
         modifier = modifier
             .padding(2.dp)
@@ -102,6 +148,7 @@ fun CourseBlock(
             }
             .clip(RoundedCornerShape(10.dp))
             .background(containerColor)
+            .then(dragModifier)
             .clickable(
                 interactionSource = interactionSource,
                 indication = null,

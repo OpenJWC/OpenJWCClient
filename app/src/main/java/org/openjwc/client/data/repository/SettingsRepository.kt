@@ -154,6 +154,9 @@ class SettingsRepository(
     suspend fun updatePermissionReminderDismissed(dismissed: Boolean) =
         settingsDataSource.save(keys.PERMISSION_REMINDER_DISMISSED, dismissed)
 
+    suspend fun updateAutoStartEnabled(enabled: Boolean) =
+        settingsDataSource.save(keys.AUTO_START_ENABLED, enabled)
+
     suspend fun getToggleState(id: String): Boolean = settingsDataSource.getToggleState(id)
 
     suspend fun saveToggleState(id: String, value: Boolean) = settingsDataSource.saveToggleState(id, value)

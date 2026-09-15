@@ -1,6 +1,7 @@
 package org.openjwc.client.utils
 
 import android.Manifest
+import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
@@ -77,4 +78,45 @@ fun startActivitySafely(context: Context, vararg intents: Intent): Boolean {
         }
     }
     return false
+}
+
+/**
+ * 自启动（后台运行）权限是各厂商自定义的，没有统一 API 可读取状态，
+ * 这里按机型逐个尝试打开对应的自启动管理页，最后回退到应用详情页。
+ */
+private val AUTO_START_COMPONENTS = listOf(
+    // Xiaomi / Redmi / POCO
+    ComponentName("com.miui.securitycenter", "com.miui.permcenter.autostart.AutoStartManagementActivity"),
+    // Huawei / Honor
+    ComponentName("com.huawei.systemmanager", "com.huawei.systemmanager.startupmgr.ui.StartupNormalAppListActivity"),
+    ComponentName("com.huawei.systemmanager", "com.huawei.systemmanager.appcontrol.activity.StartupAppControlActivity"),
+    ComponentName("com.huawei.systemmanager", "com.huawei.systemmanager.optimize.process.ProtectActivity"),
+    // OPPO / realme / OnePlus
+    ComponentName("com.coloros.safecenter", "com.coloros.safecenter.permission.startup.StartupAppListActivity"),
+    ComponentName("com.coloros.safecenter", "com.coloros.safecenter.startupapp.StartupAppListActivity"),
+    ComponentName("com.oppo.safe", "com.oppo.safe.permission.startup.StartupAppListActivity"),
+    // vivo / iQOO
+    ComponentName("com.vivo.permissionmanager", "com.vivo.permissionmanager.activity.BgStartUpManagerActivity"),
+    ComponentName("com.iqoo.secure", "com.iqoo.secure.ui.phoneoptimize.AddWhiteListActivity"),
+    // Meizu
+    ComponentName("com.meizu.safe", "com.meizu.safe.permission.SmartBGActivity"),
+    // Letv
+    ComponentName("com.letv.android.letvsafe", "com.letv.android.letvsafe.AutobootManageActivity")
+)
+
+fun openAutoStartSettings(context: Context): Boolean {
+    for (component in AUTO_START_COMPONENTS) {
+        try {
+            context.startActivity(Intent().setComponent(component))
+            return true
+        } catch (_: Exception) {
+            // 当前机型不适用，尝试下一个
+        }
+    }
+    return startActivitySafely(
+        context,
+        Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS).apply {
+            data = Uri.parse("package:${context.packageName}")
+        }
+    )
 }

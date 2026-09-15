@@ -459,6 +459,8 @@ OpenJWC는 동남대학교 학사처와 공식적인 관계가 없습니다. AI 
     <string name="notification_permission_summary">수업 알림과 새 소식 알림을 허용합니다</string>
     <string name="battery_optimization">배터리 최적화 무시</string>
     <string name="battery_optimization_summary">백그라운드에서 위젯 새로고침과 수업 알림의 안정성을 유지합니다</string>
+    <string name="auto_start">자동 시작</string>
+    <string name="auto_start_summary">백그라운드 자동 시작을 허용합니다. 일부 시스템에서는 알림과 위젯의 안정성을 위해 필요합니다</string>
     <string name="cannot_open_settings">시스템 설정을 열 수 없습니다</string>
 
     <!-- 권한 알림 FAB -->
@@ -468,4 +470,5 @@ OpenJWC는 동남대학교 학사처와 공식적인 관계가 없습니다. AI 
     <string name="permission_reminder_battery">배터리 최적화 무시</string>
     <string name="permission_reminder_granted">사용 중</string>
     <string name="permission_reminder_not_granted">사용 안 함</string>
-    <string name="dont_remind_again">다시 알리지 않기</string></resources>
+    <string name="dont_remind_again">다시 알리지 않기</string>
+    <string name="timetable_preview">미리보기</string></resources>

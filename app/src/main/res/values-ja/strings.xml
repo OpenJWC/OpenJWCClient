@@ -459,6 +459,8 @@ OpenJWC は東南大学教务処とは公式な関係はありません。AI回�
     <string name="notification_permission_summary">授業リマインダーとお知らせ通知を許可します</string>
     <string name="battery_optimization">バッテリー最適化を無効化</string>
     <string name="battery_optimization_summary">バックグラウンドでのウィジェット更新と授業リマインダーの信頼性を保ちます</string>
+    <string name="auto_start">自動起動</string>
+    <string name="auto_start_summary">バックグラウンドでの自動起動を許可します。一部のシステムではリマインダーとウィジェットの信頼性のために必要です</string>
     <string name="cannot_open_settings">システム設定を開けません</string>
 
     <!-- 権限リマインダー FAB -->
@@ -468,4 +470,5 @@ OpenJWC は東南大学教务処とは公式な関係はありません。AI回�
     <string name="permission_reminder_battery">バッテリー最適化を無効化</string>
     <string name="permission_reminder_granted">有効</string>
     <string name="permission_reminder_not_granted">未有効</string>
-    <string name="dont_remind_again">今後表示しない</string></resources>
+    <string name="dont_remind_again">今後表示しない</string>
+    <string name="timetable_preview">プレビュー</string></resources>
