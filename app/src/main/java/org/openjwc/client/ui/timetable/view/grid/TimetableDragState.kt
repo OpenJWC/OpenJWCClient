@@ -5,6 +5,8 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.dp
 import org.openjwc.client.data.models.Course
 
 /**
@@ -24,12 +26,20 @@ class TimetableDragState {
     var originalPosition by mutableStateOf(Offset.Zero)
         private set
 
+    /** 原块尺寸，用于浮层出现时从原尺寸平滑过渡到目标尺寸 */
+    var startWidth by mutableStateOf(0.dp)
+        private set
+    var startHeight by mutableStateOf(0.dp)
+        private set
+
     val isDragging: Boolean get() = draggingCourse != null
 
-    fun start(course: Course, blockTopLeft: Offset) {
+    fun start(course: Course, blockTopLeft: Offset, width: Dp, height: Dp) {
         draggingCourse = course
         originalPosition = blockTopLeft
         dragPosition = blockTopLeft
+        startWidth = width
+        startHeight = height
     }
 
     fun drag(delta: Offset) {
@@ -44,5 +54,7 @@ class TimetableDragState {
         draggingCourse = null
         dragPosition = Offset.Zero
         originalPosition = Offset.Zero
+        startWidth = 0.dp
+        startHeight = 0.dp
     }
 }

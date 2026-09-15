@@ -1,6 +1,8 @@
 package org.openjwc.client.ui.timetable.view.grid
 
 import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.VectorConverter
+import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
@@ -28,6 +30,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.isFinite
@@ -111,6 +114,8 @@ fun TimetableGrid(
         val dragState = remember { TimetableDragState() }
         var settleScale by remember { mutableStateOf<Float?>(null) }
         var pendingMove by remember { mutableStateOf<Triple<Course, DayOfWeek, Int>?>(null) }
+        // 刚落位课程的浮层尺寸，用于让新块从该尺寸过渡到目标尺寸
+        var lastDropped by remember { mutableStateOf<Pair<Long, DpSize>?>(null) }
 
         val timeLabelWidthPx = with(density) { timeLabelWidth.toPx() }
         val periodHeightPx = with(density) { periodHeight.toPx() }
@@ -142,8 +147,9 @@ fun TimetableGrid(
             }
         }
 
-        val onCourseDragStart: (Course) -> Unit = { course ->
-            dragState.start(course, courseTopLeft(course))
+        val onCourseDragStart: (Course, Dp, Dp) -> Unit = { course, width, height ->
+            lastDropped = null
+            dragState.start(course, courseTopLeft(course), width, height)
         }
         val onCourseDrag: (Offset) -> Unit = { delta -> dragState.drag(delta) }
         val onCourseDragEnd: () -> Unit = {
@@ -177,6 +183,7 @@ fun TimetableGrid(
                         }
                         // 提交数据变更，但保留浮层，等数据真正反映到列表后再移除
                         onCourseMove(course, target.first, target.second)
+                        lastDropped = course.id to DpSize(colWidthDp, periodHeight * course.duration)
                         pendingMove = Triple(course, target.first, target.second)
                     }
                 } else {
@@ -261,13 +268,35 @@ fun TimetableGrid(
                             onCourseDragStart = onCourseDragStart,
                             onCourseDrag = onCourseDrag,
                             onCourseDragEnd = onCourseDragEnd,
-                            onCourseDragCancel = onCourseDragCancel
+                            onCourseDragCancel = onCourseDragCancel,
+                            lastDropped = lastDropped
                         )
                     }
                 }
 
                 // 拖动中的浮层：渲染在网格顶层，跟随手指移动
                 dragState.draggingCourse?.let { course ->
+                    // 浮层从原块尺寸平滑过渡到整列整课尺寸（避免非本周窄块/分段块突然变形）
+                    val overlayWidth = remember {
+                        Animatable(dragState.startWidth, Dp.VectorConverter)
+                    }
+                    val overlayHeight = remember {
+                        Animatable(dragState.startHeight, Dp.VectorConverter)
+                    }
+                    LaunchedEffect(course.id, colWidthDp, periodHeight) {
+                        launch {
+                            overlayWidth.animateTo(
+                                colWidthDp,
+                                spring(stiffness = 700f, dampingRatio = 0.85f)
+                            )
+                        }
+                        launch {
+                            overlayHeight.animateTo(
+                                periodHeight * course.duration,
+                                spring(stiffness = 700f, dampingRatio = 0.85f)
+                            )
+                        }
+                    }
                     CourseBlock(
                         course = course,
                         isCurrentWeek = course.weekRule.contains(currentWeek),
@@ -275,8 +304,8 @@ fun TimetableGrid(
                         initialScale = 0.97f,
                         scaleOverride = settleScale,
                         modifier = Modifier
-                            .width(colWidthDp)
-                            .height(periodHeight * course.duration)
+                            .width(overlayWidth.value)
+                            .height(overlayHeight.value)
                             .offset {
                                 IntOffset(
                                     dragState.dragPosition.x.roundToInt(),
