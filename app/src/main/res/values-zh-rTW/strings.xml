@@ -43,6 +43,10 @@
     <string name="license">MIT License</string>
     <string name="confirm">確定</string>
     <string name="cancel">取消</string>
+    <string name="close">關閉</string>
+    <string name="crawl_progress_title">正在抓取資訊</string>
+    <string name="crawl_progress_current">正在抓取「%1$s」（%2$d/%3$d）</string>
+    <string name="crawl_progress_done">已完成 %1$d 個資料來源</string>
 
     <string name="custom_background">自訂背景</string>
     <string name="theme_color">主題顏色</string>
@@ -52,6 +56,68 @@
     <string name="enable_blur_experimental">啟用實驗性背景模糊</string>
     <string name="enable_blur">啟用模糊效果</string>
     <string name="advanced_theme">進階主題設定</string>
+    <string name="llm">AI 模型</string>
+    <string name="llm_settings">AI 模型設定</string>
+    <string name="llm_provider">供應商</string>
+    <string name="llm_base_url">介面位址 (Base URL)</string>
+    <string name="llm_model">模型</string>
+    <string name="llm_api_key">API Key</string>
+    <string name="llm_api_key_hint">金鑰安全</string>
+    <string name="llm_api_key_desc">僅儲存在本機加密空間，不會上傳</string>
+    <string name="llm_test">測試連線</string>
+    <string name="llm_testing">測試中…</string>
+    <string name="llm_test_desc">填寫後點下方按鈕驗證</string>
+    <string name="llm_save_and_test">儲存並測試</string>
+    <string name="sources_settings">資訊資料來源</string>
+    <string name="sources">資料來源</string>
+    <string name="source_import">從檔案匯入</string>
+    <string name="source_import_desc">選擇 .js 資料來源腳本</string>
+    <string name="source_count_suffix"> 筆</string>
+    <string name="source_local_count">本地 %1$d 則</string>
+    <string name="source_last_new">本次新增 %1$d 則</string>
+    <string name="source_run">抓取</string>
+    <string name="source_delete">刪除</string>
+    <string name="source_run_all">抓取全部已訂閱</string>
+    <string name="source_run_result">「%1$s」抓取到 %2$d 筆</string>
+    <string name="source_run_failed">「%1$s」抓取失敗：%2$s</string>
+    <string name="source_run_all_done">已抓取 %1$d 個資料來源</string>
+    <string name="source_properties">資料來源屬性</string>
+    <string name="source_kind_builtin">內建</string>
+    <string name="source_kind_sideload">側載</string>
+    <string name="source_overridden">已修改</string>
+    <string name="source_subscribe">訂閱</string>
+    <string name="source_subscribe_desc">訂閱後會參與背景抓取並出現在資訊流</string>
+    <string name="source_subscribed">已訂閱</string>
+    <string name="source_unsubscribed">未訂閱</string>
+    <string name="source_run_now">立即抓取</string>
+    <string name="source_last_run">最近執行</string>
+    <string name="source_script">腳本</string>
+    <string name="source_script_view">檢視腳本</string>
+    <string name="source_script_edit">編輯腳本</string>
+    <string name="source_save_script">儲存腳本</string>
+    <string name="source_script_saved">腳本已儲存</string>
+    <string name="source_script_invalid">腳本無效：需要 @id 且與資料來源一致</string>
+    <string name="source_import_success">已匯入「%1$s」</string>
+    <string name="source_import_read_failed">匯入失敗：無法讀取所選檔案</string>
+    <string name="source_script_invalid_reason">腳本無效：%1$s</string>
+    <string name="source_reset_script">還原內建腳本</string>
+    <string name="source_reset_script_desc">捨棄你的修改，回到內建版本</string>
+    <string name="source_script_reset">已還原內建腳本</string>
+    <string name="source_delete_confirm">確定刪除資料來源「%1$s」？已抓取的資訊會保留。</string>
+    <string name="source_deleted">資料來源已刪除</string>
+    <string name="must_be_positive_integer">必須為正整數</string>
+    <string name="source_crawl_settings">抓取設定</string>
+    <string name="source_crawl_days_gap">抓取回溯天數 (天)</string>
+    <string name="source_crawl_days_gap_desc">只抓最近這麼多天發布的資訊；與「新鮮期限」無關</string>
+    <string name="source_filter_all">全部</string>
+    <string name="source_all_sources">全部資料來源</string>
+    <string name="source_all_sources_desc">顯示所有已訂閱資料來源的資訊</string>
+    <string name="source_switch">切換資料來源</string>
+    <string name="source_builtin_readonly">內建腳本不可修改或刪除</string>
+    <string name="source_builtin_readonly_desc">內建資料來源隨 App 更新維護；如需自訂請另存為新腳本後從檔案匯入</string>
+    <string name="source_delete_builtin_forbidden">內建資料來源不可刪除</string>
+    <string name="source_manage">管理資料來源</string>
+    <string name="no_sources_subscribed">尚未訂閱任何資料來源</string>
     <string name="background">背景</string>
     <string name="seed_color">種子顏色</string>
     <string name="dark_mode">深色模式</string>
@@ -153,6 +219,8 @@
     <string name="favorite_hint">在資訊列表長按即可將感興趣的內容收藏到這裡</string>
     <string name="load_failed_retry">加載失敗，點擊重試</string>
     <string name="all_content_loaded">— 已加載全部內容 —</string>
+    <string name="no_news_in_category">此欄目暫時沒有資訊</string>
+    <string name="no_news_in_category_desc">下拉可重新抓取；也可以到「設定 → 資料來源」檢查訂閱與抓取結果</string>
     <string name="retry">重試</string>
     <string name="no_news_categories">未發現資訊分類</string>
     <string name="get_labels_failed_hint">暫時無法獲取到新聞標籤，請檢查網絡連接或稍後重試</string>
@@ -207,6 +275,15 @@
     <string name="predictive_back_animation">預測返回動畫</string>
     <string name="animation_type">動畫類型</string>
     <string name="exit_direction">退出方向</string>
+    <string name="animation_section">動畫</string>
+    <string name="animation_level">動畫效果</string>
+    <string name="animation_level_desc">低階裝置可降低或關閉動畫以減少卡頓</string>
+    <string name="animation_level_full">完整</string>
+    <string name="animation_level_full_desc">彈性動效，最生動</string>
+    <string name="animation_level_standard">標準</string>
+    <string name="animation_level_standard_desc">標準動效，較省資源</string>
+    <string name="animation_level_off">關閉</string>
+    <string name="animation_level_off_desc">關閉動畫，最流暢</string>
         <string name="clear_all_favorites">清除全部收藏</string>
     <string name="open_source_licenses">開源許可證</string>
 
@@ -235,6 +312,17 @@
     <!-- MeScreen & Hitokoto -->
     <string name="hitokoto_text_format">「 %1$s 」</string>
     <string name="hitokoto_author_format">—— %1$s</string>
+    <string name="motto">每日一言</string>
+    <string name="motto_text">內容</string>
+    <string name="motto_author">作者</string>
+    <string name="motto_author_placeholder">留空或填「佚名」表示無作者</string>
+    <string name="motto_online">使用線上一言</string>
+    <string name="motto_online_desc">取自 hitokoto.cn（每天快取一次，可手動重新整理）</string>
+    <string name="hitokoto_category">分類</string>
+    <string name="hitokoto_category_any">不限</string>
+    <string name="hitokoto_max_length">最大長度</string>
+    <string name="hitokoto_max_length_hint">1～100 之間</string>
+    <string name="hitokoto_from_source">來自一言 »</string>
 
     <!-- MeViewModel sections -->
     <string name="contribution">投稿</string>
@@ -499,4 +587,16 @@
     <string name="permission_reminder_granted">已開啟</string>
     <string name="permission_reminder_not_granted">未開啟</string>
     <string name="dont_remind_again">不再提醒</string>
-    <string name="timetable_preview">預覽</string></resources>
+    <string name="timetable_preview">預覽</string>    <string name="tool_unknown">工具</string>
+    <string name="tool_duration_ms">%1$d ms</string>    <string name="delete_message_confirm">確定要刪除這則訊息嗎？</string>    <string name="daily_report">日報</string>
+    <string name="daily_report_latest">最新</string>
+    <string name="daily_report_none">暫無日報</string>
+    <string name="daily_report_none_desc">目前還沒有可查看的日報</string>
+    <string name="daily_report_auto">每日自動產生日報</string>
+    <string name="daily_report_auto_desc">每天定時用你的模型總結當日資訊（消耗你的 API 額度）</string>
+    <string name="daily_report_time">產生時間</string>
+    <string name="daily_report_generate">產生昨日日報</string>
+    <string name="daily_report_generating">正在產生日報…</string>
+    <string name="daily_report_generate_failed">日報產生失敗</string>
+    <string name="daily_report_load_failed">日報載入失敗</string>
+</resources>

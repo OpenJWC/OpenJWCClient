@@ -30,7 +30,6 @@ import org.openjwc.client.ui.component.settings.SettingsBaseWidget
 @Composable
 fun WarningCard(
     modifier: Modifier = Modifier,
-    renderBackground: Boolean = true,
     shape: Shape = RoundedCornerShape(16.dp),
     message: String,
     content: (@Composable () -> Unit) = {},
@@ -41,7 +40,6 @@ fun WarningCard(
 ) {
     WarningCardInner(
         modifier = modifier,
-        renderBackground = renderBackground,
         shape = shape,
         content = {
             Text(
@@ -63,7 +61,6 @@ fun WarningCard(
 @Composable
 fun WarningCard(
     modifier: Modifier = Modifier,
-    renderBackground: Boolean = true,
     shape: Shape = RoundedCornerShape(16.dp),
     message: AnnotatedString,
     content: (@Composable () -> Unit) = {},
@@ -74,7 +71,6 @@ fun WarningCard(
 ) {
     WarningCardInner(
         modifier = modifier,
-        renderBackground = renderBackground,
         shape = shape,
         content = {
             Text(
@@ -96,7 +92,6 @@ fun WarningCard(
 @Composable
 private fun WarningCardInner(
     modifier: Modifier = Modifier,
-    renderBackground: Boolean = true,
     shape: Shape = CardDefaults.elevatedShape,
     content: (@Composable () -> Unit),
     end: (@Composable () -> Unit),
@@ -111,7 +106,6 @@ private fun WarningCardInner(
         SettingsBaseWidget(
             modifier = modifier,
             title = null,
-            renderBackgroundBlur = renderBackground,
             containerColor = color ?: MaterialTheme.colorScheme.errorContainer,
             leadingContent = icon,
             foreContent = {

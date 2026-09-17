@@ -1,20 +1,30 @@
 package org.openjwc.client.ui.news
 
 import androidx.compose.ui.graphics.Color
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.FilledTonalButton
+import androidx.compose.material3.FilterChip
 import androidx.compose.material3.LoadingIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SecondaryScrollableTabRow
@@ -36,12 +46,16 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import org.openjwc.client.navigation3.Navigator
 import kotlinx.coroutines.launch
 import org.openjwc.client.R
 import org.openjwc.client.data.appPreferences
+import org.openjwc.client.ui.component.CrawlProgressDialog
+import org.openjwc.client.data.models.SourceEntity
 import org.openjwc.client.navigation.Screen
 import org.openjwc.client.net.models.FetchedNotice
 import org.openjwc.client.navigation.MainTab
@@ -69,14 +83,24 @@ fun NewsScreen(
 
     LaunchedEffect(Unit) { newsViewModel.loadLabels() }
 
+    // 抓取已订阅数据源时显示进度
+    val crawlProgress = newsViewModel.crawlProgress.collectAsStateWithLifecycle().value
+    if (crawlProgress.running || crawlProgress.results.isNotEmpty()) {
+        CrawlProgressDialog(
+            progress = crawlProgress,
+            onCancel = { newsViewModel.cancelCrawl() },
+            onDismiss = { newsViewModel.dismissCrawlProgress() },
+        )
+    }
+
     Box(modifier = modifier) {
         if (tabs.isEmpty()) {
             if (!(isLoading || isRefreshing)) {
                 EmptyLabelsPlaceholder(
+                    hasSources = newsViewModel.sources.collectAsStateWithLifecycle().value.isNotEmpty(),
                     onRefresh = { newsViewModel.loadLabels() },
                     errorMessage = labelError,
-                    isLoggedIn = newsViewModel.needsAuth.collectAsStateWithLifecycle().value,
-                    onToLogin = { navController.push(Screen.Login) }
+                    onManageSources = { navController.push(Screen.Sources) }
                 )
             } else {
                 Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
@@ -121,17 +145,17 @@ fun NewsScreen(
 }
 
 @Composable
-private fun EmptyLabelsPlaceholder(isLoggedIn: Boolean, onRefresh: () -> Unit, onToLogin: () -> Unit, errorMessage: String?) {
+private fun EmptyLabelsPlaceholder(hasSources: Boolean, onRefresh: () -> Unit, onManageSources: () -> Unit, errorMessage: String?) {
     Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
         Surface(shape = RoundedCornerShape(20.dp), color = MaterialTheme.colorScheme.surfaceContainerLow) {
             Column(Modifier.padding(24.dp), horizontalAlignment = Alignment.CenterHorizontally) {
                 Text(stringResource(R.string.no_news_categories), style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.onSurface)
                 Spacer(Modifier.height(4.dp))
-                Text(if (isLoggedIn) stringResource(R.string.get_labels_failed_hint) else stringResource(R.string.not_logged_in), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Text(if (hasSources) stringResource(R.string.get_labels_failed_hint) else stringResource(R.string.no_sources_subscribed), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 if (errorMessage != null) { Spacer(Modifier.height(8.dp)); Text(errorMessage, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.error) }
                 Spacer(Modifier.height(16.dp))
-                if (isLoggedIn) FilledTonalButton(onClick = onRefresh) { Text(stringResource(R.string.refetch_categories)) }
-                else FilledTonalButton(onClick = onToLogin) { Text(stringResource(R.string.login)) }
+                if (hasSources) FilledTonalButton(onClick = onRefresh) { Text(stringResource(R.string.refetch_categories)) }
+                else FilledTonalButton(onClick = onManageSources) { Text(stringResource(R.string.source_manage)) }
             }
         }
     }

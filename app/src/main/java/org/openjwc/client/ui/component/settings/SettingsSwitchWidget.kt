@@ -11,6 +11,7 @@ import androidx.compose.material3.Switch
 import androidx.compose.material3.SwitchDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
@@ -34,6 +35,7 @@ import androidx.compose.ui.state.ToggleableState
  * @param onCheckedChange Callback to be invoked when the switch state changes.
  * @param isError If true, applies an error state to the widget.
  * @param containerColor Custom container color, if provided, selected/isError will be ignored.
+ * @param onLongClick Optional long-press callback, receives the touch offset (for anchoring menus).
  */
 @Composable
 fun SettingsSwitchWidget(
@@ -46,6 +48,7 @@ fun SettingsSwitchWidget(
     checked: Boolean,
     descriptionColumnContent: (@Composable ColumnScope.() -> Unit)? = null,
     containerColor: Color? = null,
+    onLongClick: ((Offset) -> Unit)? = null,
     onCheckedChange: (Boolean) -> Unit,
 ) {
     val haptic = LocalHapticFeedback.current
@@ -78,6 +81,7 @@ fun SettingsSwitchWidget(
         onClick = {
             rowClickAction()
         },
+        onLongClick = onLongClick,
         clickHaptic = null,
         description = description,
         descriptionColumnContent = descriptionColumnContent,

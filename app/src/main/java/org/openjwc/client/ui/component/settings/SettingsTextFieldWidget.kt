@@ -3,6 +3,7 @@ package org.openjwc.client.ui.component.settings
 import android.os.Build
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.expandHorizontally
 import androidx.compose.animation.expandVertically
@@ -48,6 +49,7 @@ import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusProperties
 import androidx.compose.ui.focus.focusRequester
@@ -57,6 +59,7 @@ import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.text.TextLayoutResult
 import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.delay
@@ -75,7 +78,6 @@ fun SettingsTextFieldWidget(
     placeholder: String? = null,
     enabled: Boolean = true,
     readOnly: Boolean = false,
-    renderBackgroundBlur: Boolean = true,
     inputTransformation: InputTransformation? = null,
     textStyle: TextStyle = MaterialTheme.typography.bodyMediumEmphasized.copy(
         color = MaterialTheme.colorScheme.onSurface,
@@ -143,6 +145,13 @@ fun SettingsTextFieldWidget(
         (placeholder != null || useLabelAsPlaceholder)
     val placeholderText = placeholder ?: title
 
+    // 下划线透明度动画：始终占位，避免聚焦 / 失焦导致组件高度跳变
+    val underlineAlpha by animateFloatAsState(
+        targetValue = if (focused) 1f else 0f,
+        animationSpec = MaterialTheme.motionScheme.defaultSpatialSpec(),
+        label = "TextFieldUnderlineAlpha",
+    )
+
     fun onClickInternal() {
         if (onClick != null) {
             onClick()
@@ -159,7 +168,6 @@ fun SettingsTextFieldWidget(
         title = if (useLabelAsPlaceholder) null else title,
         icon = null,
         iconPlaceholder = false,
-        renderBackgroundBlur = renderBackgroundBlur,
         leadingContent = leadingContent,
         onClick = if (isClickableMode) {
             { onClickInternal() }
@@ -171,16 +179,16 @@ fun SettingsTextFieldWidget(
                 AnimatedVisibility(
                     visible = showFloatingTitle,
                     enter = slideInVertically(
-                        animationSpec = spring(stiffness = Spring.StiffnessMediumLow),
+                        animationSpec = MaterialTheme.motionScheme.defaultSpatialSpec(),
                         initialOffsetY = { it },
                     ) + fadeIn(
-                        animationSpec = spring(stiffness = Spring.StiffnessMediumLow),
+                        animationSpec = MaterialTheme.motionScheme.defaultSpatialSpec(),
                     ),
                     exit = slideOutVertically(
-                        animationSpec = spring(stiffness = Spring.StiffnessMediumLow),
+                        animationSpec = MaterialTheme.motionScheme.defaultSpatialSpec(),
                         targetOffsetY = { it },
                     ) + fadeOut(
-                        animationSpec = spring(stiffness = Spring.StiffnessMediumLow),
+                        animationSpec = MaterialTheme.motionScheme.defaultSpatialSpec(),
                     ),
                 ) {
                     Text(
@@ -237,55 +245,38 @@ fun SettingsTextFieldWidget(
                             placeholderAnimationScope.AnimatedVisibility(
                                 visible = showPlaceholder,
                                 enter = slideInVertically(
-                                    animationSpec = spring(stiffness = Spring.StiffnessMediumLow),
+                                    animationSpec = MaterialTheme.motionScheme.defaultSpatialSpec(),
                                     initialOffsetY = { -it },
                                 ) + fadeIn(
-                                    animationSpec = spring(stiffness = Spring.StiffnessMediumLow),
+                                    animationSpec = MaterialTheme.motionScheme.defaultSpatialSpec(),
                                 ),
                                 exit = slideOutVertically(
-                                    animationSpec = spring(stiffness = Spring.StiffnessMediumLow),
+                                    animationSpec = MaterialTheme.motionScheme.defaultSpatialSpec(),
                                     targetOffsetY = { -it },
                                 ) + fadeOut(
-                                    animationSpec = spring(stiffness = Spring.StiffnessMediumLow),
+                                    animationSpec = MaterialTheme.motionScheme.defaultSpatialSpec(),
                                 ),
                             ) {
                                 Text(
                                     text = placeholderText,
                                     style = textStyle,
                                     color = labelColor.copy(alpha = 0.6f),
-                                )
-                            }
-
-                            if (error.isNotBlank() && !focused && state.text.isBlank()) {
-                                Text(
-                                    text = error,
-                                    color = MaterialTheme.colorScheme.error,
-                                    style = MaterialTheme.typography.bodySmall
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis,
                                 )
                             }
 
                             innerTextField()
                         }
 
-                        AnimatedVisibility(
-                            visible = focused,
-                            enter = expandHorizontally(
-                                animationSpec = spring(stiffness = Spring.StiffnessMediumLow),
-                                expandFrom = Alignment.Start
-                            ) + expandVertically(
-                                animationSpec = spring(stiffness = Spring.StiffnessMediumLow),
-                                expandFrom = Alignment.Top
-                            ),
-                            exit = shrinkHorizontally(
-                                animationSpec = spring(stiffness = Spring.StiffnessMediumLow),
-                                shrinkTowards = Alignment.Start
-                            ) + shrinkVertically(
-                                animationSpec = spring(stiffness = Spring.StiffnessMediumLow),
-                                shrinkTowards = Alignment.Top
-                            )
+                        // 下划线始终占位，只动画透明度：避免聚焦时组件高度跳变
+                        Spacer(modifier = Modifier.height(2.dp))
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(2.dp)
+                                .alpha(underlineAlpha)
                         ) {
-                            Spacer(modifier = Modifier.height(2.dp))
-
                             HorizontalDivider(
                                 thickness = 2.dp,
                                 color = when {
@@ -300,19 +291,19 @@ fun SettingsTextFieldWidget(
             )
 
             AnimatedVisibility(
-                visible = error.isNotBlank() && (focused || state.text.isNotBlank()),
+                visible = error.isNotBlank(),
                 enter = expandHorizontally(
-                    animationSpec = spring(stiffness = Spring.StiffnessMediumLow),
+                    animationSpec = MaterialTheme.motionScheme.defaultSpatialSpec(),
                     expandFrom = Alignment.Start
                 ) + expandVertically(
-                    animationSpec = spring(stiffness = Spring.StiffnessMediumLow),
+                    animationSpec = MaterialTheme.motionScheme.defaultSpatialSpec(),
                     expandFrom = Alignment.Top
                 ),
                 exit = shrinkHorizontally(
-                    animationSpec = spring(stiffness = Spring.StiffnessMediumLow),
+                    animationSpec = MaterialTheme.motionScheme.defaultSpatialSpec(),
                     shrinkTowards = Alignment.Start
                 ) + shrinkVertically(
-                    animationSpec = spring(stiffness = Spring.StiffnessMediumLow),
+                    animationSpec = MaterialTheme.motionScheme.defaultSpatialSpec(),
                     shrinkTowards = Alignment.Top
                 )
             ) {

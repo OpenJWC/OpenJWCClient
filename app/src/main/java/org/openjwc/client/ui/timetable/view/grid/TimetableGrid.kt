@@ -1,7 +1,9 @@
 package org.openjwc.client.ui.timetable.view.grid
 
 import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.FiniteAnimationSpec
 import androidx.compose.animation.core.VectorConverter
+import androidx.compose.animation.core.snap
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.layout.Box
@@ -42,6 +44,7 @@ import org.openjwc.client.data.models.Period
 import org.openjwc.client.data.models.SemesterConfig
 import org.openjwc.client.data.models.TableMetadata
 import org.openjwc.client.ui.timetable.view.components.TimetableHeader
+import org.openjwc.client.ui.theme.ThemeConfig
 import java.time.DayOfWeek
 import java.util.Locale
 import androidx.compose.ui.platform.LocalLocale
@@ -138,7 +141,7 @@ fun TimetableGrid(
             val end = dragState.originalPosition
             scope.launch {
                 val anim = Animatable(0f)
-                anim.animateTo(1f, tween(durationMillis = 220)) {
+                anim.animateTo(1f, tween(durationMillis = if (ThemeConfig.animationsEnabled) 220 else 0)) {
                     dragState.moveTo(lerp(start, end, value))
                     settleScale = 1.06f - 0.06f * value
                 }
@@ -177,7 +180,7 @@ fun TimetableGrid(
                     val start = dragState.dragPosition
                     scope.launch {
                         val anim = Animatable(0f)
-                        anim.animateTo(1f, tween(durationMillis = 220)) {
+                        anim.animateTo(1f, tween(durationMillis = if (ThemeConfig.animationsEnabled) 220 else 0)) {
                             dragState.moveTo(lerp(start, targetTopLeft, value))
                             settleScale = 1.06f - 0.06f * value
                         }
@@ -283,18 +286,17 @@ fun TimetableGrid(
                     val overlayHeight = remember {
                         Animatable(dragState.startHeight, Dp.VectorConverter)
                     }
+                    val overlaySpec: FiniteAnimationSpec<Dp> = if (ThemeConfig.animationsEnabled) {
+                        spring(stiffness = 700f, dampingRatio = 0.85f)
+                    } else {
+                        snap()
+                    }
                     LaunchedEffect(course.id, colWidthDp, periodHeight) {
                         launch {
-                            overlayWidth.animateTo(
-                                colWidthDp,
-                                spring(stiffness = 700f, dampingRatio = 0.85f)
-                            )
+                            overlayWidth.animateTo(colWidthDp, overlaySpec)
                         }
                         launch {
-                            overlayHeight.animateTo(
-                                periodHeight * course.duration,
-                                spring(stiffness = 700f, dampingRatio = 0.85f)
-                            )
+                            overlayHeight.animateTo(periodHeight * course.duration, overlaySpec)
                         }
                     }
                     CourseBlock(

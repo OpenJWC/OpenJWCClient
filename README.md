@@ -46,6 +46,17 @@
   │ ● Room DB (Cache)      │      │ ● API Service (Retrofit)│
   └────────────────────────┘      └─────────────────────────┘
 ```
+
+## 数据源脚本
+
+资讯抓取由本地 QuickJS 脚本驱动，内置东南大学教务处（默认订阅）及 30 余个院系/学院官网数据源，
+也可以在「设置 → 资讯数据源」里侧载自己的脚本（`fetchNotices()` 契约，宿主提供
+`http` / `dom` / `util` / `params` / `console` / `report` 桥）。
+
+- 脚本格式与 API 参考：[`docs/script-format.md`](docs/script-format.md)
+- 内置脚本示例：[`app/src/main/assets/sources/`](app/src/main/assets/sources/)
+- 改造计划与进度：[`PLAN.md`](PLAN.md)
+
 ## 用户协议
 
 欢迎使用 OpenJWC（以下简称“本产品”）。本协议是您与 OpenJWC 开发者之间就使用本产品所订立的法律协议。请您在安装、配置或使用本产品前，认真审阅本协议的所有条款。一旦您完成客户端配置或使用相关服务，即表示您已充分理解并自愿接受本协议的全部约定。

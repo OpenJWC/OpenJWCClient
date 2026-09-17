@@ -4,6 +4,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
 import androidx.room.TypeConverter
 import kotlinx.serialization.json.Json
+import org.openjwc.client.data.models.MessageStatus
 import org.openjwc.client.data.models.Role
 import org.openjwc.client.data.models.SemesterConfig
 import org.openjwc.client.log.Logger
@@ -25,6 +26,17 @@ class Converters {
         Role.valueOf(value)
     } catch (e: Exception) {
         Role.USER
+    }
+
+    // MessageStatus
+    @TypeConverter
+    fun fromMessageStatus(status: MessageStatus): String = status.name
+
+    @TypeConverter
+    fun toMessageStatus(value: String): MessageStatus = try {
+        MessageStatus.valueOf(value)
+    } catch (e: Exception) {
+        MessageStatus.COMPLETED
     }
 
     // List<String> & Set<Int> (JSON 存储)

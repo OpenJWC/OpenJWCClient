@@ -34,7 +34,6 @@ sealed class UiEvent {
 }
 
 sealed class NavEvent {
-    class ToLogin() : NavEvent()
-    class ToRegister() : NavEvent()
     class ToBack() : NavEvent()
+    class ToLlmSettings() : NavEvent()
 }

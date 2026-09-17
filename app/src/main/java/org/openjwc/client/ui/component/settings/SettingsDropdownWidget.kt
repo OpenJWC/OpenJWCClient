@@ -29,7 +29,6 @@ fun SettingsDropdownWidget(
     description: String? = null,
     iconPlaceholder: Boolean = true,
     enabled: Boolean = true,
-    renderBackgroundBlur: Boolean = true,
     isError: Boolean = false,
     choice: Int,
     data: List<String>,
@@ -54,7 +53,6 @@ fun SettingsDropdownWidget(
             title = title,
             description = description,
             enabled = enabled,
-            renderBackgroundBlur = renderBackgroundBlur,
             isError = isError,
             onClick = { offest ->
                 touchPoint = offest

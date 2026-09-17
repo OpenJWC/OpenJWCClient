@@ -21,11 +21,13 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyGridState
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ArrowUpward
+import androidx.compose.material.icons.twotone.Newspaper
 import androidx.compose.material.icons.filled.Bookmark
 import androidx.compose.material.icons.filled.BookmarkBorder
 import androidx.compose.material3.Card
@@ -49,6 +51,9 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.layout.boundsInWindow
+import org.openjwc.client.ui.util.sharedBoundsWithNav
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
@@ -96,6 +101,10 @@ fun NewsList(
                     onFavoriteClick = { if (favoriteItems.any { it.id == notice.id }) onDeleteFavorite(notice) else onAddToFavorite(notice) })
             }
 
+            if (newsItems.isEmpty() && !isLoading && error == null) {
+                item(span = { GridItemSpan(maxLineSpan) }) { EmptyCategoryPlaceholder() }
+            }
+
             if (isLoading) item { Box(Modifier.fillMaxWidth().height(48.dp), contentAlignment = Alignment.Center) { androidx.compose.material3.CircularProgressIndicator(Modifier.size(24.dp)) } }
 
             if (error != null) {
@@ -127,7 +136,14 @@ fun NewsCard(notice: FetchedNotice, freshDays: Int?, isFavorited: Boolean,
     var showContextMenu by remember { mutableStateOf(false) }
 
     Card(
-        modifier = Modifier.fillMaxWidth().combinedClickable(onClick = onClick, onLongClick = { showContextMenu = true; onLongClick() }),
+        modifier = Modifier
+            .fillMaxWidth()
+            // 官方共享元素：与详情页同 key，卡片↔详情自动插值位置/尺寸并交叉淡入淡出
+            .sharedBoundsWithNav("news-card-${notice.id}")
+            .combinedClickable(
+                onClick = onClick,
+                onLongClick = { showContextMenu = true; onLongClick() },
+            ),
         shape = RoundedCornerShape(20.dp),
         colors = CardDefaults.cardColors(containerColor = if (isFresh) MaterialTheme.colorScheme.primaryContainer.copy(alpha = CardConfig.cardAlpha) else MaterialTheme.colorScheme.surfaceContainerLow.copy(alpha = CardConfig.cardAlpha)),
         elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
@@ -157,9 +173,40 @@ fun NewsCard(notice: FetchedNotice, freshDays: Int?, isFavorited: Boolean,
     }
 }
 
+/** 某个栏目没有任何资讯时的空状态（本地语料可能还没抓到该栏目）。 */
+@Composable
+private fun EmptyCategoryPlaceholder() {
+    Box(
+        modifier = Modifier.fillMaxWidth().padding(vertical = 64.dp),
+        contentAlignment = Alignment.Center,
+    ) {
+        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+            Icon(
+                imageVector = Icons.TwoTone.Newspaper,
+                contentDescription = null,
+                modifier = Modifier.size(48.dp),
+                tint = MaterialTheme.colorScheme.outlineVariant,
+            )
+            Spacer(Modifier.height(12.dp))
+            Text(
+                text = stringResource(R.string.no_news_in_category),
+                style = MaterialTheme.typography.titleMedium,
+                color = MaterialTheme.colorScheme.onSurface,
+            )
+            Spacer(Modifier.height(4.dp))
+            Text(
+                text = stringResource(R.string.no_news_in_category_desc),
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+        }
+    }
+}
+
 @Composable
 fun BackToTopButton(visible: Boolean, onClick: () -> Unit, modifier: Modifier) {
-    AnimatedVisibility(visible = visible, enter = fadeIn() + scaleIn(), exit = scaleOut(), modifier = modifier.padding(12.dp)) {
+    val motion = MaterialTheme.motionScheme
+    AnimatedVisibility(visible = visible, enter = fadeIn(motion.fastEffectsSpec()) + scaleIn(motion.fastSpatialSpec()), exit = scaleOut(motion.fastSpatialSpec()), modifier = modifier.padding(12.dp)) {
         FloatingActionButton(onClick = onClick) {
             Icon(Icons.Default.ArrowUpward, stringResource(R.string.back_to_top), Modifier.size(24.dp))
         }

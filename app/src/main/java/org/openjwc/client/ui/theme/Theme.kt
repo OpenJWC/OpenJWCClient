@@ -3,20 +3,14 @@ package org.openjwc.client.ui.theme
 import android.R
 import android.content.Context
 import android.graphics.Bitmap
-import android.graphics.BitmapFactory
-import android.graphics.Canvas
-import android.graphics.Paint
-import android.graphics.RectF
-import android.graphics.RenderEffect
-import android.graphics.RenderNode
-import android.graphics.Shader
 import android.net.Uri
 import android.os.Build
 import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.SystemBarStyle
 import androidx.activity.enableEdgeToEdge
-import androidx.annotation.RequiresApi
+import androidx.compose.animation.core.FiniteAnimationSpec
+import androidx.compose.animation.core.snap
 import androidx.compose.foundation.background
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Box
@@ -41,40 +35,24 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
-import androidx.compose.runtime.withFrameNanos
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.composed
-import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.geometry.Rect
-import androidx.compose.ui.graphics.BlendMode
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.ImageBitmap
-import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.graphics.Shadow
-import androidx.compose.ui.graphics.asImageBitmap
-import androidx.compose.ui.graphics.drawscope.ContentDrawScope
 import androidx.compose.ui.graphics.toArgb
-import androidx.compose.ui.layout.LayoutCoordinates
-import androidx.compose.ui.layout.onGloballyPositioned
-import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.Density
-import androidx.compose.ui.unit.IntOffset
-import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.zIndex
-import androidx.core.graphics.createBitmap
-import androidx.lifecycle.Lifecycle
-import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.core.graphics.drawable.toBitmap
 import androidx.core.graphics.scale
 import androidx.core.net.toUri
-import coil.compose.AsyncImagePainter
-import coil.compose.rememberAsyncImagePainter
-import coil.request.ImageRequest
+import coil3.compose.AsyncImagePainter
+import coil3.compose.rememberAsyncImagePainter
+import coil3.request.ImageRequest
+import coil3.toBitmap
 import com.kieronquinn.monetcompat.core.MonetCompat
 import com.kieronquinn.monetcompat.interfaces.MonetColorsChangedListener
 import com.materialkolor.PaletteStyle
@@ -88,17 +66,8 @@ import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import org.openjwc.client.data.appPreferences
-import org.openjwc.client.ui.util.LocalBackgroundBlurAnchor
-import org.openjwc.client.ui.util.LocalBlurState
-import top.yukonga.miuix.kmp.blur.BlendColorEntry
-import top.yukonga.miuix.kmp.blur.BlurColors
-import top.yukonga.miuix.kmp.blur.layerBackdrop
-import top.yukonga.miuix.kmp.blur.textureBlur
 import java.io.File
 import java.io.FileOutputStream
-import kotlin.math.abs
-import kotlin.math.ceil
-import kotlin.math.floor
 import dev.kdrag0n.monet.theme.ColorScheme as MonetCompatColorScheme
 
 @Stable
@@ -118,11 +87,30 @@ object ThemeConfig {
     var isThemeChanging by mutableStateOf(false)
     var preventBackgroundRefresh by mutableStateOf(false)
     var isHighContrastMode by mutableStateOf(false)
-    var isEnableBlur by mutableStateOf(false)
-    var isEnableBlurExp by mutableStateOf(false)
     var isUseBackgroundSeedColor by mutableStateOf(false)
     var predictiveBackAnimation by mutableStateOf("AOSP")
     var predictiveBackExitDirection by mutableStateOf("FOLLOW_GESTURE")
+
+    /**
+     * 界面动画强度：`full` 弹性动效（默认）、`standard` 标准、`off` 关闭。
+     * 低配设备可降级，减少弹簧过冲/重测量带来的掉帧。
+     */
+    var animationMode by mutableStateOf(ANIMATION_FULL)
+
+    /** 当前 motion scheme；`off` 时所有动画退化为瞬切（snap）。 */
+    val motionScheme: MotionScheme
+        get() = when (animationMode) {
+            ANIMATION_STANDARD -> MotionScheme.standard()
+            ANIMATION_OFF -> NoMotionScheme
+            else -> MotionScheme.expressive()
+        }
+
+    /** 是否启用共享元素等较重的动画。 */
+    val animationsEnabled: Boolean get() = animationMode != ANIMATION_OFF
+
+    const val ANIMATION_FULL = "full"
+    const val ANIMATION_STANDARD = "standard"
+    const val ANIMATION_OFF = "off"
 
     // 主题变化检测
     private var lastDarkModeState: Boolean? = null
@@ -165,6 +153,16 @@ object ThemeConfig {
     }
 }
 
+/** 关闭动画：所有 motion spec 退化为瞬切，最省资源。 */
+private object NoMotionScheme : MotionScheme {
+    override fun <T> defaultSpatialSpec(): FiniteAnimationSpec<T> = snap()
+    override fun <T> fastSpatialSpec(): FiniteAnimationSpec<T> = snap()
+    override fun <T> slowSpatialSpec(): FiniteAnimationSpec<T> = snap()
+    override fun <T> defaultEffectsSpec(): FiniteAnimationSpec<T> = snap()
+    override fun <T> fastEffectsSpec(): FiniteAnimationSpec<T> = snap()
+    override fun <T> slowEffectsSpec(): FiniteAnimationSpec<T> = snap()
+}
+
 object ThemeManager {
     fun saveThemeMode(context: Context, forceDark: Boolean?) {
         context.appPreferences.putString(
@@ -185,6 +183,12 @@ object ThemeManager {
             "light" -> false
             else -> null
         }
+    }
+
+    /** 保存界面动画强度（full / standard / off）。 */
+    fun saveAnimationMode(context: Context, mode: String) {
+        context.appPreferences.putString("animation_mode", mode)
+        ThemeConfig.animationMode = mode
     }
 
     fun saveSeedColor(context: Context, seedColor: Int) {
@@ -261,16 +265,6 @@ object BackgroundManager {
         context.appPreferences.putFloat("background_dim", dim)
     }
 
-    fun saveEnableBlur(context: Context, enable: Boolean) {
-        ThemeConfig.isEnableBlur = enable
-        context.appPreferences.putBoolean("enable_blur", enable)
-    }
-
-    fun saveEnableBlurExp(context: Context, enable: Boolean) {
-        ThemeConfig.isEnableBlurExp = enable
-        context.appPreferences.putBoolean("enable_blur_exp", enable)
-    }
-
     fun saveUseBackgroundSeedColor(context: Context, enable: Boolean) {
         ThemeConfig.isUseBackgroundSeedColor = enable
         context.appPreferences.putBoolean("use_background_seed_color", enable)
@@ -291,7 +285,6 @@ object BackgroundManager {
             saveBackgroundUri(context, finalUri)
             ThemeConfig.customBackgroundUri = finalUri
             CardConfig.updateBackground(true)
-            clearBackgroundBlurCache(context)
             resetBackgroundState(context)
 
         } catch (e: Exception) {
@@ -303,7 +296,6 @@ object BackgroundManager {
         saveBackgroundUri(context, null)
         ThemeConfig.customBackgroundUri = null
         CardConfig.updateBackground(false)
-        clearBackgroundBlurCache(context)
         resetBackgroundState(context)
     }
 
@@ -324,8 +316,6 @@ object BackgroundManager {
         }
 
         ThemeConfig.backgroundDim = prefs.getFloat("background_dim", 0f).coerceIn(0f, 1f)
-        ThemeConfig.isEnableBlur = prefs.getBoolean("enable_blur", false)
-        ThemeConfig.isEnableBlurExp = prefs.getBoolean("enable_blur_exp", false)
         ThemeConfig.isUseBackgroundSeedColor = prefs.getBoolean("use_background_seed_color", false)
         ThemeConfig.isHighContrastMode = prefs.getBoolean("high_contrast_mode", false)
     }
@@ -338,17 +328,7 @@ object BackgroundManager {
     private fun resetBackgroundState(context: Context) {
         ThemeConfig.backgroundImageLoaded = false
         ThemeConfig.preventBackgroundRefresh = false
-        blurBackgroundImageBitmap = null
         context.appPreferences.putBoolean("prevent_background_refresh", false)
-    }
-
-    fun clearBackgroundBlurCache(context: Context) {
-        runCatching {
-            backgroundBlurCacheFile(context).delete()
-            legacyBackgroundBlurCacheDir(context).deleteRecursively()
-        }.onFailure {
-            Log.w(TAG, "Failed to clear background blur cache: ${it.message}")
-        }
     }
 
     private fun copyImageToInternalStorage(context: Context, uri: Uri): Uri? {
@@ -408,7 +388,7 @@ fun OpenJWCClientTheme(
     ) {
         MaterialExpressiveTheme(
             colorScheme = colorScheme,
-            motionScheme = MotionScheme.expressive(),
+            motionScheme = ThemeConfig.motionScheme,
             typography = generateTypography()
         ) {
             Box(modifier = Modifier.fillMaxSize()) {
@@ -456,9 +436,8 @@ private fun ThemeInitializer(context: Context, systemIsDark: Boolean) {
             val prefs = context.appPreferences
             ThemeConfig.predictiveBackAnimation = prefs.getString("predictive_back_animation", "AOSP") ?: "AOSP"
             ThemeConfig.predictiveBackExitDirection = prefs.getString("predictive_back_exit_direction", "FOLLOW_GESTURE") ?: "FOLLOW_GESTURE"
+            ThemeConfig.animationMode = prefs.getString("animation_mode", ThemeConfig.ANIMATION_FULL) ?: ThemeConfig.ANIMATION_FULL
             ThemeConfig.isHighContrastMode = prefs.getBoolean("high_contrast_mode", false)
-            ThemeConfig.isEnableBlur = prefs.getBoolean("enable_blur", false)
-            ThemeConfig.isEnableBlurExp = prefs.getBoolean("enable_blur_exp", false)
             ThemeConfig.isUseBackgroundSeedColor = prefs.getBoolean("use_background_seed_color", false)
             ThemeConfig.backgroundDim = prefs.getFloat("background_dim", 0f)
 
@@ -525,28 +504,8 @@ private fun BackgroundLayer() {
         backgroundUri.value = ThemeConfig.customBackgroundUri
         if (backgroundUri.value == null) {
             backgroundImagePainter = null
-            blurBackgroundImageBitmap = null
             backgroundSeedColor = 0
             context.appPreferences.remove("cached_seed_color")
-        }
-    }
-
-    val hasBlurBitmap = blurBackgroundImageBitmap != null
-
-    val lifecycleOwner = androidx.lifecycle.compose.LocalLifecycleOwner.current
-    val lifecycle = lifecycleOwner.lifecycle
-    val isResumed = lifecycle.currentState.isAtLeast(Lifecycle.State.RESUMED)
-
-    LaunchedEffect(ThemeConfig.isEnableBlurExp, hasBlurBitmap, isResumed) {
-        if (!ThemeConfig.isEnableBlurExp || !hasBlurBitmap || !isResumed) return@LaunchedEffect
-
-        while (true) {
-            withFrameNanos { }
-            backgroundBlurFrameTick = if (backgroundBlurFrameTick == Int.MAX_VALUE) {
-                0
-            } else {
-                backgroundBlurFrameTick + 1
-            }
         }
     }
 
@@ -555,16 +514,6 @@ private fun BackgroundLayer() {
         modifier = Modifier
             .fillMaxSize()
             .zIndex(-2f)
-            .onSizeChanged { size ->
-                if (
-                    size.width > 0 &&
-                    size.height > 0 &&
-                    backgroundBlurViewportSize != size
-                ) {
-                    backgroundBlurViewportSize = size
-                    blurBackgroundImageBitmap = null
-                }
-            }
             .background(
                 MaterialTheme.colorScheme.surfaceContainer
             )
@@ -577,319 +526,7 @@ private fun BackgroundLayer() {
 }
 
 var backgroundImagePainter: AsyncImagePainter? by mutableStateOf(null)
-var blurBackgroundImageBitmap: ImageBitmap? by mutableStateOf(null)
-private var backgroundBlurViewportSize by mutableStateOf(IntSize(0, 0))
-private var backgroundBlurFrameTick by mutableIntStateOf(0)
 var backgroundSeedColor by mutableIntStateOf(0)
-
-private const val BACKGROUND_BLUR_RADIUS = 25f
-
-/**
- * Captures background content for blurEffect child nodes,
- * It will only work when blurState available
- * @return modified modifier
- */
-@Composable
-fun Modifier.blurSource(): Modifier {
-    if (Build.VERSION.SDK_INT < Build.VERSION_CODES.S) return this
-
-    return LocalBlurState.current?.let {
-        this.then(Modifier.layerBackdrop(it))
-    } ?: this
-}
-
-/**
- * Render blur when backdrop available
- * @return modified modifier
- */
-@Composable
-fun Modifier.blurEffect(): Modifier {
-    if (Build.VERSION.SDK_INT < Build.VERSION_CODES.S) return this
-
-    return LocalBlurState.current?.let { backdrop ->
-        val blendColor =
-            MaterialTheme.colorScheme.surfaceContainer.copy(alpha = CardConfig.cardAlpha)
-
-        this.then(
-            Modifier.textureBlur(
-                backdrop = backdrop,
-                shape = RectangleShape,
-                blurRadius = 25f,
-                colors = BlurColors(
-                    blendColors = listOf(
-                        BlendColorEntry(color = blendColor)
-                    )
-                )
-            )
-        )
-    } ?: this
-}
-
-
-fun Modifier.renderBackgroundBlur(
-    tintColor: Color? = null
-): Modifier = composed {
-    if (!ThemeConfig.isEnableBlurExp) return@composed this
-
-    var coordinates by remember {
-        mutableStateOf<LayoutCoordinates?>(null)
-    }
-
-    val tintColor = (tintColor ?: MaterialTheme.colorScheme.surfaceBright).copy(
-        alpha = CardConfig.cardAlpha
-    )
-    val backgroundBlurAnchor = LocalBackgroundBlurAnchor.current
-
-    this
-        .onGloballyPositioned { newCoordinates ->
-            coordinates = newCoordinates.takeIf { it.isAttached }
-        }
-        .drawWithContent {
-            backgroundBlurFrameTick
-
-            val currentBitmap = blurBackgroundImageBitmap
-            val currentBoundsInBackground = coordinates?.boundsInBackgroundNow(backgroundBlurAnchor)
-
-            if (
-                currentBitmap != null &&
-                currentBoundsInBackground != null &&
-                currentBoundsInBackground.width > 0f &&
-                currentBoundsInBackground.height > 0f
-            ) {
-                drawBitmapIntersection(
-                    bitmap = currentBitmap,
-                    boundsInBackground = currentBoundsInBackground,
-                )
-
-                drawRect(
-                    color = tintColor,
-                    blendMode = BlendMode.SrcOver,
-                )
-            }
-
-            drawContent()
-        }
-}
-
-private fun LayoutCoordinates.boundsInBackgroundNow(
-    backgroundCoordinates: LayoutCoordinates?,
-): Rect? {
-    if (!isAttached || size.width <= 0 || size.height <= 0) return null
-
-    return backgroundCoordinates
-        ?.takeIf { it.isAttached && it.size.width > 0 && it.size.height > 0 }
-        ?.let { boundsInCoordinatesNow(it) }
-        ?: localBoundsInWindowNow()
-}
-
-private fun LayoutCoordinates.boundsInCoordinatesNow(
-    targetCoordinates: LayoutCoordinates,
-): Rect? {
-    fun localToTarget(point: Offset): Offset {
-        val screenPoint = localToScreen(point)
-        if (!screenPoint.isUsable()) return Offset.Unspecified
-
-        return targetCoordinates.screenToLocal(screenPoint)
-    }
-
-    val width = size.width.toFloat()
-    val height = size.height.toFloat()
-
-    return boundsFromCorners(
-        topLeft = localToTarget(Offset.Zero),
-        topRight = localToTarget(Offset(width, 0f)),
-        bottomLeft = localToTarget(Offset(0f, height)),
-        bottomRight = localToTarget(Offset(width, height)),
-    )
-}
-
-private fun LayoutCoordinates.localBoundsInWindowNow(): Rect? {
-    val width = size.width.toFloat()
-    val height = size.height.toFloat()
-
-    return boundsFromCorners(
-        topLeft = localToWindow(Offset.Zero),
-        topRight = localToWindow(Offset(width, 0f)),
-        bottomLeft = localToWindow(Offset(0f, height)),
-        bottomRight = localToWindow(Offset(width, height)),
-    )
-}
-
-private fun boundsFromCorners(
-    topLeft: Offset,
-    topRight: Offset,
-    bottomLeft: Offset,
-    bottomRight: Offset,
-): Rect? {
-    if (
-        !topLeft.isUsable() ||
-        !topRight.isUsable() ||
-        !bottomLeft.isUsable() ||
-        !bottomRight.isUsable()
-    ) {
-        return null
-    }
-
-    return Rect(
-        left = minOf(topLeft.x, topRight.x, bottomLeft.x, bottomRight.x),
-        top = minOf(topLeft.y, topRight.y, bottomLeft.y, bottomRight.y),
-        right = maxOf(topLeft.x, topRight.x, bottomLeft.x, bottomRight.x),
-        bottom = maxOf(topLeft.y, topRight.y, bottomLeft.y, bottomRight.y),
-    )
-}
-
-private data class BitmapDrawSegment(
-    val srcStart: Int,
-    val srcEnd: Int,
-    val dstStart: Int,
-    val dstEnd: Int,
-)
-
-private fun buildBitmapDrawSegments(
-    sourceStart: Float,
-    sourceEnd: Float,
-    bitmapSize: Int,
-    destinationSize: Float,
-): List<BitmapDrawSegment> {
-    val sourceSpan = sourceEnd - sourceStart
-    val destinationEnd = ceil(destinationSize).toInt()
-
-    if (bitmapSize <= 0 || sourceSpan <= 0f || destinationEnd <= 0) {
-        return emptyList()
-    }
-
-    fun mapToDestination(value: Float): Float {
-        return (value - sourceStart) / sourceSpan * destinationSize
-    }
-
-    val segments = mutableListOf<BitmapDrawSegment>()
-
-    // Emulate Shader.TileMode.CLAMP for areas that are above / left of the bitmap.
-    if (sourceStart < 0f) {
-        val dstEnd = ceil(mapToDestination(0f).coerceIn(0f, destinationSize))
-            .toInt()
-            .coerceIn(0, destinationEnd)
-
-        if (dstEnd > 0) {
-            segments += BitmapDrawSegment(
-                srcStart = 0,
-                srcEnd = 1,
-                dstStart = 0,
-                dstEnd = dstEnd,
-            )
-        }
-    }
-
-    val clippedStart = sourceStart.coerceIn(0f, bitmapSize.toFloat())
-    val clippedEnd = sourceEnd.coerceIn(0f, bitmapSize.toFloat())
-
-    if (clippedEnd > clippedStart) {
-        val srcStart = floor(clippedStart).toInt().coerceIn(0, bitmapSize - 1)
-        val srcEnd = ceil(clippedEnd).toInt().coerceIn(srcStart + 1, bitmapSize)
-        val dstStart = floor(mapToDestination(clippedStart).coerceIn(0f, destinationSize))
-            .toInt()
-            .coerceIn(0, destinationEnd)
-        val dstEnd = ceil(mapToDestination(clippedEnd).coerceIn(0f, destinationSize))
-            .toInt()
-            .coerceIn(0, destinationEnd)
-
-        if (dstEnd > dstStart) {
-            segments += BitmapDrawSegment(
-                srcStart = srcStart,
-                srcEnd = srcEnd,
-                dstStart = dstStart,
-                dstEnd = dstEnd,
-            )
-        }
-    }
-
-    // Emulate Shader.TileMode.CLAMP for areas that are below / right of the bitmap.
-    if (sourceEnd > bitmapSize.toFloat()) {
-        val dstStart = floor(mapToDestination(bitmapSize.toFloat()).coerceIn(0f, destinationSize))
-            .toInt()
-            .coerceIn(0, destinationEnd)
-
-        if (destinationEnd > dstStart) {
-            segments += BitmapDrawSegment(
-                srcStart = bitmapSize - 1,
-                srcEnd = bitmapSize,
-                dstStart = dstStart,
-                dstEnd = destinationEnd,
-            )
-        }
-    }
-
-    // The whole destination is outside one side of the source bitmap.
-    if (segments.isEmpty()) {
-        val src = if (sourceEnd <= 0f) 0 else bitmapSize - 1
-        segments += BitmapDrawSegment(
-            srcStart = src,
-            srcEnd = src + 1,
-            dstStart = 0,
-            dstEnd = destinationEnd,
-        )
-    }
-
-    return segments
-}
-
-private fun ContentDrawScope.drawBitmapIntersection(
-    bitmap: ImageBitmap,
-    boundsInBackground: Rect,
-) {
-    val bitmapWidth = bitmap.width
-    val bitmapHeight = bitmap.height
-
-    if (
-        bitmapWidth <= 0 ||
-        bitmapHeight <= 0 ||
-        size.width <= 0f ||
-        size.height <= 0f ||
-        boundsInBackground.width <= 0f ||
-        boundsInBackground.height <= 0f
-    ) {
-        return
-    }
-
-    val xSegments = buildBitmapDrawSegments(
-        sourceStart = boundsInBackground.left,
-        sourceEnd = boundsInBackground.right,
-        bitmapSize = bitmapWidth,
-        destinationSize = size.width,
-    )
-    val ySegments = buildBitmapDrawSegments(
-        sourceStart = boundsInBackground.top,
-        sourceEnd = boundsInBackground.bottom,
-        bitmapSize = bitmapHeight,
-        destinationSize = size.height,
-    )
-
-    for (xSegment in xSegments) {
-        for (ySegment in ySegments) {
-            val srcWidth = xSegment.srcEnd - xSegment.srcStart
-            val srcHeight = ySegment.srcEnd - ySegment.srcStart
-            val dstWidth = xSegment.dstEnd - xSegment.dstStart
-            val dstHeight = ySegment.dstEnd - ySegment.dstStart
-
-            if (srcWidth <= 0 || srcHeight <= 0 || dstWidth <= 0 || dstHeight <= 0) {
-                continue
-            }
-
-            drawImage(
-                image = bitmap,
-                srcOffset = IntOffset(xSegment.srcStart, ySegment.srcStart),
-                srcSize = IntSize(srcWidth, srcHeight),
-                dstOffset = IntOffset(xSegment.dstStart, ySegment.dstStart),
-                dstSize = IntSize(dstWidth, dstHeight),
-                blendMode = BlendMode.SrcOver,
-            )
-        }
-    }
-}
-
-private fun Offset.isUsable(): Boolean {
-    return x.isFinite() && y.isFinite()
-}
 
 private suspend fun Bitmap.extractSeedColor(
     maxColors: Int = 128,
@@ -912,301 +549,6 @@ private suspend fun Bitmap.extractSeedColor(
     sortedColors.firstOrNull() ?: fallbackColorArgb
 }
 
-private fun Bitmap.softwareFastBlur(radius: Int): Bitmap {
-    if (radius < 1) return this
-
-    val w = width
-    val h = height
-    val pix = IntArray(w * h)
-    getPixels(pix, 0, w, 0, 0, w, h)
-
-    val wm = w - 1
-    val hm = h - 1
-    val wh = w * h
-    val div = radius + radius + 1
-
-    val r = IntArray(wh)
-    val g = IntArray(wh)
-    val b = IntArray(wh)
-    var rsum: Int; var gsum: Int; var bsum: Int
-    var p: Int; var yp: Int; var yi: Int
-    val vmin = IntArray(w.coerceAtLeast(h))
-
-    var divsum = (div + 1) shr 1
-    divsum *= divsum
-    val dv = IntArray(256 * divsum)
-    for (i in 0 until 256 * divsum) {
-        dv[i] = i / divsum
-    }
-
-    var yw = 0
-    yi = 0
-
-    val stack = Array(div) { IntArray(3) }
-    var stackpointer: Int
-    var stackstart: Int
-    var sir: IntArray
-    var rbs: Int
-    val r1 = radius + 1
-    var routsum: Int; var goutsum: Int; var boutsum: Int
-    var rinsum: Int; var ginsum: Int; var binsum: Int
-
-    for (y in 0 until h) {
-        bsum = 0; gsum = 0; rsum = 0
-        boutsum = 0; goutsum = 0; routsum = 0
-        binsum = 0; ginsum = 0; rinsum = 0
-        for (i in -radius..radius) {
-            p = pix[yi + wm.coerceAtMost(i.coerceAtLeast(0))]
-            sir = stack[i + radius]
-            sir[0] = (p and 0xff0000) shr 16
-            sir[1] = (p and 0x00ff00) shr 8
-            sir[2] = p and 0x0000ff
-            rbs = r1 - abs(i)
-            rsum += sir[0] * rbs
-            gsum += sir[1] * rbs
-            bsum += sir[2] * rbs
-            if (i > 0) {
-                rinsum += sir[0]
-                ginsum += sir[1]
-                binsum += sir[2]
-            } else {
-                routsum += sir[0]
-                goutsum += sir[1]
-                boutsum += sir[2]
-            }
-        }
-        stackpointer = radius
-
-        for (x in 0 until w) {
-            r[yi] = dv[rsum]
-            g[yi] = dv[gsum]
-            b[yi] = dv[bsum]
-
-            rsum -= routsum
-            gsum -= goutsum
-            bsum -= boutsum
-
-            stackstart = stackpointer - radius + div
-            sir = stack[stackstart % div]
-
-            routsum -= sir[0]
-            goutsum -= sir[1]
-            boutsum -= sir[2]
-
-            if (y == 0) vmin[x] = (x + radius + 1).coerceAtMost(wm)
-            p = pix[yw + vmin[x]]
-
-            sir[0] = (p and 0xff0000) shr 16
-            sir[1] = (p and 0x00ff00) shr 8
-            sir[2] = p and 0x0000ff
-
-            rinsum += sir[0]
-            ginsum += sir[1]
-            binsum += sir[2]
-
-            rsum += rinsum
-            gsum += ginsum
-            bsum += binsum
-
-            stackpointer = (stackpointer + 1) % div
-            sir = stack[stackpointer % div]
-
-            routsum += sir[0]
-            goutsum += sir[1]
-            boutsum += sir[2]
-
-            rinsum -= sir[0]
-            ginsum -= sir[1]
-            binsum -= sir[2]
-
-            yi++
-        }
-        yw += w
-    }
-
-    for (x in 0 until w) {
-        bsum = 0; gsum = 0; rsum = 0
-        boutsum = 0; goutsum = 0; routsum = 0
-        binsum = 0; ginsum = 0; rinsum = 0
-        yp = -radius * w
-        for (i in -radius..radius) {
-            yi = (yp.coerceAtLeast(0)) + x
-            sir = stack[i + radius]
-            sir[0] = r[yi]
-            sir[1] = g[yi]
-            sir[2] = b[yi]
-            rbs = r1 - abs(i)
-            rsum += r[yi] * rbs
-            gsum += g[yi] * rbs
-            bsum += b[yi] * rbs
-            if (i > 0) {
-                rinsum += sir[0]
-                ginsum += sir[1]
-                binsum += sir[2]
-            } else {
-                routsum += sir[0]
-                goutsum += sir[1]
-                boutsum += sir[2]
-            }
-            if (i < hm) yp += w
-        }
-        yi = x
-        stackpointer = radius
-        for (y in 0 until h) {
-            pix[yi] = (-0x1000000 and pix[yi]) or (dv[rsum] shl 16) or (dv[gsum] shl 8) or dv[bsum]
-            rsum -= routsum
-            gsum -= goutsum
-            bsum -= boutsum
-            stackstart = stackpointer - radius + div
-            sir = stack[stackstart % div]
-            routsum -= sir[0]
-            goutsum -= sir[1]
-            boutsum -= sir[2]
-            if (x == 0) vmin[y] = (y + r1).coerceAtMost(hm) * w
-            p = x + vmin[y]
-            sir[0] = r[p]
-            sir[1] = g[p]
-            sir[2] = b[p]
-            rinsum += sir[0]
-            ginsum += sir[1]
-            binsum += sir[2]
-            rsum += rinsum
-            gsum += ginsum
-            bsum += binsum
-            stackpointer = (stackpointer + 1) % div
-            sir = stack[stackpointer]
-            routsum += sir[0]
-            goutsum += sir[1]
-            boutsum += sir[2]
-            rinsum -= sir[0]
-            ginsum -= sir[1]
-            binsum -= sir[2]
-            yi += w
-        }
-    }
-
-    val outputBitmap = createBitmap(w, h)
-    outputBitmap.setPixels(pix, 0, w, 0, 0, w, h)
-    return outputBitmap
-}
-
-@RequiresApi(Build.VERSION_CODES.S)
-private fun Bitmap.blurBitmap(blurRadius: Float): Bitmap {
-    val outputBitmap = createBitmap(width, height)
-    val outputCanvas = Canvas(outputBitmap)
-
-    if (outputCanvas.isHardwareAccelerated) {
-        val renderNode = RenderNode("BlurEffectNode").apply {
-            setPosition(0, 0, width, height)
-            setRenderEffect(
-                RenderEffect.createBlurEffect(
-                    blurRadius,
-                    blurRadius,
-                    Shader.TileMode.CLAMP
-                )
-            )
-        }
-
-        val recordingCanvas = renderNode.beginRecording()
-        recordingCanvas.drawBitmap(this, 0f, 0f, null)
-        renderNode.endRecording()
-
-        outputCanvas.drawRenderNode(renderNode)
-    } else {
-        val radiusInt = blurRadius.toInt().coerceIn(1, 25)
-        return this.softwareFastBlur(radiusInt)
-    }
-
-    return outputBitmap
-}
-
-
-@RequiresApi(Build.VERSION_CODES.S)
-private suspend fun Bitmap.createBackgroundBlurImage(
-    context: Context,
-    viewportSize: IntSize,
-    blurRadius: Float,
-): ImageBitmap = withContext(Dispatchers.Default) {
-    val cacheFile = backgroundBlurCacheFile(context)
-
-    BitmapFactory.decodeFile(cacheFile.absolutePath)?.let { cachedBitmap ->
-        if (
-            cachedBitmap.width == viewportSize.width &&
-            cachedBitmap.height == viewportSize.height
-        ) {
-            return@withContext cachedBitmap.asImageBitmap()
-        }
-
-        cachedBitmap.recycle()
-    }
-
-    val blurSource = createBackgroundBlurSource(viewportSize)
-
-    val blurredBitmap = try {
-        blurSource.blurBitmap(blurRadius)
-    } finally {
-        if (blurSource !== this@createBackgroundBlurImage) {
-            blurSource.recycle()
-        }
-    }
-
-    saveBackgroundBlurCache(cacheFile, blurredBitmap)
-    blurredBitmap.asImageBitmap()
-}
-
-private fun Bitmap.createBackgroundBlurSource(viewportSize: IntSize): Bitmap {
-    val targetWidth = viewportSize.width
-    val targetHeight = viewportSize.height
-
-    if (
-        targetWidth <= 0 ||
-        targetHeight <= 0 ||
-        (width == targetWidth && height == targetHeight)
-    ) {
-        return this
-    }
-
-    val scale = maxOf(
-        targetWidth / width.toFloat(),
-        targetHeight / height.toFloat(),
-    )
-    val scaledWidth = width * scale
-    val scaledHeight = height * scale
-    val left = (targetWidth - scaledWidth) / 2f
-    val top = (targetHeight - scaledHeight) / 2f
-
-    return createBitmap(targetWidth, targetHeight).also { outputBitmap ->
-        Canvas(outputBitmap).drawBitmap(
-            this,
-            null,
-            RectF(left, top, left + scaledWidth, top + scaledHeight),
-            Paint(Paint.ANTI_ALIAS_FLAG or Paint.FILTER_BITMAP_FLAG),
-        )
-    }
-}
-
-private fun backgroundBlurCacheFile(context: Context): File =
-    File(context.filesDir, "blured_custom_background.jpg")
-
-private fun legacyBackgroundBlurCacheDir(context: Context): File =
-    File(context.filesDir, "background_blur_cache")
-
-private fun saveBackgroundBlurCache(cacheFile: File, bitmap: Bitmap) {
-    runCatching {
-        cacheFile.parentFile?.mkdirs()
-        val tempFile = File(cacheFile.parentFile, "${cacheFile.name}.tmp")
-        FileOutputStream(tempFile).use { output ->
-            bitmap.compress(Bitmap.CompressFormat.JPEG, 95, output)
-        }
-        if (!tempFile.renameTo(cacheFile)) {
-            tempFile.copyTo(cacheFile, overwrite = true)
-            tempFile.delete()
-        }
-    }.onFailure {
-        Log.w("ThemeSystem", "Failed to save background blur cache: ${it.message}")
-    }
-}
-
 @Composable
 private fun BackgroundInitializer(uri: Uri) {
     val context = LocalContext.current
@@ -1220,33 +562,9 @@ private fun BackgroundInitializer(uri: Uri) {
     val calcedCachedSeedColor =
         context.appPreferences.getInt("cached_seed_color", dynamicColorFromSystem)
 
-    LaunchedEffect(ThemeConfig.isEnableBlurExp, backgroundBlurViewportSize) {
-        if (
-            Build.VERSION.SDK_INT >= Build.VERSION_CODES.S &&
-            ThemeConfig.isEnableBlurExp &&
-            backgroundBlurViewportSize.width > 0 &&
-            backgroundBlurViewportSize.height > 0
-        ) {
-            backgroundImagePainter?.let {
-                if (it.state !is AsyncImagePainter.State.Success) return@let
-
-                val bitmap = (it.state as AsyncImagePainter.State.Success).result.drawable.toBitmap()
-                blurBackgroundImageBitmap = bitmap.createBackgroundBlurImage(
-                    context = context,
-                    viewportSize = backgroundBlurViewportSize,
-                    blurRadius = BACKGROUND_BLUR_RADIUS,
-                )
-            }
-        } else {
-            blurBackgroundImageBitmap = null
-        }
-    }
-
     backgroundImagePainter = rememberAsyncImagePainter(
         model = ImageRequest.Builder(context)
             .data(uri)
-            .allowHardware(false)
-            .crossfade(true)
             .build(),
         onError = { error ->
             Log.e("ThemeSystem", "背景加载失败: ${error.result.throwable.message}")
@@ -1257,23 +575,7 @@ private fun BackgroundInitializer(uri: Uri) {
             ThemeConfig.backgroundImageLoaded = true
             ThemeConfig.isThemeChanging = false
 
-            val bitmap = it.result.drawable.toBitmap()
-            if (
-                Build.VERSION.SDK_INT >= Build.VERSION_CODES.S &&
-                ThemeConfig.isEnableBlurExp &&
-                backgroundBlurViewportSize.width > 0 &&
-                backgroundBlurViewportSize.height > 0
-            ) {
-                coroutineScope.launch {
-                    blurBackgroundImageBitmap = bitmap.createBackgroundBlurImage(
-                        context = context,
-                        viewportSize = backgroundBlurViewportSize,
-                        blurRadius = BACKGROUND_BLUR_RADIUS,
-                    )
-                }
-            } else {
-                blurBackgroundImageBitmap = null
-            }
+            val bitmap = it.result.image.toBitmap()
 
             backgroundSeedColor = calcedCachedSeedColor
             coroutineScope.launch {

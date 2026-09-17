@@ -40,9 +40,6 @@ import androidx.compose.ui.unit.max
 private const val PADDING_HORIZONTAL = 16
 private const val PADDING_VERTICAL = 8
 
-private const val bouncyStiffness = 800f
-private const val bouncyDamping = 0.5f
-
 @DslMarker
 annotation class SegmentedColumnDsl
 
@@ -146,7 +143,9 @@ fun SegmentedColumn(
         val lastVisibleIndex = allItems.indexOfLast { it.visible }
         val focusManager = LocalFocusManager.current
 
-        val dpSpring = spring<Dp>(dampingRatio = bouncyDamping, stiffness = bouncyStiffness)
+        // 圆角/间距动画走 M3 的 spatial token（进入用 default，退出用更快的 fast）
+        val motion = MaterialTheme.motionScheme
+        val dpSpring = motion.defaultSpatialSpec<Dp>()
 
         allItems.forEachIndexed { index, itemData ->
             key(itemData.key ?: index) {
@@ -178,8 +177,12 @@ fun SegmentedColumn(
 
                 val targetTopPadding = itemData.customTopPadding
                     ?: (if (isFirst) 0.dp else ListItemDefaults.SegmentedGap)
+                // 弹簧欠阻尼会过冲到负值，而 padding 不允许为负，必须夹到 0
                 val currentTopPadding = if (isDynamicDpSupported) {
-                    animateDpAsState(targetTopPadding, dpSpring, label = "TopPadding").value
+                    max(
+                        0.dp,
+                        animateDpAsState(targetTopPadding, dpSpring, label = "TopPadding").value
+                    )
                 } else targetTopPadding
 
                 var hasFocus by remember { mutableStateOf(false) }
@@ -192,8 +195,8 @@ fun SegmentedColumn(
 
                 AnimatedVisibility(
                     visible = itemData.visible,
-                    enter = fadeIn(spring(dampingRatio = bouncyDamping, stiffness = bouncyStiffness)) + expandVertically(spring(dampingRatio = bouncyDamping, stiffness = bouncyStiffness)),
-                    exit = fadeOut(spring(dampingRatio = bouncyDamping, stiffness = bouncyStiffness)) + shrinkVertically(spring(dampingRatio = bouncyDamping, stiffness = bouncyStiffness))
+                    enter = fadeIn(motion.defaultEffectsSpec()) + expandVertically(motion.defaultSpatialSpec()),
+                    exit = fadeOut(motion.fastEffectsSpec()) + shrinkVertically(motion.fastSpatialSpec())
                 ) {
                     Box(
                         modifier = Modifier

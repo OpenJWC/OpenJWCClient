@@ -1,6 +1,8 @@
 package org.openjwc.client.ui.timetable.view.grid
 
 import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.FiniteAnimationSpec
+import androidx.compose.animation.core.snap
 import androidx.compose.animation.core.spring
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -32,6 +34,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import org.openjwc.client.data.models.Course
+import org.openjwc.client.ui.theme.ThemeConfig
 import org.openjwc.client.ui.theme.rememberCourseColor
 import java.time.DayOfWeek
 
@@ -93,10 +96,16 @@ fun CourseBlock(
     }
     // 用 Animatable 从 initialScale 起步，避免拖动浮层首次组合时直接跳到目标缩放值
     val scaleAnim = remember { Animatable(initialScale) }
+    // 关闭动画时直接瞬切，避免拖动浮层每帧弹簧计算
+    val scaleSpec: FiniteAnimationSpec<Float> = if (ThemeConfig.animationsEnabled) {
+        spring(stiffness = 800f, dampingRatio = 0.5f)
+    } else {
+        snap()
+    }
     LaunchedEffect(targetScale) {
         scaleAnim.animateTo(
             targetValue = targetScale,
-            animationSpec = spring(stiffness = 800f, dampingRatio = 0.5f)
+            animationSpec = scaleSpec,
         )
     }
     val scale = scaleOverride ?: scaleAnim.value

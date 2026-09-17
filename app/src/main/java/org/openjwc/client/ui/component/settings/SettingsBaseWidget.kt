@@ -64,8 +64,6 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import org.openjwc.client.ui.component.settings.material3internal.rememberAnimatedShape
 import org.openjwc.client.ui.theme.CardConfig
-import org.openjwc.client.ui.theme.ThemeConfig
-import org.openjwc.client.ui.theme.renderBackgroundBlur
 
 /**
  * A [CompositionLocal] that provides the dynamically calculated [Shape] for items
@@ -94,7 +92,6 @@ val LocalSegmentedItemShape = compositionLocalOf<Shape> { RoundedCornerShape(16.
  * If [onClick] is not null, this also controls clickability.
  * @param isError If true, applies the error color to the description text.
  * @param selected If true, highlights the widget with a primary container background.
- * @param renderBackgroundBlur If true, this composable will renderBackgroundBlur.
  * @param fillMaxWidth If true, this composable will fill max width.
  * @param onClick Callback to be invoked when the widget is clicked. If null, the widget is not clickable.
  * @param onLongClick Callback to be invoked when the widget is LONG CLICKED. If null, the widget is not clickable.
@@ -120,7 +117,6 @@ fun SettingsBaseWidget(
     enabled: Boolean = true,
     isError: Boolean = false,
     selected: Boolean = false,
-    renderBackgroundBlur: Boolean = true,
     fillMaxWidth: Boolean = true,
     onClick: ((Offset) -> Unit)? = null,
     onLongClick: ((Offset) -> Unit)? = null,
@@ -150,11 +146,7 @@ fun SettingsBaseWidget(
             alpha = CardConfig.cardAlpha
         )
 
-    val backgroundColor = run {
-        if (renderBackgroundBlur && ThemeConfig.isEnableBlurExp)
-            Color.Transparent
-        else finalContainerColor
-    }
+    val backgroundColor = finalContainerColor
 
     val baseContentColor = if (containerColor != null)
         MaterialTheme.colorScheme.contentColorFor(containerColor)
@@ -241,10 +233,6 @@ fun SettingsBaseWidget(
     }
 
     var itemModifier = (if (fillMaxWidth) modifier.fillMaxWidth() else modifier)
-    if (renderBackgroundBlur && ThemeConfig.isEnableBlurExp)
-        itemModifier = itemModifier
-            .clip(clipShape)
-            .renderBackgroundBlur(finalContainerColor)
 
     val finalLeadingContent: (@Composable () -> Unit)? =
         if (leadingContent == null && icon == null && !iconPlaceholder)

@@ -7,6 +7,7 @@ import java.util.concurrent.atomic.AtomicLong
 
 object Logger {
     private val counter = AtomicLong(0L)
+    private val appendLock = Any()
     enum class Level {
         NONE,
         DEBUG,
@@ -83,10 +84,24 @@ object Logger {
             message = message
         )
 
-        Snapshot.withMutableSnapshot {
-            logHistory.add(0, entry)
-            if (logHistory.size > maxEntries) {
-                logHistory.removeAt(logHistory.size - 1)
+        // logHistory 是 Compose 快照状态列表，可能被后台线程（网络回调等）并发修改，
+        // 与主线程快照冲突时会抛 SnapshotApplyConflictException；这里重试，且绝不向上抛，
+        // 避免"打日志"本身中断业务（如 SSE 流）。
+        repeat(3) {
+            try {
+                synchronized(appendLock) {
+                    Snapshot.withMutableSnapshot {
+                        logHistory.add(0, entry)
+                        if (logHistory.size > maxEntries) {
+                            logHistory.removeAt(logHistory.size - 1)
+                        }
+                    }
+                }
+                return
+            } catch (_: androidx.compose.runtime.snapshots.SnapshotApplyConflictException) {
+                // 快照冲突，重试
+            } catch (_: Exception) {
+                return
             }
         }
     }

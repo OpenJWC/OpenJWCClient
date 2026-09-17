@@ -53,3 +53,13 @@
 -keepclassmembers class org.openjwc.client.ui.timetable.load.WebAppInterface {
     @android.webkit.JavascriptInterface <methods>;
 }
+
+# QuickJS 脚本桥：JS 侧按「方法名」调用（http.get / dom.query / params.crawlCutoffDate / util.resolveUrl…），
+# 而绑定走的是反射（QuickJs.set 用 Class.getMethods() 取名字）。R8 会重命名/移除未保留的接口方法，
+# 导致 release 包里脚本报 "xxx is not a function"。必须保留接口及其方法名。
+-keep interface org.openjwc.client.script.ScriptHttpApi { *; }
+-keep interface org.openjwc.client.script.ScriptHtmlApi { *; }
+-keep interface org.openjwc.client.script.ScriptUtilApi { *; }
+-keep interface org.openjwc.client.script.ScriptConsoleApi { *; }
+-keep interface org.openjwc.client.script.ScriptReportApi { *; }
+-keep interface org.openjwc.client.script.ScriptParamsApi { *; }

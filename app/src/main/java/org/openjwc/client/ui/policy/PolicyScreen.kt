@@ -19,9 +19,9 @@ import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import dev.jeziellago.compose.markdowntext.MarkdownText
 import org.openjwc.client.R
 import org.openjwc.client.navigation3.Navigator
+import org.openjwc.client.ui.component.MarkdownContent
 import org.openjwc.client.ui.component.settings.AppBackButton
 
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
@@ -58,10 +58,7 @@ fun PolicyScreen(navigator: Navigator) {
                 .padding(horizontal = 20.dp, vertical = 16.dp)
                 .verticalScroll(rememberScrollState())
         ) {
-            MarkdownText(
-                markdown = policyText,
-                isTextSelectable = true
-            )
+            MarkdownContent(policyText)
         }
     }
 }

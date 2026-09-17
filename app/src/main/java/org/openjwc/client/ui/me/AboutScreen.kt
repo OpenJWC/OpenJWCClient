@@ -41,8 +41,8 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import coil.compose.AsyncImage
-import coil.request.ImageRequest
+import coil3.compose.AsyncImage
+import coil3.request.ImageRequest
 import org.openjwc.client.BuildConfig
 import org.openjwc.client.R
 import org.openjwc.client.navigation.Screen
@@ -100,7 +100,6 @@ fun AboutScreen(navigator: Navigator, mainViewModel: MainViewModel) {
                     AsyncImage(
                         model = ImageRequest.Builder(LocalContext.current)
                             .data(R.mipmap.ic_launcher)
-                            .crossfade(true)
                             .build(),
                         contentDescription = stringResource(R.string.app_icon_description),
                         modifier = Modifier.size(80.dp).clip(RoundedCornerShape(20.dp)),

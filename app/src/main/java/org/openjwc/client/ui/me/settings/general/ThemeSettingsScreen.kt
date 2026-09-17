@@ -6,8 +6,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.twotone.BlurOn
-import androidx.compose.material.icons.twotone.Colorize
+import androidx.compose.material.icons.twotone.Animation
 import androidx.compose.material.icons.twotone.Contrast
 import androidx.compose.material.icons.twotone.OpenInFull
 import androidx.compose.material.icons.twotone.Swipe
@@ -34,6 +33,7 @@ import org.openjwc.client.ui.component.settings.SettingsChooseWidget
 import org.openjwc.client.ui.component.settings.SettingsSwitchWidget
 import org.openjwc.client.ui.theme.BackgroundManager
 import org.openjwc.client.ui.theme.ThemeConfig
+import org.openjwc.client.ui.theme.ThemeManager
 
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
@@ -82,6 +82,33 @@ fun ThemeSettingsContent(modifier: Modifier = Modifier) {
             }
         }
 
+        SegmentedColumn(title = stringResource(R.string.animation_section)) {
+            item {
+                val modes = listOf(
+                    ThemeConfig.ANIMATION_FULL to R.string.animation_level_full,
+                    ThemeConfig.ANIMATION_STANDARD to R.string.animation_level_standard,
+                    ThemeConfig.ANIMATION_OFF to R.string.animation_level_off,
+                )
+                SettingsChooseWidget(
+                    icon = Icons.TwoTone.Animation,
+                    title = stringResource(R.string.animation_level),
+                    description = stringResource(R.string.animation_level_desc),
+                    items = modes.map { stringResource(it.second) },
+                    itemDescriptions = listOf(
+                        stringResource(R.string.animation_level_full_desc),
+                        stringResource(R.string.animation_level_standard_desc),
+                        stringResource(R.string.animation_level_off_desc),
+                    ),
+                    selectedIndex = modes
+                        .indexOfFirst { it.first == ThemeConfig.animationMode }
+                        .coerceAtLeast(0),
+                    onSelectedIndexChange = { index ->
+                        ThemeManager.saveAnimationMode(context, modes[index].first)
+                    },
+                )
+            }
+        }
+
         SegmentedColumn(title = stringResource(R.string.predictive_back_animation)) {
             item {
                 SettingsChooseWidget(
@@ -122,4 +149,3 @@ fun ThemeSettingsContent(modifier: Modifier = Modifier) {
         }
     }
 }
-

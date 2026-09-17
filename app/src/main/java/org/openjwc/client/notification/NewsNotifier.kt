@@ -47,6 +47,13 @@ object NewsNotifier {
 
         val launchIntent = Intent(context, MainActivity::class.java).apply {
             flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
+            // 单条 → 直达该资讯详情；多条 → 打开资讯页
+            if (notices.size == 1) {
+                putExtra(NotificationNavigation.EXTRA_DESTINATION, NotificationNavigation.DEST_NEWS_DETAIL)
+                putExtra(NewsNotificationContract.EXTRA_NEWS_ID, notices.first().id)
+            } else {
+                putExtra(NotificationNavigation.EXTRA_DESTINATION, NotificationNavigation.DEST_NEWS)
+            }
         }
         val contentPendingIntent = PendingIntent.getActivity(
             context,

@@ -19,6 +19,7 @@ import androidx.compose.material.icons.filled.ContentCopy
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Share
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
@@ -27,6 +28,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -41,8 +43,8 @@ import androidx.compose.ui.unit.dp
 import org.openjwc.client.R
 import org.openjwc.client.data.models.ChatMessage
 import org.openjwc.client.data.models.Role
+import org.openjwc.client.ui.component.MarkdownContent
 import org.openjwc.client.ui.theme.CardConfig
-import dev.jeziellago.compose.markdowntext.MarkdownText
 
 @Composable
 fun MessageBubble(
@@ -65,6 +67,8 @@ fun MessageBubble(
         bottomStart = 20.dp,
         bottomEnd = 20.dp
     )
+
+    var showDeleteConfirm by remember { mutableStateOf(false) }
 
     Column(
         modifier = Modifier.fillMaxWidth(),
@@ -97,10 +101,7 @@ fun MessageBubble(
                         color = MaterialTheme.colorScheme.onPrimaryContainer
                     )
                 } else {
-                    MarkdownText(
-                        markdown = message.text,
-                        isTextSelectable = true
-                    )
+                    MarkdownContent(message.text)
                 }
                 if (isLoading) {
                     Spacer(Modifier.height(8.dp))
@@ -130,12 +131,30 @@ fun MessageBubble(
                             DropdownMenuItem(
                                 text = { Text(stringResource(R.string.delete), color = MaterialTheme.colorScheme.error) },
                                 leadingIcon = { Icon(Icons.Default.Delete, null, tint = MaterialTheme.colorScheme.error) },
-                                onClick = { onDelete(); showMenu = false }
+                                onClick = { showMenu = false; showDeleteConfirm = true }
                             )
                         }
                     }
                 }
             }
         }
+    }
+
+    if (showDeleteConfirm) {
+        AlertDialog(
+            onDismissRequest = { showDeleteConfirm = false },
+            title = { Text(stringResource(R.string.delete)) },
+            text = { Text(stringResource(R.string.delete_message_confirm)) },
+            confirmButton = {
+                TextButton(onClick = { showDeleteConfirm = false; onDelete() }) {
+                    Text(stringResource(R.string.delete), color = MaterialTheme.colorScheme.error)
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showDeleteConfirm = false }) {
+                    Text(stringResource(R.string.cancel))
+                }
+            }
+        )
     }
 }

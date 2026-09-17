@@ -30,6 +30,7 @@ class CourseReminderReceiver : BroadcastReceiver() {
 
         val launchIntent = Intent(context, MainActivity::class.java).apply {
             flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
+            putExtra(NotificationNavigation.EXTRA_DESTINATION, NotificationNavigation.DEST_TIMETABLE)
         }
         val launchPendingIntent = PendingIntent.getActivity(
             context,

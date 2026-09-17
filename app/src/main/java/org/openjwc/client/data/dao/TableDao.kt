@@ -41,6 +41,12 @@ interface TableDao {
     suspend fun getTableById(id: Long): TableMetadata?
 
     /**
+     * 同步获取全部课表（Agent 的 list_timetables 工具用）
+     */
+    @Query("SELECT * FROM table_metadata ORDER BY id DESC")
+    suspend fun getAllTablesSync(): List<TableMetadata>
+
+    /**
      * 同步获取当前活跃课表快照
      */
     @Query("SELECT * FROM table_metadata WHERE isCurrent = 1 LIMIT 1")

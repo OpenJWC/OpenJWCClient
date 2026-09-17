@@ -3,10 +3,14 @@ package org.openjwc.client.ui.chat
 import android.widget.Toast
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.Crossfade
+import androidx.compose.animation.EnterTransition
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.scaleIn
 import androidx.compose.animation.scaleOut
+import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
@@ -70,6 +74,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -88,10 +93,15 @@ import kotlinx.coroutines.launch
 import org.openjwc.client.R
 import org.openjwc.client.data.models.ChatMessage
 import org.openjwc.client.data.models.ChatMetadata
+import org.openjwc.client.data.models.Role
+import org.openjwc.client.data.models.ChatTurn
+import org.openjwc.client.data.repository.ToolUiState
+import org.openjwc.client.data.repository.toUiState
 import org.openjwc.client.navigation.MainTab
 import org.openjwc.client.viewmodels.ChatSessionState
 import org.openjwc.client.viewmodels.ChatSessionUiModel
 import org.openjwc.client.viewmodels.ChatViewModel
+import org.openjwc.client.viewmodels.FailedTurn
 import org.openjwc.client.viewmodels.MainViewModel
 import org.openjwc.client.viewmodels.NewsViewModel
 import org.openjwc.client.net.models.FetchedNotice
@@ -238,15 +248,28 @@ fun ChatMainContent(
     mainViewModel: MainViewModel,
     newsViewModel: NewsViewModel,
     windowSizeClass: WindowSizeClass,
-    contentPadding: PaddingValues
+    contentPadding: PaddingValues,
+    onOpenNotice: (FetchedNotice) -> Unit = {},
 ) {
-    val messages by chatViewModel.messages.collectAsStateWithLifecycle()
+    val turns by chatViewModel.turns.collectAsStateWithLifecycle()
     val currentMetadata by chatViewModel.currentSessionMetadata.collectAsStateWithLifecycle()
     val sessionState by chatViewModel.getSessionState(currentMetadata?.sessionId).collectAsStateWithLifecycle()
+    val failedTurn by chatViewModel.getFailedTurn(currentMetadata?.sessionId).collectAsStateWithLifecycle()
     val listState = rememberLazyListState()
     val clipboardManager = LocalClipboard.current
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
+
+    // 预解析工具卡片引用的资讯：点击时像资讯卡片那样「同步」触发导航，共享元素形变才与资讯卡片一致
+    val toolNoticeIds = remember(turns) {
+        turns.flatMap { it.toolCalls }.mapNotNull { it.targetId }.distinct()
+    }
+    var toolNotices by remember { mutableStateOf<Map<String, FetchedNotice>>(emptyMap()) }
+    LaunchedEffect(toolNoticeIds) {
+        toolNotices = toolNoticeIds.mapNotNull { id ->
+            newsViewModel.noticeById(id)?.let { id to it }
+        }.toMap()
+    }
 
     // Bottom sheet for news attachment
     var showNewsSheet by remember { mutableStateOf(false) }
@@ -280,7 +303,7 @@ fun ChatMainContent(
         modifier = Modifier.fillMaxSize().padding(contentPadding).consumeWindowInsets(contentPadding).padding(horizontal = horizontalPadding)
     ) {
         Box(Modifier.weight(1f).fillMaxWidth(), contentAlignment = Alignment.Center) {
-            if (messages.isEmpty()) {
+            if (turns.isEmpty()) {
                 Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center) {
                     Icon(Icons.Default.ChatBubbleOutline, null, Modifier.size(64.dp), tint = MaterialTheme.colorScheme.outline.copy(alpha = 0.5f))
                     Spacer(Modifier.height(16.dp))
@@ -289,8 +312,10 @@ fun ChatMainContent(
             } else {
                 ChatList(
                     listState = listState,
-                    chatMessages = messages,
+                    turns = turns,
                     sessionState = sessionState,
+                    failedTurn = failedTurn,
+                    onRetry = { chatViewModel.retryLastMessage() },
                     onCopy = { msg ->
                         chatViewModel.copyMessage(msg)
                         scope.launch { clipboardManager.setClipEntry(ClipEntry(ClipData.newPlainText(msg.text, msg.text))) }
@@ -299,7 +324,15 @@ fun ChatMainContent(
                         val sendIntent = Intent(Intent.ACTION_SEND).apply { action = Intent.ACTION_SEND; putExtra(Intent.EXTRA_TEXT, it.text); type = "text/plain" }
                         context.startActivity(Intent.createChooser(sendIntent, null))
                     },
-                    onDelete = { chatViewModel.deleteMessage(it.messageId) }
+                    onDelete = { chatViewModel.deleteMessage(it.messageId) },
+                    onOpenNotice = { noticeId ->
+                        val cached = toolNotices[noticeId]
+                        if (cached != null) {
+                            onOpenNotice(cached)
+                        } else {
+                            scope.launch { newsViewModel.noticeById(noticeId)?.let(onOpenNotice) }
+                        }
+                    }
                 )
             }
         }
@@ -320,30 +353,120 @@ fun ChatMainContent(
 @Composable
 fun ChatList(
     listState: androidx.compose.foundation.lazy.LazyListState,
-    chatMessages: List<ChatMessage>,
+    turns: List<ChatTurn>,
     modifier: Modifier = Modifier,
     sessionState: ChatSessionState,
+    failedTurn: FailedTurn? = null,
+    onRetry: () -> Unit = {},
     onDelete: (ChatMessage) -> Unit = {},
     onCopy: (ChatMessage) -> Unit = {},
-    onShare: (ChatMessage) -> Unit = {}
+    onShare: (ChatMessage) -> Unit = {},
+    onOpenNotice: ((String) -> Unit)? = null
 ) {
     val scope = rememberCoroutineScope()
     val showBackToBottom by remember { derivedStateOf { val li = listState.layoutInfo; val l = li.visibleItemsInfo.lastOrNull(); li.totalItemsCount > 0 && (l?.index ?: 0) < li.totalItemsCount - 1 } }
 
-    BoxWithConstraints(modifier = modifier.fillMaxSize()) {
-        val bubbleMaxFraction = 0.85f
+    val motion = MaterialTheme.motionScheme
 
-        LazyColumn(state = listState, modifier = Modifier.fillMaxSize(), contentPadding = PaddingValues(vertical = 16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-            itemsIndexed(chatMessages, key = { _, msg -> msg.messageId }) { index, message ->
-                val isLast = index == chatMessages.lastIndex
-                val isLoading = isLast && (sessionState is ChatSessionState.Loading || sessionState is ChatSessionState.ToolCalling || sessionState is ChatSessionState.Generating)
-                MessageBubble(message = message, isLoading = isLoading, onCopy = { onCopy(message) }, onShare = { onShare(message) }, onDelete = { onDelete(message) }, maxWidthFraction = bubbleMaxFraction)
+    BoxWithConstraints(modifier = modifier.fillMaxSize()) {
+        // 以最后一条【用户消息】为锚点放置失败重试行
+        val lastUserIndex = remember(turns) {
+            turns.indexOfLast { it.message.role == Role.USER }
+        }
+
+        // AI 输出/工具进度更新时持续滚到底部
+        val autoScrollTarget = if (lastUserIndex >= 0) turns.size else turns.size - 1
+        LaunchedEffect(
+            turns.size,
+            turns.lastOrNull()?.message?.text,
+            turns.lastOrNull()?.toolCalls?.size,
+            sessionState
+        ) {
+            if (autoScrollTarget >= 0) {
+                listState.animateScrollToItem(autoScrollTarget)
             }
         }
 
-        AnimatedVisibility(visible = showBackToBottom, enter = fadeIn() + scaleIn(), exit = fadeOut() + scaleOut(), modifier = Modifier.align(Alignment.BottomEnd).padding(12.dp)) {
-            FloatingActionButton(onClick = { scope.launch { if (chatMessages.isNotEmpty()) listState.animateScrollToItem(chatMessages.size - 1) } }, shape = CircleShape) {
+        LazyColumn(state = listState, modifier = Modifier.fillMaxSize(), contentPadding = PaddingValues(vertical = 16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            turns.forEachIndexed { index, turn ->
+                item(key = turn.message.messageId) {
+                    val isLast = index == turns.lastIndex
+                    val isLoading = isLast && (
+                        sessionState is ChatSessionState.Loading ||
+                            sessionState is ChatSessionState.ToolCalling ||
+                            sessionState is ChatSessionState.Generating
+                        )
+                    Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                        // 工具轨迹属于这一轮助手消息，随消息落库，重启后仍可还原
+                        if (turn.toolCalls.isNotEmpty()) {
+                            ToolTimeline(tools = turn.toolCalls.map { it.toUiState() }, onOpenNotice = onOpenNotice)
+                        }
+                        MessageBubble(message = turn.message, isLoading = isLoading, onCopy = { onCopy(turn.message) }, onShare = { onShare(turn.message) }, onDelete = { onDelete(turn.message) }, maxWidthFraction = BUBBLE_MAX_FRACTION)
+                    }
+                }
+                if (index == lastUserIndex) {
+                    item(key = "turn_footer") {
+                        failedTurn?.let { failed ->
+                            RetryRow(message = failed.message, onRetry = onRetry)
+                        }
+                    }
+                }
+            }
+        }
+
+        AnimatedVisibility(visible = showBackToBottom, enter = fadeIn(motion.fastEffectsSpec()) + scaleIn(motion.fastSpatialSpec()), exit = fadeOut(motion.fastEffectsSpec()) + scaleOut(motion.fastSpatialSpec()), modifier = Modifier.align(Alignment.BottomEnd).padding(12.dp)) {
+            FloatingActionButton(onClick = { scope.launch { if (turns.isNotEmpty()) listState.animateScrollToItem(turns.size - 1) } }, shape = CircleShape) {
                 Icon(Icons.Default.ArrowDownward, stringResource(R.string.bottom))
+            }
+        }
+    }
+}
+
+private const val BUBBLE_MAX_FRACTION = 0.85f
+
+@Composable
+private fun ToolTimeline(tools: List<ToolUiState>, onOpenNotice: ((String) -> Unit)? = null) {
+    Column(
+        modifier = Modifier.fillMaxWidth(BUBBLE_MAX_FRACTION),
+        verticalArrangement = Arrangement.spacedBy(6.dp)
+    ) {
+        tools.forEach { tool ->
+            // 不加任何入场动画/图层：资讯卡片那侧没有这些，共享元素形变时会导致尺寸/位置抖动
+            ToolCard(
+                tool = tool,
+                modifier = Modifier.fillMaxWidth(),
+                onOpenNotice = onOpenNotice,
+            )
+        }
+    }
+}
+
+@Composable
+private fun RetryRow(message: String, onRetry: () -> Unit) {
+    Surface(
+        shape = RoundedCornerShape(12.dp),
+        color = MaterialTheme.colorScheme.errorContainer,
+        modifier = Modifier.fillMaxWidth()
+    ) {
+        Row(
+            modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 8.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Icon(
+                Icons.Default.ErrorOutline,
+                contentDescription = null,
+                modifier = Modifier.size(18.dp),
+                tint = MaterialTheme.colorScheme.onErrorContainer
+            )
+            Spacer(Modifier.width(8.dp))
+            Text(
+                text = message,
+                modifier = Modifier.weight(1f),
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onErrorContainer
+            )
+            TextButton(onClick = onRetry) {
+                Text(stringResource(R.string.retry))
             }
         }
     }
@@ -351,8 +474,7 @@ fun ChatList(
 
 @Preview
 @Composable
-fun TestChatHistoryList() {
-    ChatHistoryList(
+fun TestChatHistoryList() {    ChatHistoryList(
         sessions = listOf(ChatSessionUiModel(metadata = ChatMetadata(sessionId = 1, title = "Session 1"), state = ChatSessionState.Idle)),
         currentSessionId = 1,
         onNewChat = {}, onSessionClick = {}, onDeleteSession = {}, onUpdateSessionMetadata = {}, modifier = Modifier
@@ -364,64 +486,105 @@ private fun NewsAttachmentSheet(
     newsViewModel: NewsViewModel,
     onSelect: (FetchedNotice) -> Unit
 ) {
-    LaunchedEffect(Unit) { newsViewModel.loadLabels() }
-    val labels = newsViewModel.labels.collectAsStateWithLifecycle().value
+    val sources = newsViewModel.sources.collectAsStateWithLifecycle().value
+    val sourceNames = remember(sources) { sources.associate { it.id to it.name } }
+
+    var selectedSourceId by remember { mutableStateOf<String?>(null) }
     var selectedLabel by remember { mutableStateOf("") }
+    var labels by remember { mutableStateOf<List<String>>(emptyList()) }
+    var notices by remember { mutableStateOf<List<FetchedNotice>>(emptyList()) }
+    var labelsReady by remember { mutableStateOf(false) }
+    var noticesLoading by remember { mutableStateOf(false) }
+
+    // 数据源变化 → 重新取该范围内的栏目，并回落到第一个
+    LaunchedEffect(selectedSourceId, sources) {
+        labelsReady = false
+        val loaded = newsViewModel.attachmentLabels(selectedSourceId)
+        labels = loaded
+        if (selectedLabel !in loaded) selectedLabel = loaded.firstOrNull().orEmpty()
+        labelsReady = true
+    }
+
+    // 栏目 / 数据源变化 → 重新取资讯
+    LaunchedEffect(selectedLabel, selectedSourceId) {
+        if (selectedLabel.isBlank()) {
+            notices = emptyList()
+            noticesLoading = false
+            return@LaunchedEffect
+        }
+        noticesLoading = true
+        notices = newsViewModel.attachmentNotices(selectedLabel, selectedSourceId)
+        noticesLoading = false
+    }
 
     Column(Modifier.fillMaxWidth().padding(horizontal = 16.dp)) {
         Text(stringResource(R.string.attach), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold, modifier = Modifier.padding(16.dp))
 
-        if (labels.isEmpty()) {
-            Box(Modifier.fillMaxWidth().padding(24.dp), contentAlignment = Alignment.Center) {
-                Text(stringResource(R.string.loading), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.outline)
-            }
-        } else {
-            LaunchedEffect(labels) {
-                if (selectedLabel.isEmpty() || selectedLabel !in labels) {
-                    selectedLabel = labels.first()
-                }
-            }
-
-            // Label tabs
-            LazyColumn(Modifier.fillMaxWidth().height(48.dp)) {
+        // 数据源筛选
+        if (sources.isNotEmpty()) {
+            LazyRow(contentPadding = PaddingValues(horizontal = 4.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 item {
-                    LazyRow(contentPadding = PaddingValues(horizontal = 4.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        items(labels) { label ->
-                            val isSel = label == selectedLabel
-                            Surface(
-                                onClick = { selectedLabel = label },
-                                shape = RoundedCornerShape(20.dp),
-                                color = if (isSel) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surfaceContainerLow
-                            ) {
-                                Text(label, modifier = Modifier.padding(horizontal = 14.dp, vertical = 6.dp), style = MaterialTheme.typography.labelLarge, color = if (isSel) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurfaceVariant)
-                            }
-                        }
-                    }
+                    FilterChipItem(
+                        text = stringResource(R.string.source_all_sources),
+                        selected = selectedSourceId == null,
+                        onClick = { selectedSourceId = null }
+                    )
+                }
+                items(sources, key = { it.id }) { source ->
+                    FilterChipItem(
+                        text = source.name,
+                        selected = selectedSourceId == source.id,
+                        onClick = { selectedSourceId = source.id }
+                    )
                 }
             }
-
             Spacer(Modifier.height(8.dp))
+        }
 
-            // News list - scrollable
-            var loadTrigger by remember { mutableIntStateOf(0) }
-            LaunchedEffect(selectedLabel) { newsViewModel.loadCategory(selectedLabel); loadTrigger++ }
-            val notices = newsViewModel.getNewsState(selectedLabel)
+        // 栏目筛选
+        if (labels.isNotEmpty()) {
+            LazyRow(contentPadding = PaddingValues(horizontal = 4.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                items(labels, key = { it }) { label ->
+                    FilterChipItem(
+                        text = label,
+                        selected = label == selectedLabel,
+                        onClick = { selectedLabel = label }
+                    )
+                }
+            }
+            Spacer(Modifier.height(8.dp))
+        }
 
-            if (notices.isEmpty()) {
+        val showLoading = !labelsReady || noticesLoading
+        when {
+            showLoading -> {
                 Box(Modifier.fillMaxWidth().padding(24.dp), contentAlignment = Alignment.Center) {
                     Text(stringResource(R.string.loading), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.outline)
                 }
-            } else {
+            }
+
+            labels.isEmpty() -> EmptyHint(stringResource(R.string.no_news_categories))
+
+            notices.isEmpty() -> EmptyHint(stringResource(R.string.no_news_in_category))
+
+            else -> {
                 LazyColumn(modifier = Modifier.fillMaxWidth().heightIn(max = 400.dp)) {
                     item {
                         SegmentedColumn {
                             notices.forEach { notice ->
-                                item {
+                                item(key = notice.id) {
                                     SettingsBaseWidget(
                                         icon = Icons.Default.Newspaper,
                                         iconColor = MaterialTheme.colorScheme.primary,
                                         title = notice.title,
-                                        description = notice.date,
+                                        description = buildString {
+                                            val sourceName = notice.sourceId?.let { sourceNames[it] }
+                                            if (!sourceName.isNullOrBlank()) {
+                                                append(sourceName)
+                                                append(" · ")
+                                            }
+                                            append(notice.date)
+                                        },
                                         onClick = { onSelect(notice) }
                                     ) {}
                                 }
@@ -433,5 +596,40 @@ private fun NewsAttachmentSheet(
         }
 
         Spacer(Modifier.height(48.dp))
+    }
+}
+
+@Composable
+private fun EmptyHint(text: String) {
+    Box(Modifier.fillMaxWidth().padding(24.dp), contentAlignment = Alignment.Center) {
+        Text(text, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.outline)
+    }
+}
+
+@Composable
+private fun FilterChipItem(
+    text: String,
+    selected: Boolean,
+    onClick: () -> Unit
+) {
+    Surface(
+        onClick = onClick,
+        shape = RoundedCornerShape(20.dp),
+        color = if (selected) {
+            MaterialTheme.colorScheme.primaryContainer
+        } else {
+            MaterialTheme.colorScheme.surfaceContainerLow
+        }
+    ) {
+        Text(
+            text = text,
+            modifier = Modifier.padding(horizontal = 14.dp, vertical = 6.dp),
+            style = MaterialTheme.typography.labelLarge,
+            color = if (selected) {
+                MaterialTheme.colorScheme.onPrimaryContainer
+            } else {
+                MaterialTheme.colorScheme.onSurfaceVariant
+            }
+        )
     }
 }

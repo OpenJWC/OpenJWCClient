@@ -37,6 +37,10 @@ If you have any questions or suggestions about this agreement, you are welcome t
     <string name="license">MIT License</string>
     <string name="confirm">OK</string>
     <string name="cancel">Cancel</string>
+    <string name="close">Close</string>
+    <string name="crawl_progress_title">Crawling sources</string>
+    <string name="crawl_progress_current">Crawling “%1$s” (%2$d/%3$d)</string>
+    <string name="crawl_progress_done">Finished %1$d sources</string>
 
     <string name="device_list_hint">After logging in, you can view and manage your authorized devices.</string>
     <string name="custom_background">Custom Background</string>
@@ -47,6 +51,68 @@ If you have any questions or suggestions about this agreement, you are welcome t
     <string name="enable_blur_experimental">Experimental Background Blur</string>
     <string name="enable_blur">Enable Blur</string>
     <string name="advanced_theme">Advanced Theme</string>
+    <string name="llm">AI Model</string>
+    <string name="llm_settings">AI Model Settings</string>
+    <string name="llm_provider">Provider</string>
+    <string name="llm_base_url">Base URL</string>
+    <string name="llm_model">Model</string>
+    <string name="llm_api_key">API Key</string>
+    <string name="llm_api_key_hint">Key Security</string>
+    <string name="llm_api_key_desc">Stored encrypted on this device only, never uploaded</string>
+    <string name="llm_test">Test Connection</string>
+    <string name="llm_testing">Testing…</string>
+    <string name="llm_test_desc">Fill in the fields and tap the button below</string>
+    <string name="llm_save_and_test">Save &amp; Test</string>
+    <string name="sources_settings">News Sources</string>
+    <string name="sources">Sources</string>
+    <string name="source_import">Import from file</string>
+    <string name="source_import_desc">Pick a .js source script</string>
+    <string name="source_count_suffix"> items</string>
+    <string name="source_local_count">%1$d stored</string>
+    <string name="source_last_new">+%1$d this run</string>
+    <string name="source_run">Fetch</string>
+    <string name="source_delete">Delete</string>
+    <string name="source_run_all">Fetch all subscribed</string>
+    <string name="source_run_result">"%1$s" fetched %2$d items</string>
+    <string name="source_run_failed">"%1$s" failed: %2$s</string>
+    <string name="source_run_all_done">Fetched %1$d sources</string>
+    <string name="source_properties">Source</string>
+    <string name="source_kind_builtin">Built-in</string>
+    <string name="source_kind_sideload">Sideloaded</string>
+    <string name="source_overridden">Modified</string>
+    <string name="source_subscribe">Subscribe</string>
+    <string name="source_subscribe_desc">Subscribed sources are crawled in the background and shown in the feed</string>
+    <string name="source_subscribed">Subscribed</string>
+    <string name="source_unsubscribed">Not subscribed</string>
+    <string name="source_run_now">Crawl now</string>
+    <string name="source_last_run">Last run</string>
+    <string name="source_script">Script</string>
+    <string name="source_script_view">View script</string>
+    <string name="source_script_edit">Edit script</string>
+    <string name="source_save_script">Save script</string>
+    <string name="source_script_saved">Script saved</string>
+    <string name="source_script_invalid">Invalid script: needs @id matching this source</string>
+    <string name="source_import_success">Imported “%1$s”</string>
+    <string name="source_import_read_failed">Import failed: cannot read the selected file</string>
+    <string name="source_script_invalid_reason">Invalid script: %1$s</string>
+    <string name="source_reset_script">Reset to built-in</string>
+    <string name="source_reset_script_desc">Discard your edits and restore the bundled script</string>
+    <string name="source_script_reset">Built-in script restored</string>
+    <string name="source_delete_confirm">Delete source “%1$s”? Crawled notices are kept.</string>
+    <string name="source_deleted">Source deleted</string>
+    <string name="must_be_positive_integer">Must be a positive integer</string>
+    <string name="source_crawl_settings">Crawl settings</string>
+    <string name="source_crawl_days_gap">Crawl look-back (days)</string>
+    <string name="source_crawl_days_gap_desc">Only crawl notices published within this many days; unrelated to the freshness highlight</string>
+    <string name="source_filter_all">All</string>
+    <string name="source_all_sources">All sources</string>
+    <string name="source_all_sources_desc">Show notices from every subscribed source</string>
+    <string name="source_switch">Switch source</string>
+    <string name="source_builtin_readonly">Built-in scripts are read-only</string>
+    <string name="source_builtin_readonly_desc">Built-in sources are maintained with the app; to customize, import your own script from a file</string>
+    <string name="source_delete_builtin_forbidden">Built-in sources cannot be deleted</string>
+    <string name="source_manage">Manage sources</string>
+    <string name="no_sources_subscribed">No sources subscribed yet</string>
     <string name="background">Background</string>
     <string name="seed_color">Seed Color</string>
     <string name="dark_mode">Dark Mode</string>
@@ -148,6 +214,8 @@ If you have any questions or suggestions about this agreement, you are welcome t
     <string name="favorite_hint">Long press a news card to add it to your favorites</string>
     <string name="load_failed_retry">Load failed, tap to retry</string>
     <string name="all_content_loaded">— All content loaded —</string>
+    <string name="no_news_in_category">No notices in this category yet</string>
+    <string name="no_news_in_category_desc">Pull down to crawl again, or check subscriptions and crawl results in Settings → Sources</string>
     <string name="retry">Retry</string>
     <string name="no_news_categories">No categories found</string>
     <string name="get_labels_failed_hint">Unable to get news labels. Please check your connection or try again later.</string>
@@ -202,6 +270,15 @@ If you have any questions or suggestions about this agreement, you are welcome t
     <string name="predictive_back_animation">Predictive Back Animation</string>
     <string name="animation_type">Animation Type</string>
     <string name="exit_direction">Exit Direction</string>
+    <string name="animation_section">Animation</string>
+    <string name="animation_level">Animation level</string>
+    <string name="animation_level_desc">Lower or disable animations on low-end devices to reduce stutter</string>
+    <string name="animation_level_full">Full</string>
+    <string name="animation_level_full_desc">Springy motion, most lively</string>
+    <string name="animation_level_standard">Standard</string>
+    <string name="animation_level_standard_desc">Standard motion, lighter on resources</string>
+    <string name="animation_level_off">Off</string>
+    <string name="animation_level_off_desc">No animation, smoothest</string>
         <string name="clear_all_favorites">Clear all favorites</string>
     <string name="open_source_licenses">Open Source Licenses</string>
 
@@ -229,6 +306,17 @@ If you have any questions or suggestions about this agreement, you are welcome t
     <!-- MeScreen & Hitokoto -->
     <string name="hitokoto_text_format">“ %1$s ”</string>
     <string name="hitokoto_author_format">—— %1$s</string>
+    <string name="motto">Daily quote</string>
+    <string name="motto_text">Text</string>
+    <string name="motto_author">Author</string>
+    <string name="motto_author_placeholder">Leave empty or “Anonymous” for no author</string>
+    <string name="motto_online">Use online quote</string>
+    <string name="motto_online_desc">From hitokoto.cn (cached daily, pull to refresh)</string>
+    <string name="hitokoto_category">Category</string>
+    <string name="hitokoto_category_any">Any</string>
+    <string name="hitokoto_max_length">Max length</string>
+    <string name="hitokoto_max_length_hint">Between 1 and 100</string>
+    <string name="hitokoto_from_source">Powered by Hitokoto »</string>
 
     <!-- MeViewModel sections -->
     <string name="contribution">Contribution</string>
@@ -497,4 +585,16 @@ If you have any questions or suggestions about this agreement, you are welcome t
     <string name="permission_reminder_granted">Enabled</string>
     <string name="permission_reminder_not_granted">Not enabled</string>
     <string name="dont_remind_again">Don\'t remind again</string>
-    <string name="timetable_preview">Preview</string></resources>
+    <string name="timetable_preview">Preview</string>    <string name="tool_unknown">Tool</string>
+    <string name="tool_duration_ms">%1$d ms</string>    <string name="delete_message_confirm">Delete this message?</string>    <string name="daily_report">Daily</string>
+    <string name="daily_report_latest">Latest</string>
+    <string name="daily_report_none">No report</string>
+    <string name="daily_report_none_desc">No report available yet</string>
+    <string name="daily_report_auto">Auto-generate daily report</string>
+    <string name="daily_report_auto_desc">Summarize the day’s notices with your own model (uses your API quota)</string>
+    <string name="daily_report_time">Generate at</string>
+    <string name="daily_report_generate">Generate yesterday’s report</string>
+    <string name="daily_report_generating">Generating report…</string>
+    <string name="daily_report_generate_failed">Report generation failed</string>
+    <string name="daily_report_load_failed">Failed to load report</string>
+</resources>

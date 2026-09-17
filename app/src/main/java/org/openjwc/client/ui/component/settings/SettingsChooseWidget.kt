@@ -133,7 +133,6 @@ fun SettingsChooseWidget(
                     SettingsBaseWidget(
                         title = item,
                         fillMaxWidth = false,
-                        renderBackgroundBlur = false,
                         description = itemDescriptions.getOrNull(index),
                         selected = currentIndex == index,
                         onClick = {
@@ -187,7 +186,6 @@ fun SettingsChooseDialog(
                 SettingsBaseWidget(
                     title = item,
                     fillMaxWidth = false,
-                    renderBackgroundBlur = false,
                     description = itemDescriptions.getOrNull(index),
                     selected = currentIndex == index,
                     onClick = {
@@ -303,7 +301,6 @@ fun SettingsChooseWidget(
                         title = item,
                         selected = isSelected,
                         fillMaxWidth = false,
-                        renderBackgroundBlur = false,
                         description = itemDescriptions.getOrNull(index),
                         onClick = {
                             if (isSelected) {

@@ -12,21 +12,14 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import org.openjwc.client.data.datastore.UserSettings
-import org.openjwc.client.data.repository.AuthRepository
 import org.openjwc.client.data.repository.SettingsRepository
 import org.openjwc.client.log.Logger
-import org.openjwc.client.net.models.DevicesQueryResponseData
-import org.openjwc.client.net.models.DevicesUnbindSuccessResponse
-import org.openjwc.client.net.models.NetworkResult
-import org.openjwc.client.net.models.Proxy
-import org.openjwc.client.net.models.SuccessResponse
 import org.openjwc.client.utils.changeAppLanguage
 
 private const val label = "SettingsViewModel"
 
 class SettingsViewModel(
     private val settingsRepository: SettingsRepository,
-    private val authRepository: AuthRepository,
 ) : ViewModel() {
 
     var uiEvent = Channel<UiEvent>(Channel.BUFFERED)
@@ -35,10 +28,21 @@ class SettingsViewModel(
     val settings: StateFlow<UserSettings> = settingsRepository.userSettings
         .stateIn(scope = viewModelScope, started = SharingStarted.WhileSubscribed(5000), initialValue = UserSettings())
 
-    fun updateHost(host: String) = viewModelScope.launch { settingsRepository.updateHost(host) }
-    fun updatePort(port: Int) = viewModelScope.launch { settingsRepository.updatePort(port) }
-    fun updateUseHttp(useHttp: Boolean) = viewModelScope.launch { settingsRepository.updateUseHttp(useHttp) }
     fun updateFreshDays(freshDays: Int) = viewModelScope.launch { settingsRepository.updateFreshDays(freshDays) }
+
+    fun updateCrawlDaysGap(days: Int) = viewModelScope.launch { settingsRepository.updateCrawlDaysGap(days) }
+
+    fun updateMotto(text: String, author: String) =
+        viewModelScope.launch { settingsRepository.updateMotto(text, author) }
+
+    fun updateMottoOnline(enabled: Boolean) =
+        viewModelScope.launch { settingsRepository.updateMottoOnline(enabled) }
+
+    fun updateHitokotoCategory(code: String) =
+        viewModelScope.launch { settingsRepository.updateHitokotoCategory(code) }
+
+    fun updateHitokotoMaxLength(length: Int) =
+        viewModelScope.launch { settingsRepository.updateHitokotoMaxLength(length) }
 
     fun updateBackground(uri: Uri) = viewModelScope.launch {
         val success = settingsRepository.updateBackground(uri)
@@ -47,7 +51,6 @@ class SettingsViewModel(
 
     fun deleteBackground() = viewModelScope.launch { settingsRepository.deleteBackground() }
     fun updateBackgroundAlpha(alpha: Float) = viewModelScope.launch { settingsRepository.updateBackgroundAlpha(alpha) }
-    fun updateProxy(proxy: Proxy) = viewModelScope.launch { settingsRepository.updateProxy(proxy) }
 
     fun updateLanguage(code: String?) = viewModelScope.launch {
         changeAppLanguage(code)
@@ -74,61 +77,21 @@ class SettingsViewModel(
     fun updateAutoStartEnabled(enabled: Boolean) =
         viewModelScope.launch { settingsRepository.updateAutoStartEnabled(enabled) }
 
-    private var _deviceResult = MutableStateFlow<NetworkResult<SuccessResponse<DevicesQueryResponseData>>>(
-        NetworkResult.Success(SuccessResponse("success", DevicesQueryResponseData(deviceQueries = emptyList())))
-    )
-    private var _isLoadingDeviceResult = MutableStateFlow(false)
-    val isLoadingDeviceResult = _isLoadingDeviceResult.asStateFlow()
-    val deviceResult = _deviceResult.asStateFlow()
+    fun updateDailyReportEnabled(enabled: Boolean) =
+        viewModelScope.launch { settingsRepository.updateDailyReportEnabled(enabled) }
 
-    private var _deviceUnbindNetworkResult = MutableStateFlow<NetworkResult<DevicesUnbindSuccessResponse>>(
-        NetworkResult.Success(DevicesUnbindSuccessResponse(""))
-    )
-    val deviceUnbindNetworkResult = _deviceUnbindNetworkResult.asStateFlow()
+    fun updateDailyReportTime(time: String) =
+        viewModelScope.launch { settingsRepository.updateDailyReportTime(time) }
 
-    fun devicesQuery() {
-        viewModelScope.launch {
-            _isLoadingDeviceResult.value = true
-            try {
-                _deviceResult.value = authRepository.deviceQuery()
-            } catch (e: Exception) {
-                Logger.e(label, "devicesQuery error: ${e.localizedMessage}")
-            } finally {
-                _isLoadingDeviceResult.value = false
-            }
-        }
-    }
-
-    fun unbindAndRefresh(deviceId: String) {
-        viewModelScope.launch {
-            _isLoadingDeviceResult.value = true
-            try {
-                val unbindResult = authRepository.deviceUnbind(deviceId)
-                _deviceUnbindNetworkResult.value = unbindResult
-                if (unbindResult is NetworkResult.Success) {
-                    _deviceResult.value = authRepository.deviceQuery()
-                }
-            } catch (e: Exception) {
-                Logger.e(label, "unbindAndRefresh error: ${e.localizedMessage}")
-            } finally {
-                _isLoadingDeviceResult.value = false
-            }
-        }
-    }
-
-    fun clearUnbindResult() {
-        _deviceUnbindNetworkResult.value = NetworkResult.Success(DevicesUnbindSuccessResponse(""))
-    }
 }
 
 class SettingsViewModelFactory(
     private val settingsRepository: SettingsRepository,
-    private val authRepository: AuthRepository
 ) : ViewModelProvider.Factory {
     override fun <T : ViewModel> create(modelClass: Class<T>): T {
         if (modelClass.isAssignableFrom(SettingsViewModel::class.java)) {
             @Suppress("UNCHECKED_CAST")
-            return SettingsViewModel(settingsRepository, authRepository) as T
+            return SettingsViewModel(settingsRepository) as T
         }
         throw IllegalArgumentException("Unknown ViewModel class")
     }

@@ -30,6 +30,7 @@ import androidx.compose.material.icons.twotone.Settings
 import androidx.compose.material.icons.twotone.Upload
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.FilledTonalButton
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -42,12 +43,14 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import org.openjwc.client.R
-import org.openjwc.client.data.datastore.CachedHitokoto
+import org.openjwc.client.data.models.Motto
 import org.openjwc.client.navigation.Screen
 import org.openjwc.client.navigation3.Navigator
 import org.openjwc.client.ui.component.settings.SegmentedColumn
@@ -59,11 +62,13 @@ import org.openjwc.client.viewmodels.MeViewModel
 fun MeScreenContent(
     navigator: Navigator,
     meViewModel: MeViewModel,
-    hitokoto: CachedHitokoto,
+    motto: Motto,
     windowSizeClass: WindowSizeClass
 ) {
-    val successText = stringResource(R.string.refreshed_successfully)
     val isExpanded = windowSizeClass.widthSizeClass == WindowWidthSizeClass.Expanded
+    val refreshing by meViewModel.refreshing.collectAsStateWithLifecycle()
+    val onlineMode by meViewModel.onlineMode.collectAsStateWithLifecycle()
+    val refreshAction = { meViewModel.refreshMotto() }
 
     Box(
         modifier = Modifier.fillMaxSize(),
@@ -79,9 +84,12 @@ fun MeScreenContent(
             ) {
                 Box(modifier = Modifier.weight(1f)) {
                     HitokotoView(
-                        text = hitokoto.text,
-                        author = hitokoto.author,
-                        onRefresh = { meViewModel.refreshHitokoto(successText) }
+                        text = motto.text,
+                        author = motto.author,
+                        source = motto.source,
+                        permalink = motto.permalink,
+                        refreshing = refreshing,
+                        onRefresh = if (onlineMode) refreshAction else null
                     )
                 }
 
@@ -101,9 +109,12 @@ fun MeScreenContent(
             ) {
                 item(key = "hitokoto_header") {
                     HitokotoView(
-                        text = hitokoto.text,
-                        author = hitokoto.author,
-                        onRefresh = { meViewModel.refreshHitokoto(successText) },
+                        text = motto.text,
+                        author = motto.author,
+                        source = motto.source,
+                        permalink = motto.permalink,
+                        refreshing = refreshing,
+                        onRefresh = if (onlineMode) refreshAction else null,
                         modifier = Modifier.padding(vertical = 64.dp, horizontal = 16.dp)
                     )
                 }
@@ -135,20 +146,6 @@ private fun LazyListScope.menuSections(navigator: Navigator) {
                     onClick = { navigator.push(Screen.Favorite) }
                 )
             }
-            item {
-                SettingsJumpPageWidget(
-                    icon = Icons.TwoTone.History,
-                    title = stringResource(R.string.reviewed_notices),
-                    onClick = { navigator.push(Screen.Review) }
-                )
-            }
-            item {
-                SettingsJumpPageWidget(
-                    icon = Icons.TwoTone.Upload,
-                    title = stringResource(R.string.upload_news),
-                    onClick = { navigator.push(Screen.UploadNews) }
-                )
-            }
         }
     }
 
@@ -170,9 +167,21 @@ fun HitokotoView(
     modifier: Modifier = Modifier,
     text: String,
     author: String? = null,
-    onRefresh: () -> Unit,
+    source: String? = null,
+    /** 在线一言的详情页；本地自定义文本为 null。 */
+    permalink: String? = null,
+    refreshing: Boolean = false,
+    onRefresh: (() -> Unit)? = null,
 ) {
-    var showRefreshButton by remember { mutableStateOf(false) }
+    var showActions by remember { mutableStateOf(false) }
+    val uriHandler = LocalUriHandler.current
+    val attribution = remember(author, source) {
+        listOfNotNull(
+            author?.takeIf { it.isNotBlank() },
+            source?.takeIf { it.isNotBlank() }?.let { "《$it》" },
+        ).joinToString(" ")
+    }
+
     Column(
         modifier = modifier
             .fillMaxWidth()
@@ -181,7 +190,7 @@ fun HitokotoView(
                 interactionSource = remember { MutableInteractionSource() },
                 indication = null
             ) {
-                showRefreshButton = !showRefreshButton
+                if (onRefresh != null) showActions = !showActions
             },
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
@@ -194,9 +203,9 @@ fun HitokotoView(
             textAlign = TextAlign.Start
         )
         Spacer(modifier = Modifier.padding(16.dp))
-        author?.let {
+        if (attribution.isNotEmpty()) {
             Text(
-                text = stringResource(R.string.hitokoto_author_format, it),
+                text = stringResource(R.string.hitokoto_author_format, attribution),
                 style = MaterialTheme.typography.labelLarge,
                 color = MaterialTheme.colorScheme.outline,
                 textAlign = TextAlign.End,
@@ -205,8 +214,19 @@ fun HitokotoView(
                     .fillMaxWidth()
             )
         }
+        // 在线一言按官方要求附上出处链接
+        permalink?.let { link ->
+            Text(
+                text = stringResource(R.string.hitokoto_from_source),
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.primary,
+                modifier = Modifier
+                    .padding(top = 6.dp)
+                    .clickable { uriHandler.openUri(link) }
+            )
+        }
         AnimatedVisibility(
-            visible = showRefreshButton,
+            visible = showActions && onRefresh != null,
             enter = fadeIn() + expandVertically(),
             exit = fadeOut() + shrinkVertically()
         ) {
@@ -214,16 +234,21 @@ fun HitokotoView(
                 Spacer(modifier = Modifier.height(16.dp))
                 FilledTonalButton(
                     onClick = {
-                        onRefresh()
-                        showRefreshButton = false
+                        onRefresh?.invoke()
+                        showActions = false
                     },
+                    enabled = !refreshing,
                     modifier = Modifier.fillMaxWidth()
                 ) {
-                    Icon(
-                        Icons.Default.Refresh,
-                        contentDescription = null,
-                        modifier = Modifier.size(18.dp)
-                    )
+                    if (refreshing) {
+                        CircularProgressIndicator(modifier = Modifier.size(18.dp), strokeWidth = 2.dp)
+                    } else {
+                        Icon(
+                            Icons.Default.Refresh,
+                            contentDescription = null,
+                            modifier = Modifier.size(18.dp)
+                        )
+                    }
                     Spacer(Modifier.width(8.dp))
                     Text(stringResource(R.string.refresh))
                 }

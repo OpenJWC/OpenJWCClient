@@ -18,7 +18,9 @@ import kotlinx.coroutines.launch
 import org.openjwc.client.R
 import org.openjwc.client.data.models.ChatMessage
 import org.openjwc.client.data.models.ChatMetadata
+import org.openjwc.client.data.models.ChatTurn
 import org.openjwc.client.data.models.Role
+import org.openjwc.client.agent.AgentFailure
 import org.openjwc.client.data.repository.ChatRepository
 import org.openjwc.client.data.repository.ChatStreamStatus
 import org.openjwc.client.log.Logger
@@ -28,13 +30,20 @@ sealed class ChatSessionState {
     data object Idle : ChatSessionState()
     data object Loading : ChatSessionState()      // 刚发出请求，等待响应
     data object Generating : ChatSessionState()     // 正在生成
-    data object ToolCalling : ChatSessionState()  // AI 正在查课表或爬取网页
+    data object ToolCalling : ChatSessionState()  // AI 正在检索本地资讯
     data class Error(val msg: String) : ChatSessionState()
 }
 
 data class ChatSessionUiModel(
     val metadata: ChatMetadata,
     val state: ChatSessionState
+)
+
+/** 失败的一轮，用于界面提示与重试 */
+data class FailedTurn(
+    val text: String,
+    val attachments: List<FetchedNotice>,
+    val message: String,
 )
 
 class ChatViewModel(
@@ -63,6 +72,17 @@ class ChatViewModel(
     // 用来记录正在生成的文本，key 是 sessionId，value 是生成的文本
     private val _generatingTexts = MutableStateFlow<Map<Long, String>>(emptyMap())
 
+    // 失败的一轮，key 是 sessionId
+    private val _failedTurns = MutableStateFlow<Map<Long, FailedTurn>>(emptyMap())
+    private val failedTurnCache = java.util.concurrent.ConcurrentHashMap<Long, StateFlow<FailedTurn?>>()
+
+    fun getFailedTurn(sessionId: Long?): StateFlow<FailedTurn?> {
+        val cacheKey = sessionId ?: NULL_SESSION_KEY
+        return failedTurnCache.computeIfAbsent(cacheKey) {
+            _failedTurns.map { it[sessionId] }
+                .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), null)
+        }
+    }
 
     var uiEvent = Channel<UiEvent>(Channel.BUFFERED)
         private set
@@ -94,27 +114,30 @@ class ChatViewModel(
         attachments.value = emptyList()
     }
 
-    /// Repository 以 500ms 的周期写数据库，同时 UI 立刻渲染出来
+    /**
+     * 消息 + 工具轨迹。工具卡片由数据库驱动，重启后仍能还原；
+     * 生成中的正文只存在于内存，避免流式期间频繁写库。
+     */
     @OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)
-    val messages: StateFlow<List<ChatMessage>> = combine(
+    val turns: StateFlow<List<ChatTurn>> = combine(
         currentSessionMetadata.flatMapLatest { metadata ->
             if (metadata == null) flowOf(emptyList())
-            else chatRepository.getMessagesBySessionId(metadata.sessionId)
+            else chatRepository.observeTurns(metadata.sessionId)
         },
         _generatingTexts
-    ) { dbMessages, generatingMap ->
+    ) { dbTurns, generatingMap ->
         val currentSessionId = currentSessionMetadata.value?.sessionId
-        val liveText = generatingMap[currentSessionId]
+        val liveText = currentSessionId?.let { generatingMap[it] }
         if (liveText != null) {
-            dbMessages.mapIndexed { index, msg ->
-                if (index == dbMessages.lastIndex && msg.role == Role.ASSISTANT) {
-                    msg.copy(text = liveText)
+            dbTurns.mapIndexed { index, turn ->
+                if (index == dbTurns.lastIndex && turn.message.role == Role.ASSISTANT) {
+                    turn.copy(message = turn.message.copy(text = liveText))
                 } else {
-                    msg
+                    turn
                 }
             }
         } else {
-            dbMessages
+            dbTurns
         }
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
@@ -164,36 +187,7 @@ class ChatViewModel(
                     )
                     currentSessionMetadata.value = newMetadata
                 }
-
-                chatRepository.sendMessage(sessionId, messageText, currentAttachments)
-                    .collect { status ->
-                        if (status is ChatStreamStatus.Generating) {
-                            _generatingTexts.update { it + (sessionId to status.content) }
-                        }
-
-                        // 流结束或失败时，清理内存占位
-                        if (status is ChatStreamStatus.Finished || status is ChatStreamStatus.Failure) {
-                            _generatingTexts.update { it - sessionId }
-                        }
-
-                        // 更新会话状态 (Loading/Generating/Idle)
-                        updateSessionState(
-                            sessionId, when (status) {
-                                is ChatStreamStatus.Loading -> ChatSessionState.Loading
-                                is ChatStreamStatus.Generating -> ChatSessionState.Generating
-                                is ChatStreamStatus.Finished -> ChatSessionState.Idle
-                                is ChatStreamStatus.Failure -> {
-                                    if (status.code == 401) {
-                                        navEvent.send(NavEvent.ToLogin())
-                                    }
-                                    uiEvent.send(UiEvent.ShowToast(UiText.DynamicString(status.msg)))
-                                    ChatSessionState.Error(status.msg)
-                                }
-
-                                else -> ChatSessionState.Idle
-                            }
-                        )
-                    }
+                runSend(sessionId, messageText, currentAttachments, isRetry = false)
             } catch (e: Exception) {
                 Logger.e(label, "sendMessage Error", e)
                 uiEvent.send(
@@ -205,6 +199,72 @@ class ChatViewModel(
                 )
             }
         }
+    }
+
+    /** 失败后重试上一轮：复用已有的用户消息，不重复插入 */
+    fun retryLastMessage() {
+        val sessionId = currentSessionMetadata.value?.sessionId ?: return
+        val failed = _failedTurns.value[sessionId] ?: return
+        viewModelScope.launch {
+            try {
+                runSend(sessionId, failed.text, failed.attachments, isRetry = true)
+            } catch (e: Exception) {
+                Logger.e(label, "retry Error", e)
+            }
+        }
+    }
+
+    private suspend fun runSend(
+        sessionId: Long,
+        messageText: String,
+        currentAttachments: List<FetchedNotice>,
+        isRetry: Boolean,
+    ) {
+        // 新一轮问答：清空上一轮的失败态与内存正文
+        _failedTurns.update { it - sessionId }
+        _generatingTexts.update { it - sessionId }
+        Logger.d(
+            label,
+            "sendMessage session=$sessionId retry=$isRetry textLen=${messageText.length} attachments=${currentAttachments.size}"
+        )
+
+        chatRepository.sendMessage(sessionId, messageText, currentAttachments, isRetry)
+            .collect { status ->
+                when (status) {
+                    is ChatStreamStatus.Loading -> {
+                        updateSessionState(sessionId, ChatSessionState.Loading)
+                    }
+
+                    is ChatStreamStatus.ToolRunning -> {
+                        updateSessionState(sessionId, ChatSessionState.ToolCalling)
+                    }
+
+                    is ChatStreamStatus.Generating -> {
+                        _generatingTexts.update { it + (sessionId to status.content) }
+                        updateSessionState(sessionId, ChatSessionState.Generating)
+                    }
+
+                    is ChatStreamStatus.Finished -> {
+                        Logger.d(label, "finished session=$sessionId answerLen=${status.finalContent.length}")
+                        // 正文此时已落库；保留内存正文直到下一次发送，避免清理与 DB 反射之间的闪烁
+                        _failedTurns.update { it - sessionId }
+                        updateSessionState(sessionId, ChatSessionState.Idle)
+                    }
+
+                    is ChatStreamStatus.Failure -> {
+                        Logger.e(label, "failure session=$sessionId code=${status.code} msg=${status.msg}")
+                        _generatingTexts.update { it - sessionId }
+                        _failedTurns.update {
+                            it + (sessionId to FailedTurn(messageText, currentAttachments, status.msg))
+                        }
+                        if (status.errorCode in AgentFailure.CONFIG_RELATED) {
+                            navEvent.send(NavEvent.ToLlmSettings())
+                        }
+                        uiEvent.send(UiEvent.ShowToast(UiText.DynamicString(status.msg)))
+                        updateSessionState(sessionId, ChatSessionState.Error(status.msg))
+                    }
+                }
+            }
     }
 
     fun deleteSession(sessionId: Long) {

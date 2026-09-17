@@ -38,6 +38,7 @@ import androidx.glance.text.TextAlign
 import androidx.glance.text.TextStyle
 import org.openjwc.client.MainActivity
 import org.openjwc.client.R
+import org.openjwc.client.notification.NotificationNavigation
 import org.openjwc.client.ui.theme.CourseColorGenerator
 import org.openjwc.client.widget.WidgetCourseEntry
 import org.openjwc.client.widget.remainingCourseMinutes
@@ -71,6 +72,8 @@ fun CoursesWidgetContent(
         val scrimColor = GlanceTheme.colors.widgetBackground.getColor(context).copy(alpha = scrimAlpha)
         val launchIntent = Intent(context, MainActivity::class.java).apply {
             flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
+            // 点小组件直达课程表页
+            putExtra(NotificationNavigation.EXTRA_DESTINATION, NotificationNavigation.DEST_TIMETABLE)
         }
         Box(
             modifier = GlanceModifier

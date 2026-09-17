@@ -23,8 +23,8 @@ android {
         applicationId = "org.openjwc.client"
         minSdk = 26
         targetSdk = 37
-        versionCode = 30
-        versionName = "1.4.1 (Beta)"
+        versionCode = 38
+        versionName = "2.0b"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
@@ -63,6 +63,13 @@ android {
         val javaVersion = JavaVersion.toVersion(libs.versions.java.get())
         sourceCompatibility = javaVersion
         targetCompatibility = javaVersion
+    }
+
+    testOptions {
+        unitTests {
+            // 让 android.util.Log 等桩方法返回默认值，便于在 JVM 单测里覆盖走日志的代码路径
+            isReturnDefaultValues = true
+        }
     }
 
     buildFeatures {
@@ -111,7 +118,10 @@ dependencies {
 
     implementation(libs.androidx.lifecycle.viewmodel.compose)
     implementation(libs.compose.markdown)
-    implementation(libs.coil.compose)
+    implementation(libs.compose.markdown.code)
+    implementation(libs.compose.markdown.coil3)
+    implementation(libs.coil3.compose)
+    implementation(libs.coil3.network.okhttp)
     implementation(libs.monet.compat)
 
     implementation(libs.retrofit.core)
@@ -123,7 +133,6 @@ dependencies {
     implementation(libs.androidx.navigation3.runtime)
     implementation(libs.androidx.navigationevent)
     implementation(libs.miuix.navigation3.ui)
-    implementation(libs.miuix.blur)
     implementation(libs.androidx.animation)
     implementation(libs.androidx.room.common.jvm)
     implementation(libs.androidx.room.ktx)
@@ -132,6 +141,9 @@ dependencies {
 
     implementation(libs.glance.appwidget)
     implementation(libs.glance.material3)
+    implementation(libs.jsoup)
+    implementation(libs.quickjs.android)
+    implementation(libs.androidx.security.crypto)
     debugImplementation(libs.glance.appwidget.preview)
 
     testImplementation(libs.junit)

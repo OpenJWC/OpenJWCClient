@@ -18,6 +18,9 @@ import androidx.compose.material.icons.twotone.Language
 import androidx.compose.material.icons.twotone.Newspaper
 import androidx.compose.material.icons.twotone.Notifications
 import androidx.compose.material.icons.twotone.Palette
+import androidx.compose.material.icons.twotone.RssFeed
+import androidx.compose.material.icons.twotone.SmartToy
+import androidx.compose.material.icons.twotone.FormatQuote
 import androidx.compose.material.icons.twotone.Storage
 import androidx.compose.material.icons.twotone.VpnKey
 import androidx.compose.material.icons.twotone.Widgets
@@ -50,28 +53,28 @@ import org.openjwc.client.ui.component.settings.AppBackButton
 import org.openjwc.client.ui.component.settings.SegmentedColumn
 import org.openjwc.client.ui.component.settings.SettingsBaseWidget
 import org.openjwc.client.ui.component.settings.SettingsJumpPageWidget
-import org.openjwc.client.ui.me.settings.auth.AccountContent
-import org.openjwc.client.ui.me.settings.auth.AccountScreen
-import org.openjwc.client.ui.me.settings.connection.HostContent
-import org.openjwc.client.ui.me.settings.connection.HostScreen
 import org.openjwc.client.ui.me.settings.general.LanguageContent
 import org.openjwc.client.ui.me.settings.general.LanguageScreen
 import org.openjwc.client.ui.me.settings.general.ThemeContent
 import org.openjwc.client.ui.me.settings.general.ThemeScreen
 import org.openjwc.client.ui.me.settings.log.LogContent
 import org.openjwc.client.ui.me.settings.log.LogScreen
+import org.openjwc.client.ui.me.settings.motto.MottoSettingsContent
+import org.openjwc.client.ui.me.settings.motto.MottoSettingsScreen
+import org.openjwc.client.ui.me.settings.llm.LlmSettingsContent
 import org.openjwc.client.ui.me.settings.news.NewsContent
+import org.openjwc.client.ui.me.settings.sources.SourceDetailContent
+import org.openjwc.client.ui.me.settings.sources.SourcesContent
 import org.openjwc.client.ui.me.settings.news.NewsDisplaySettingsScreen
 import org.openjwc.client.ui.me.settings.notification.NotificationContent
 import org.openjwc.client.ui.me.settings.notification.NotificationSettingsScreen
-import org.openjwc.client.ui.me.settings.storage.StorageCacheContent
-import org.openjwc.client.ui.me.settings.storage.StorageCacheScreen
 import org.openjwc.client.ui.me.settings.timetable.TimetableContent
 import org.openjwc.client.ui.me.settings.timetable.TimetablePrefsScreen
 import org.openjwc.client.ui.me.settings.widget.WidgetSettingsContent
-import org.openjwc.client.viewmodels.AuthViewModel
+import org.openjwc.client.viewmodels.LlmSettingsViewModel
 import org.openjwc.client.viewmodels.NewsViewModel
 import org.openjwc.client.viewmodels.SettingsViewModel
+import org.openjwc.client.viewmodels.SourcesViewModel
 import org.openjwc.client.viewmodels.TimetableViewModel
 
 @OptIn(ExperimentalMaterial3ExpressiveApi::class, ExperimentalMaterial3WindowSizeClassApi::class)
@@ -79,9 +82,9 @@ import org.openjwc.client.viewmodels.TimetableViewModel
 fun SettingsScreen(
     navigator: Navigator,
     settingsViewModel: SettingsViewModel? = null,
-    authViewModel: AuthViewModel? = null,
-    newsViewModel: NewsViewModel? = null,
-    timetableViewModel: TimetableViewModel? = null
+    timetableViewModel: TimetableViewModel? = null,
+    llmViewModel: LlmSettingsViewModel? = null,
+    sourcesViewModel: SourcesViewModel? = null
 ) {
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior(rememberTopAppBarState())
     val context = LocalContext.current
@@ -102,14 +105,14 @@ fun SettingsScreen(
                     SegmentedColumn(title = stringResource(R.string.general)) {
                         item { SettingsBaseWidget(icon = Icons.TwoTone.Palette, title = stringResource(R.string.theme), selected = selectedPage == Screen.Theme, onClick = { selectedPage = Screen.Theme }) {} }
                         item { SettingsBaseWidget(icon = Icons.TwoTone.Language, title = stringResource(R.string.language), selected = selectedPage == Screen.Language, onClick = { selectedPage = Screen.Language }) {} }
-                        item { SettingsBaseWidget(icon = Icons.TwoTone.Storage, title = stringResource(R.string.storage_and_cache), selected = selectedPage == Screen.StorageCache, onClick = { selectedPage = Screen.StorageCache }) {} }
                     }
-                    SegmentedColumn(title = stringResource(R.string.connection)) {
-                        item { SettingsBaseWidget(icon = Icons.TwoTone.Dns, title = stringResource(R.string.network_config), selected = selectedPage == Screen.Host, onClick = { selectedPage = Screen.Host }) {} }
-                        item { SettingsBaseWidget(icon = Icons.TwoTone.VpnKey, title = stringResource(R.string.account_management), selected = selectedPage == Screen.Account, onClick = { selectedPage = Screen.Account }) {} }
+                    SegmentedColumn(title = stringResource(R.string.llm)) {
+                        item { SettingsBaseWidget(icon = Icons.TwoTone.SmartToy, title = stringResource(R.string.llm_settings), selected = selectedPage == Screen.LlmSettings, onClick = { selectedPage = Screen.LlmSettings }) {} }
                     }
                     SegmentedColumn(title = stringResource(R.string.news)) {
                         item { SettingsBaseWidget(icon = Icons.TwoTone.Newspaper, title = stringResource(R.string.display_settings), selected = selectedPage == Screen.NewsSettings, onClick = { selectedPage = Screen.NewsSettings }) {} }
+                        item { SettingsBaseWidget(icon = Icons.TwoTone.RssFeed, title = stringResource(R.string.sources_settings), selected = selectedPage == Screen.Sources, onClick = { selectedPage = Screen.Sources }) {} }
+                        item { SettingsBaseWidget(icon = Icons.TwoTone.FormatQuote, title = stringResource(R.string.motto), selected = selectedPage == Screen.MottoSettings, onClick = { selectedPage = Screen.MottoSettings }) {} }
                     }
                     SegmentedColumn(title = stringResource(R.string.notification)) {
                         item { SettingsBaseWidget(icon = Icons.TwoTone.Notifications, title = stringResource(R.string.notification_settings), selected = selectedPage == Screen.NotificationSettings, onClick = { selectedPage = Screen.NotificationSettings }) {} }
@@ -128,13 +131,27 @@ fun SettingsScreen(
                     when (selectedPage) {
                         Screen.Theme -> ThemeContent(navigator, contentModifier)
                         Screen.Language -> LanguageContent(navigator, settingsViewModel, contentModifier)
-                        Screen.StorageCache -> StorageCacheContent(newsViewModel!!, contentModifier)
                         Screen.WidgetSettings -> WidgetSettingsContent(contentModifier)
-                        Screen.Host -> HostContent(navigator, settingsViewModel, contentModifier)
-                        Screen.Account -> AccountContent(navigator, authViewModel!!, settingsViewModel)
                         Screen.NewsSettings -> NewsContent(navigator, settingsViewModel, contentModifier)
                         Screen.NotificationSettings -> NotificationContent(settingsViewModel, contentModifier)
                         Screen.TimetablePrefs -> TimetableContent(settingsViewModel, timetableViewModel!!, contentModifier)
+                        Screen.LlmSettings -> LlmSettingsContent(llmViewModel!!, settingsViewModel, contentModifier)
+                        Screen.Sources -> SourcesContent(
+                            viewModel = sourcesViewModel!!,
+                            onOpenSource = { sourceId ->
+                                sourcesViewModel.selectSource(sourceId)
+                                selectedPage = Screen.SourceDetail
+                            },
+                            modifier = contentModifier,
+                        )
+
+                        Screen.SourceDetail -> SourceDetailContent(
+                            viewModel = sourcesViewModel!!,
+                            onBack = { selectedPage = Screen.Sources },
+                            onOpenScript = { navigator.push(Screen.SourceScript) },
+                            modifier = contentModifier,
+                        )
+                        Screen.MottoSettings -> MottoSettingsContent(settingsViewModel, contentModifier)
                         Screen.Log -> LogContent(navigator, modifier = contentModifier)
                         null -> Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                             Text(stringResource(R.string.select_a_setting), style = MaterialTheme.typography.bodyLarge, color = MaterialTheme.colorScheme.outline)
@@ -160,14 +177,14 @@ fun SettingsScreen(
                 SegmentedColumn(title = stringResource(R.string.general)) {
                     item { SettingsJumpPageWidget(icon = Icons.TwoTone.Palette, title = stringResource(R.string.theme), onClick = { navigator.push(Screen.Theme) }) }
                     item { SettingsJumpPageWidget(icon = Icons.TwoTone.Language, title = stringResource(R.string.language), onClick = { navigator.push(Screen.Language) }) }
-                    item { SettingsJumpPageWidget(icon = Icons.TwoTone.Storage, title = stringResource(R.string.storage_and_cache), onClick = { navigator.push(Screen.StorageCache) }) }
                 }
-                SegmentedColumn(title = stringResource(R.string.connection)) {
-                    item { SettingsJumpPageWidget(icon = Icons.TwoTone.Dns, title = stringResource(R.string.network_config), onClick = { navigator.push(Screen.Host) }) }
-                    item { SettingsJumpPageWidget(icon = Icons.TwoTone.VpnKey, title = stringResource(R.string.account_management), onClick = { navigator.push(Screen.Account) }) }
+                SegmentedColumn(title = stringResource(R.string.llm)) {
+                    item { SettingsJumpPageWidget(icon = Icons.TwoTone.SmartToy, title = stringResource(R.string.llm_settings), onClick = { navigator.push(Screen.LlmSettings) }) }
                 }
                 SegmentedColumn(title = stringResource(R.string.news)) {
                     item { SettingsJumpPageWidget(icon = Icons.TwoTone.Newspaper, title = stringResource(R.string.display_settings), onClick = { navigator.push(Screen.NewsSettings) }) }
+                    item { SettingsJumpPageWidget(icon = Icons.TwoTone.RssFeed, title = stringResource(R.string.sources_settings), onClick = { navigator.push(Screen.Sources) }) }
+                    item { SettingsJumpPageWidget(icon = Icons.TwoTone.FormatQuote, title = stringResource(R.string.motto), onClick = { navigator.push(Screen.MottoSettings) }) }
                 }
                 SegmentedColumn(title = stringResource(R.string.notification)) {
                     item { SettingsJumpPageWidget(icon = Icons.TwoTone.Notifications, title = stringResource(R.string.notification_settings), onClick = { navigator.push(Screen.NotificationSettings) }) }

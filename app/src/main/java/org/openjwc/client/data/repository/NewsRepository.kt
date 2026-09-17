@@ -1,197 +1,132 @@
 package org.openjwc.client.data.repository
 
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.map
-import org.openjwc.client.data.dao.NewsDao
-import org.openjwc.client.data.datastore.AuthDataSource
-import org.openjwc.client.data.datastore.SettingsDataSource
-import org.openjwc.client.data.models.NewsCacheEntity
-import org.openjwc.client.data.models.NewsLabelCacheEntity
+import org.openjwc.client.data.dao.LabelCount
+import org.openjwc.client.data.dao.NoticeDao
+import org.openjwc.client.data.dao.SourceDao
 import org.openjwc.client.data.models.NoticeEntity
+import org.openjwc.client.data.models.SourceEntity
 import org.openjwc.client.data.models.toFetchedNotice
-import org.openjwc.client.data.models.toNewsCacheEntity
-import org.openjwc.client.net.models.*
-import org.openjwc.client.net.news.*
-import kotlinx.coroutines.ExperimentalCoroutinesApi
+import org.openjwc.client.net.models.FetchedNotice
 
+/** 语料覆盖范围，供 Agent 判断能查多远。 */
+data class CorpusCatalog(
+    val total: Int,
+    val firstDay: String?,
+    val lastDay: String?,
+)
+
+/**
+ * 资讯仓库：本地语料（`notices`）的读写 + 数据源订阅 + 收藏，
+ * 同时向 Agent 暴露检索接口（[searchNotices] / [findNotice] / [corpusCatalog]）。
+ */
 class NewsRepository(
-    private val newsDao: NewsDao,
-    private val settingsDataSource: SettingsDataSource,
-    private val authDataSource: AuthDataSource
-) {
-    companion object {
-        /** 每个数据源分区（host+port+label）的缓存行数上限。 */
-        const val CACHE_LIMIT = 200
-    }
+    private val noticeDao: NoticeDao,
+    private val sourceDao: SourceDao,
+) : NoticeCorpus {
 
-    private suspend fun getApiService(): NetService {
-        val settings = settingsDataSource.userSettings.first()
-        return NetClient.getService(
-            settings.host,
-            settings.port,
-            settings.useHttp,
-            settings.proxy
-        )
-    }
+    /* ================= 资讯流 ================= */
 
-    /** 当前数据源分区（host, port）。所有缓存/收藏读写都以调用时刻的设置为分区依据。 */
-    private suspend fun getSource(): Pair<String, Int> {
-        val settings = settingsDataSource.userSettings.first()
-        return settings.host to settings.port
-    }
+    fun observeSubscribedSources(): Flow<List<SourceEntity>> = sourceDao.observeSubscribed()
 
-    suspend fun getLabels(): NetworkResult<SuccessResponse<FetchLabelsResponseData>> {
-        val authSession = authDataSource.authSession.first()
-        return getApiService().fetchLabels(
-            authSession.token ?: "",
-            authSession.uuid
-        )
-    }
+    /** 已订阅数据源快照（Agent 的 list_sources 工具用）。 */
+    override suspend fun subscribedSources(): List<SourceEntity> = sourceDao.getSubscribed()
 
-    suspend fun getNews(
-        label: String,
-        page: Int,
-        size: Int
-    ): NetworkResult<SuccessResponse<FetchNewsResponseData>> {
-        val authSession = authDataSource.authSession.first()
-        return getApiService().fetchNews(
-            authSession.token ?: "",
-            authSession.uuid,
-            label,
-            page,
-            size
-        )
-    }
-
-    suspend fun uploadNews(notice: UploadedNotice): NetworkResult<SuccessResponse<Map<String, String>>> {
-        val authSession = authDataSource.authSession.first()
-        return getApiService().uploadNews(
-            authSession.token ?: "",
-            authSession.uuid,
-            notice
-        )
-    }
-
-    suspend fun getReviewedNews(): NetworkResult<SuccessResponse<ReviewedNoticesData>> {
-        val authSession = authDataSource.authSession.first()
-        return getApiService().fetchReviewedNews(
-            authSession.token ?: "",
-            authSession.uuid,
-        )
-    }
-
-    /* ================= 资讯缓存 ================= */
-
-    suspend fun getCachedNews(label: String, limit: Int = CACHE_LIMIT): List<FetchedNotice> {
-        val (host, port) = getSource()
-        return newsDao.getNewsCache(host, port, label, limit).map { it.toFetchedNotice() }
-    }
-
-    suspend fun countCachedNews(label: String): Int {
-        val (host, port) = getSource()
-        return newsDao.countNewsCache(host, port, label)
-    }
-
-    suspend fun getCachedLabels(): List<String>? {
-        val (host, port) = getSource()
-        return newsDao.getLabelCache(host, port)?.labels
-    }
-
-    fun observeNewsCacheCount(): Flow<Int> = newsDao.observeNewsCacheCount()
+    fun observeNoticeCount(): Flow<Int> = noticeDao.observeCount()
 
     /**
-     * 三步法写入缓存，保留已有行的 notified 状态（@Upsert 会整行覆盖）：
-     * 1) 读取分区已有 id 与已通知 id 集合
-     * 2) upsert（新行 notified=false）
-     * 3) 回写原有 notified 状态
-     * @return 本次真正新插入的资讯（Worker 依据此列表发通知）
+     * 栏目列表：以订阅源声明的 `@labels` 顺序为准，再补上语料里出现的额外栏目。
+     * [sourceId] 为 null 表示全部数据源。
      */
-    suspend fun upsertNewsCachePreservingNotified(items: List<FetchedNotice>): List<FetchedNotice> {
-        if (items.isEmpty()) return emptyList()
-        val (host, port) = getSource()
-        val existingIds = newsDao.getNewsCacheIds(host, port, items.first().label).toSet()
-        val notifiedIds = newsDao.getNotifiedNewsIds(host, port).toSet()
-        val now = System.currentTimeMillis()
-
-        newsDao.upsertNewsCache(items.map { it.toNewsCacheEntity(host, port, now) })
-
-        // 回写被 upsert 覆盖行的已通知状态
-        val stillNotified = items.map { it.id }.filter { it in notifiedIds }
-        if (stillNotified.isNotEmpty()) {
-            newsDao.markNewsNotified(host, port, stillNotified)
-        }
-
-        return items.filter { it.id !in existingIds }
+    suspend fun getLocalLabels(sourceId: String? = null): List<String> {
+        val sources = sourceDao.getSubscribed()
+        val picked = if (sourceId == null) sources else sources.filter { it.id == sourceId }
+        val declared = picked.flatMap { it.labels }.distinct()
+        val extra = noticeDao.distinctLabelsBySource(sourceId).filterNot { it in declared }
+        return declared + extra
     }
 
-    /** UI 刷新路径：用户正在浏览，新行立即视为已通知；随后裁剪分区容量。 */
-    suspend fun refreshNewsCacheFromUi(label: String, items: List<FetchedNotice>) {
-        if (items.isEmpty()) return
-        val newlyInserted = upsertNewsCachePreservingNotified(items)
-        if (newlyInserted.isNotEmpty()) {
-            markNewsNotified(newlyInserted.map { it.id })
-        }
-        pruneNewsCache(label)
+    suspend fun getLocalNews(
+        label: String,
+        sourceId: String? = null,
+        limit: Int,
+        offset: Int = 0,
+    ): List<FetchedNotice> =
+        noticeDao.listByLabel(label, sourceId, limit, offset).map { it.toFetchedNotice() }
+
+    suspend fun clearNotices() {
+        noticeDao.clearAll()
     }
 
-    suspend fun pruneNewsCache(label: String, keep: Int = CACHE_LIMIT) {
-        val (host, port) = getSource()
-        newsDao.pruneNewsCache(host, port, label, keep)
+    /* ================= 收藏 ================= */
+
+    fun observeFavorites(): Flow<List<FetchedNotice>> =
+        noticeDao.observeFavorites().map { list -> list.map { it.toFetchedNotice() } }
+
+    suspend fun setFavorite(noticeId: String, favorite: Boolean) {
+        noticeDao.setFavorite(noticeId, favorite)
     }
 
-    suspend fun saveLabelsCache(labels: List<String>) {
-        val (host, port) = getSource()
-        newsDao.upsertLabelCache(
-            NewsLabelCacheEntity(host, port, labels, System.currentTimeMillis())
-        )
+    suspend fun clearFavorites() {
+        noticeDao.clearFavorites()
     }
 
-    suspend fun clearNewsCache() {
-        newsDao.clearNewsCache()
-        newsDao.clearNewsLabelCache()
-    }
+    suspend fun isFavorite(noticeId: String): Boolean = noticeDao.isFavorite(noticeId)
 
-    suspend fun markNewsNotified(noticeIds: List<String>) {
-        if (noticeIds.isEmpty()) return
-        val (host, port) = getSource()
-        newsDao.markNewsNotified(host, port, noticeIds)
-    }
+    /* ================= Agent 检索 ================= */
 
-    /* ================= 收藏（按数据源分区） ================= */
+    /**
+     * 语料检索。空 [query] 表示只按条件列举；[relevance] 为 true 时标题命中优先。
+     * 日期为 `yyyy-MM-dd` 闭区间（空串表示不限）。
+     */
+    override suspend fun searchNotices(
+        query: String,
+        label: String,
+        sourceId: String?,
+        fromDay: String,
+        toDay: String,
+        favoriteOnly: Boolean,
+        relevance: Boolean,
+        limit: Int,
+        offset: Int,
+    ): List<NoticeEntity> = noticeDao.searchNotices(
+        query = query,
+        label = label,
+        sourceId = sourceId,
+        fromDay = fromDay,
+        toDay = toDay,
+        favoriteOnly = if (favoriteOnly) 1 else 0,
+        relevance = if (relevance) 1 else 0,
+        limit = limit,
+        offset = offset,
+    )
 
-    @OptIn(ExperimentalCoroutinesApi::class)
-    fun allFavorites(): Flow<List<NoticeEntity>> =
-        settingsDataSource.userSettings
-            .map { it.host to it.port }
-            .distinctUntilChanged()
-            .flatMapLatest { (host, port) -> newsDao.getAllFavorites(host, port) }
+    override suspend fun countNotices(
+        query: String,
+        label: String,
+        sourceId: String?,
+        fromDay: String,
+        toDay: String,
+        favoriteOnly: Boolean,
+    ): Int = noticeDao.countNotices(
+        query = query,
+        label = label,
+        sourceId = sourceId,
+        fromDay = fromDay,
+        toDay = toDay,
+        favoriteOnly = if (favoriteOnly) 1 else 0,
+    )
 
-    suspend fun deleteFavoriteNews(noticeId: String) {
-        val (host, port) = getSource()
-        newsDao.deleteFavoriteById(host, port, noticeId)
-    }
+    override suspend fun findNotice(id: String): NoticeEntity? = noticeDao.findById(id)
 
-    suspend fun deleteAllFavorites() {
-        val (host, port) = getSource()
-        newsDao.deleteAllFavorites(host, port)
-    }
+    /** 栏目及条数（Agent 的 list_labels 工具用）。 */
+    override suspend fun corpusLabels(): List<LabelCount> = noticeDao.labelCounts()
 
-    suspend fun insertFavoriteNews(notice: FetchedNotice) {
-        val (host, port) = getSource()
-        newsDao.insertFavorite(notice.toNoticeEntity(host, port))
-    }
-
-    suspend fun isFavorited(noticeId: String): Boolean {
-        val (host, port) = getSource()
-        return newsDao.isFavorited(host, port, noticeId)
-    }
-
-    /** 迁移遗留收藏（host='' 分区）到当前数据源，幂等。 */
-    suspend fun adoptLegacyFavorites() {
-        val (host, port) = getSource()
-        newsDao.updateLegacyFavoritesOwner(host, port)
-    }
+    override suspend fun corpusCatalog(): CorpusCatalog = CorpusCatalog(
+        total = noticeDao.totalCount(),
+        firstDay = noticeDao.minDay(),
+        lastDay = noticeDao.maxDay(),
+    )
 }

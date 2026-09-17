@@ -29,8 +29,45 @@ import java.util.Locale
 class CourseRepository(
     private val courseDao: CourseDao,
     private val tableDao: TableDao
-) {
+) : TimetableSource {
+
     private val TAG = "CourseRepository"
+
+    /** 当前课表快照，供 Agent 的 get_timetable 工具读取。 */
+    override suspend fun currentTimetable(): TimetableSnapshot? =
+        tableDao.getCurrentTableSync()?.let { toSnapshot(it, isCurrent = true) }
+
+    /** 全部课表快照（可能有多张，例如不同学期）。 */
+    override suspend fun timetables(): List<TimetableSnapshot> =
+        tableDao.getAllTablesSync().map { toSnapshot(it, isCurrent = it.isCurrent) }
+
+    private suspend fun toSnapshot(
+        table: TableMetadata,
+        isCurrent: Boolean,
+    ): TimetableSnapshot {
+        val courses = courseDao.getCoursesByTableIdSync(table.id)
+        return TimetableSnapshot(
+            id = table.id,
+            name = table.tableName,
+            startDate = table.semesterConfig.startDate.toString(),
+            totalWeeks = table.semesterConfig.weeks,
+            currentWeek = table.semesterConfig.calculateCurrentWeek(),
+            isCurrent = isCurrent,
+            courses = courses.map { course ->
+                TimetableCourse(
+                    name = course.name,
+                    teacher = course.teacher,
+                    location = course.location,
+                    dayOfWeek = course.dayOfWeek.value,
+                    startPeriod = course.startPeriod,
+                    duration = course.duration,
+                    weeks = course.weekRule,
+                    note = course.note,
+                )
+            },
+        )
+    }
+
     /**
      * 观察所有课表列表
      */

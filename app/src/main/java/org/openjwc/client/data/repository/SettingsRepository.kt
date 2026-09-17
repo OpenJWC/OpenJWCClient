@@ -6,64 +6,25 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.withContext
-import org.openjwc.client.data.datastore.AuthDataSource
-import org.openjwc.client.data.datastore.CachedDataSource
-import org.openjwc.client.data.datastore.CachedHitokoto
 import org.openjwc.client.data.datastore.SettingsDataSource
 import org.openjwc.client.data.datastore.UserSettings
 import org.openjwc.client.log.Logger
-import org.openjwc.client.net.hitokoto.fetchHitokoto
-import org.openjwc.client.net.models.Hitokoto
-import org.openjwc.client.net.models.NetClient
-import org.openjwc.client.net.models.NetworkResult
 import org.openjwc.client.net.models.Proxy
-import org.openjwc.client.net.models.SuccessResponse
 import org.openjwc.client.ui.theme.ColorType
 import org.openjwc.client.ui.theme.DarkThemeStyle
 import java.io.File
 import java.io.FileOutputStream
-import java.time.LocalDate
 
 class SettingsRepository(
     private val settingsDataSource: SettingsDataSource,
-    private val cachedDataSource: CachedDataSource,
-    private val authDataSource: AuthDataSource,
     private val context: Context
 ) {
     private val label = "SettingsRepository"
     val userSettings: Flow<UserSettings> = settingsDataSource.userSettings
-    val hitokotoFlow: Flow<CachedHitokoto> = cachedDataSource.cachedHitokotoFlow
     val keys = SettingsDataSource.Keys
 
     suspend fun getSettingsSnapshot(): UserSettings {
         return userSettings.first()
-    }
-
-    suspend fun tryRefreshHitokoto(): NetworkResult<SuccessResponse<Hitokoto>> {
-        try {
-            val settings = getSettingsSnapshot()
-            val apiService =
-                NetClient.getService(
-                    settings.host,
-                    settings.port,
-                    settings.useHttp,
-                    settings.proxy
-                )
-
-            val session = authDataSource.authSession.first()
-            val result = apiService.fetchHitokoto(
-                session.token ?: "",
-                session.uuid,
-            )
-            if (result is NetworkResult.Success) {
-                Logger.i(label, "Refresh hitokoto: ${LocalDate.now()}")
-                cachedDataSource.saveHitokoto(result.response.data)
-            }
-            return result
-        } catch (e: Exception) {
-            Logger.e(label, "Failed to refresh hitokoto: ${e.localizedMessage}")
-            return NetworkResult.Error("Unknown Error")
-        }
     }
 
     suspend fun agreePolicy() = settingsDataSource.save(keys.POLICY_AGREED, true)
@@ -73,13 +34,23 @@ class SettingsRepository(
     suspend fun updateThemeStyle(style: DarkThemeStyle) =
         settingsDataSource.save(keys.THEME_STYLE, style.name)
 
-    suspend fun updateHost(host: String) = settingsDataSource.save(keys.HOST, host)
-
-    suspend fun updatePort(port: Int) = settingsDataSource.save(keys.PORT, port)
-
-    suspend fun updateUseHttp(useHttp: Boolean) = settingsDataSource.save(keys.USE_HTTP, useHttp)
-
     suspend fun updateFreshDays(days: Int) = settingsDataSource.save(keys.FRESH_DAYS, days)
+
+    suspend fun updateCrawlDaysGap(days: Int) = settingsDataSource.save(keys.CRAWL_DAYS_GAP, days)
+
+    suspend fun updateMotto(text: String, author: String) {
+        settingsDataSource.save(keys.MOTTO_TEXT, text)
+        settingsDataSource.save(keys.MOTTO_AUTHOR, author)
+    }
+
+    suspend fun updateMottoOnline(enabled: Boolean) =
+        settingsDataSource.save(keys.MOTTO_ONLINE, enabled)
+
+    suspend fun updateHitokotoCategory(code: String) =
+        settingsDataSource.save(keys.HITOKOTO_CATEGORY, code)
+
+    suspend fun updateHitokotoMaxLength(length: Int) =
+        settingsDataSource.save(keys.HITOKOTO_MAX_LENGTH, length)
 
     private suspend fun updateBackgroundPath(path: String?) =
         settingsDataSource.saveBackgroundPath(path)
@@ -156,6 +127,12 @@ class SettingsRepository(
 
     suspend fun updateAutoStartEnabled(enabled: Boolean) =
         settingsDataSource.save(keys.AUTO_START_ENABLED, enabled)
+
+    suspend fun updateDailyReportEnabled(enabled: Boolean) =
+        settingsDataSource.save(keys.DAILY_REPORT_ENABLED, enabled)
+
+    suspend fun updateDailyReportTime(time: String) =
+        settingsDataSource.save(keys.DAILY_REPORT_TIME, time)
 
     suspend fun getToggleState(id: String): Boolean = settingsDataSource.getToggleState(id)
 

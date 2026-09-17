@@ -89,17 +89,17 @@ fun NewsContent(
     val freshDaysError = run {
         val d = freshDaysState.text.toString().toIntOrNull()
         when {
-            freshDaysState.text.isBlank() -> "Required"
-            d == null || d <= 0 -> "Must be a positive integer"
+            freshDaysState.text.isBlank() -> stringResource(R.string.required)
+            d == null || d <= 0 -> stringResource(R.string.must_be_positive_integer)
             else -> ""
         }
     }
-    val isValid = freshDaysError.isEmpty()
+    val pendingFreshDays = freshDaysState.text.toString().toIntOrNull()
+    // 表单语义：只有「合法且与已保存值不同」时才可保存；保存后停留本页
+    val canSave = freshDaysError.isEmpty() && pendingFreshDays != savedFreshDays
 
     fun save() {
-        val days = freshDaysState.text.toString().toIntOrNull() ?: savedFreshDays
-        settingsViewModel.updateFreshDays(days)
-        navigator.pop()
+        settingsViewModel.updateFreshDays(pendingFreshDays ?: savedFreshDays)
     }
 
     Column(
@@ -120,7 +120,7 @@ fun NewsContent(
 
         Button(
             onClick = { save() },
-            enabled = isValid,
+            enabled = canSave,
             modifier = Modifier.fillMaxWidth().padding(horizontal = 32.dp, vertical = 16.dp)
         ) {
             Text(stringResource(R.string.save))

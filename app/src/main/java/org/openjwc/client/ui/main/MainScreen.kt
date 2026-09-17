@@ -3,6 +3,8 @@ package org.openjwc.client.ui.main
 import android.app.Activity
 import android.widget.Toast
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -11,10 +13,12 @@ import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.WindowInsetsSides
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.only
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.Star
@@ -50,6 +54,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import kotlinx.coroutines.launch
@@ -61,14 +67,17 @@ import org.openjwc.client.navigation3.Navigator
 import org.openjwc.client.ui.chat.ChatHistoryList
 import org.openjwc.client.ui.chat.ChatMainContent
 import org.openjwc.client.ui.chat.EditMetadataDialog
+import org.openjwc.client.ui.dailyreport.DailyReportScreen
 import org.openjwc.client.ui.component.PermissionReminderFab
 import org.openjwc.client.ui.component.settings.SettingsChooseDialog
 import org.openjwc.client.ui.me.MeScreenContent
+import org.openjwc.client.ui.news.SourceSelectSheet
 import org.openjwc.client.ui.news.NewsScreen
 import org.openjwc.client.ui.timetable.view.TimetableScreen
 import org.openjwc.client.ui.util.LocalHandlePageChange
 import org.openjwc.client.ui.util.LocalSelectedPage
 import org.openjwc.client.viewmodels.ChatViewModel
+import org.openjwc.client.viewmodels.DailyReportViewModel
 import org.openjwc.client.viewmodels.MainViewModel
 import org.openjwc.client.viewmodels.MeViewModel
 import org.openjwc.client.viewmodels.NavEvent
@@ -84,6 +93,7 @@ fun MainScreen(
     navigator: Navigator,
     mainViewModel: MainViewModel,
     chatViewModel: ChatViewModel,
+    dailyReportViewModel: DailyReportViewModel,
     newsViewModel: NewsViewModel,
     timetableViewModel: TimetableViewModel,
     settingsViewModel: SettingsViewModel,
@@ -135,9 +145,8 @@ fun MainScreen(
     LaunchedEffect(Unit) {
         for (event in chatViewModel.navEvent) {
             when (event) {
-                is NavEvent.ToLogin -> navigator.push(Screen.Login)
                 is NavEvent.ToBack -> navigator.pop()
-                is NavEvent.ToRegister -> navigator.push(Screen.Register)
+                is NavEvent.ToLlmSettings -> navigator.push(Screen.LlmSettings)
             }
         }
     }
@@ -152,26 +161,6 @@ fun MainScreen(
     }
 
     LaunchedEffect(Unit) {
-        for (event in meViewModel.navEvent) {
-            when (event) {
-                is NavEvent.ToLogin -> navigator.push(Screen.Login)
-                is NavEvent.ToBack -> navigator.pop()
-                is NavEvent.ToRegister -> navigator.push(Screen.Register)
-            }
-        }
-    }
-
-    LaunchedEffect(Unit) {
-        for (event in meViewModel.uiEvent) {
-            when (event) {
-                is UiEvent.ShowToast -> Toast.makeText(context, event.uiText.asString(context), Toast.LENGTH_SHORT).show()
-                is UiEvent.ShowSnackBar -> Toast.makeText(context, event.uiText.asString(context), Toast.LENGTH_SHORT).show()
-            }
-        }
-    }
-
-    LaunchedEffect(Unit) {
-        meViewModel.refreshHitokotoLazily()
     }
 
     if (showEditMetadataDialog) {
@@ -212,13 +201,34 @@ fun MainScreen(
         }
     }
 
+    // 资讯页顶栏标题 → 数据源切换 sheet
+    val newsSources by newsViewModel.sources.collectAsStateWithLifecycle()
+    val newsSourceFilter by newsViewModel.sourceFilter.collectAsStateWithLifecycle()
+    var showSourceSheet by remember { mutableStateOf(false) }
+    val allSourcesLabel = stringResource(R.string.source_all_sources)
+    val newsSourceTitle = remember(newsSources, newsSourceFilter, allSourcesLabel) {
+        newsSources.firstOrNull { it.id == newsSourceFilter }?.name ?: allSourcesLabel
+    }
+
     val isChatTab = selectedPage == 0
-    val isNewsTab = selectedPage == 1
-    val isTimetableTab = selectedPage == 2
+    val isDailyReportTab = selectedPage == 1
+    val isNewsTab = selectedPage == 2
+    val isTimetableTab = selectedPage == 3
 
     val currentTableMeta by timetableViewModel.currentTable.collectAsStateWithLifecycle()
     val currentWeek by timetableViewModel.currentWeek.collectAsStateWithLifecycle()
-    val hitokoto by meViewModel.hitokoto.collectAsStateWithLifecycle()
+    val motto by meViewModel.motto.collectAsStateWithLifecycle()
+
+    // 进入主界面时按天刷新在线一言
+    LaunchedEffect(Unit) { meViewModel.refreshMottoLazily() }
+
+    LaunchedEffect(Unit) {
+        for (event in meViewModel.uiEvent) {
+            if (event is UiEvent.ShowToast) {
+                Toast.makeText(context, event.uiText.asString(context), Toast.LENGTH_SHORT).show()
+            }
+        }
+    }
     var showWeekPicker by remember { mutableStateOf(false) }
 
     // 课程表右上角周次选择对话框
@@ -231,6 +241,15 @@ fun MainScreen(
             selectedIndex = (currentWeek - 1).coerceIn(0, totalWeeks - 1),
             onDismiss = { showWeekPicker = false },
             onSelectedIndexChange = { index -> timetableViewModel.setWeek(index + 1) }
+        )
+    }
+
+    if (showSourceSheet) {
+        SourceSelectSheet(
+            sources = newsSources,
+            selectedSourceId = newsSourceFilter,
+            onSelect = { newsViewModel.setSourceFilter(it) },
+            onDismissRequest = { showSourceSheet = false }
         )
     }
 
@@ -270,13 +289,39 @@ fun MainScreen(
                             TopAppBar(
                                 modifier = Modifier,
                                 title = {
-                                    Column {
-                                        Text(
-                                            when (isChatTab) {
-                                                true -> chatTitle
-                                                else -> stringResource(tabs[selectedPage].titleRes)
-                                            }
-                                        )
+                                    if (isNewsTab) {
+                                        Row(
+                                            verticalAlignment = Alignment.CenterVertically,
+                                            modifier = Modifier.clickable(
+                                                interactionSource = remember { MutableInteractionSource() },
+                                                indication = null,
+                                                onClick = { showSourceSheet = true }
+                                            )
+                                        ) {
+                                            Text(
+                                                text = newsSourceTitle,
+                                                style = MaterialTheme.typography.titleMedium,
+                                                fontWeight = FontWeight.SemiBold,
+                                                maxLines = 1,
+                                                overflow = TextOverflow.Ellipsis,
+                                                modifier = Modifier.weight(1f, fill = false)
+                                            )
+                                            Icon(
+                                                imageVector = Icons.Default.ArrowDropDown,
+                                                contentDescription = stringResource(R.string.source_switch),
+                                                modifier = Modifier.size(20.dp),
+                                                tint = MaterialTheme.colorScheme.onSurfaceVariant
+                                            )
+                                        }
+                                    } else {
+                                        Column {
+                                            Text(
+                                                when (isChatTab) {
+                                                    true -> chatTitle
+                                                    else -> stringResource(tabs[selectedPage].titleRes)
+                                                }
+                                            )
+                                        }
                                     }
                                 },
                                 navigationIcon = {
@@ -290,9 +335,6 @@ fun MainScreen(
                                     if (isNewsTab) {
                                         IconButton(onClick = { navigator.push(Screen.Favorite) }) {
                                             Icon(Icons.Default.Star, contentDescription = stringResource(R.string.favorite))
-                                        }
-                                        IconButton(onClick = { navigator.push(Screen.UploadNews) }) {
-                                            Icon(Icons.Default.Add, contentDescription = stringResource(R.string.upload_news))
                                         }
                                     }
                                 },
@@ -338,9 +380,17 @@ fun MainScreen(
                                     mainViewModel = mainViewModel,
                                     newsViewModel = newsViewModel,
                                     windowSizeClass = windowSizeClass,
-                                    contentPadding = PaddingValues(top = 0.dp)
+                                    contentPadding = PaddingValues(top = 0.dp),
+                                    onOpenNotice = { notice ->
+                                        newsViewModel.setCurrentNewsToDisplay(notice)
+                                        navigator.push(Screen.NoticeDetail)
+                                    }
                                 )
-                                1 -> NewsScreen(
+                                1 -> DailyReportScreen(
+                                    viewModel = dailyReportViewModel,
+                                    modifier = Modifier
+                                )
+                                2 -> NewsScreen(
                                     modifier = Modifier,
                                     windowSizeClass = windowSizeClass,
                                     newsViewModel = newsViewModel,
@@ -348,13 +398,13 @@ fun MainScreen(
                                     chatViewModel = chatViewModel,
                                     navController = navigator
                                 )
-                                2 -> TimetableScreen(
+                                3 -> TimetableScreen(
                                     windowSizeClass = windowSizeClass,
                                     viewModel = timetableViewModel,
                                     onImportRequest = onImportRequest,
                                     contentPadding = PaddingValues()
                                 )
-                                3 -> MeScreenContent(navigator, meViewModel, hitokoto, windowSizeClass)
+                                4 -> MeScreenContent(navigator, meViewModel, motto, windowSizeClass)
                             }
                         }
                     }
